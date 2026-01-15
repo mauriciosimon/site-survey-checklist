@@ -1,8 +1,44 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from datetime import date, datetime
 from decimal import Decimal
 
+
+# ============ User Schemas ============
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=1)
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    role: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserWithStats(UserResponse):
+    checklist_count: int = 0
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+# ============ Checklist Schemas ============
 
 class ChecklistBase(BaseModel):
     # Header Info
@@ -69,8 +105,14 @@ class ChecklistUpdate(ChecklistBase):
 
 class ChecklistResponse(ChecklistBase):
     id: int
+    user_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+
+class ChecklistWithOwner(ChecklistResponse):
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None

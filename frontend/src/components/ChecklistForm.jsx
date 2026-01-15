@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { checklistApi, API_BASE } from '../api';
+import { useAuth } from '../AuthContext';
 
 const initialFormData = {
   // Header Info
@@ -53,6 +54,7 @@ const initialFormData = {
 function ChecklistForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isEdit = Boolean(id);
 
   const [formData, setFormData] = useState(initialFormData);
@@ -74,8 +76,11 @@ function ChecklistForm() {
         })
         .catch(() => setError('Failed to load checklist'))
         .finally(() => setLoading(false));
+    } else if (user) {
+      // Pre-fill surveyor name for new checklists
+      setFormData(prev => ({ ...prev, surveyor_name: user.full_name }));
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

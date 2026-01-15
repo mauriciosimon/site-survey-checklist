@@ -1,12 +1,33 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, Date, Numeric, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Text, Boolean, Date, Numeric, DateTime, JSON, ForeignKey, Enum
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
+import enum
+
+
+class UserRole(str, enum.Enum):
+    user = "user"
+    admin = "admin"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(20), default=UserRole.user.value)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    checklists = relationship("Checklist", back_populates="owner")
 
 
 class Checklist(Base):
     __tablename__ = "checklists"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Header Info
     site_name = Column(String(255), nullable=False)
@@ -64,3 +85,5 @@ class Checklist(Base):
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    owner = relationship("User", back_populates="checklists")
