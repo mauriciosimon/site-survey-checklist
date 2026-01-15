@@ -82,6 +82,7 @@ function ChecklistList() {
             <thead>
               <tr>
                 <th>Site Name</th>
+                <th>Surveyor</th>
                 <th>Client</th>
                 <th>Project</th>
                 <th>Survey Date</th>
@@ -97,6 +98,7 @@ function ChecklistList() {
                       <strong>{checklist.site_name}</strong>
                     </Link>
                   </td>
+                  <td>{checklist.surveyor_name || '-'}</td>
                   <td>{checklist.client_name || '-'}</td>
                   <td>{checklist.project_name || '-'}</td>
                   <td>{formatDate(checklist.survey_date)}</td>

@@ -47,11 +47,12 @@ def get_current_user(
     if not token:
         return None
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_sub": False})
+        user_id_str = payload.get("sub")
+        if user_id_str is None:
             return None
-    except JWTError:
+        user_id = int(user_id_str) if isinstance(user_id_str, str) else user_id_str
+    except (JWTError, ValueError):
         return None
 
     user = db.query(User).filter(User.id == user_id).first()
