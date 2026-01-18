@@ -33,8 +33,9 @@ function Header() {
 
   return (
     <header>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
-        <h1>Site Visit Checklists</h1>
+      <Link to="/" style={{ color: 'white', textDecoration: 'none' }} className="logo-section">
+        <img src="/logo.png" alt="West Park Contracting" className="logo" />
+        <h1>Site Survey Checklists</h1>
       </Link>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         {user ? (
