@@ -48,11 +48,11 @@ header .logo-section {
 }
 
 header .logo {
-  height: 45px;
+  height: 60px;
   width: auto;
   background: white;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
 header h1 {
