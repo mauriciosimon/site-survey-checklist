@@ -21,16 +21,6 @@ export default function PlaceholderPage({ title, icon, description }) {
 }
 
 // Specific placeholder pages
-export function LeadsPage() {
-  return (
-    <PlaceholderPage
-      title="Leads"
-      icon="🎯"
-      description="Track and manage your sales leads through the pipeline."
-    />
-  );
-}
-
 export function DealsPage() {
   return (
     <PlaceholderPage

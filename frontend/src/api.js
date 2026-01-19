@@ -68,4 +68,142 @@ export const checklistApi = {
   },
 };
 
+export const leadApi = {
+  getAll: (filters = {}) =>
+    api.get('/leads', {
+      params: {
+        status: filters.status || undefined,
+        priority: filters.priority || undefined,
+        source: filters.source || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/leads/${id}`),
+
+  create: (data) =>
+    api.post('/leads', data),
+
+  update: (id, data) =>
+    api.put(`/leads/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/leads/${id}`),
+};
+
+export const dealApi = {
+  getAll: (filters = {}) =>
+    api.get('/deals', {
+      params: {
+        stage: filters.stage || undefined,
+        status: filters.status || undefined,
+        grade: filters.grade || undefined,
+        deal_type: filters.deal_type || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/deals/${id}`),
+
+  create: (data) =>
+    api.post('/deals', data),
+
+  update: (id, data) =>
+    api.put(`/deals/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/deals/${id}`),
+};
+
+export const accountApi = {
+  getAll: (filters = {}) =>
+    api.get('/accounts', {
+      params: {
+        status: filters.status || undefined,
+        label: filters.label || undefined,
+        industry: filters.industry || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/accounts/${id}`),
+
+  create: (data) =>
+    api.post('/accounts', data),
+
+  update: (id, data) =>
+    api.put(`/accounts/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/accounts/${id}`),
+};
+
+export const contactApi = {
+  getAll: (filters = {}) =>
+    api.get('/contacts', {
+      params: {
+        contact_type: filters.contact_type || undefined,
+        account_id: filters.account_id || undefined,
+        icp_fit: filters.icp_fit || undefined,
+        outreach_stage: filters.outreach_stage || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/contacts/${id}`),
+
+  create: (data) =>
+    api.post('/contacts', data),
+
+  update: (id, data) =>
+    api.put(`/contacts/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/contacts/${id}`),
+};
+
+export const taskApi = {
+  getAll: (filters = {}) =>
+    api.get('/tasks', {
+      params: {
+        status: filters.status || undefined,
+        priority: filters.priority || undefined,
+        task_type: filters.task_type || undefined,
+        owner_id: filters.owner_id || undefined,
+        due_date_from: filters.due_date_from || undefined,
+        due_date_to: filters.due_date_to || undefined,
+        deal_id: filters.deal_id || undefined,
+        lead_id: filters.lead_id || undefined,
+        account_id: filters.account_id || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/tasks/${id}`),
+
+  create: (data) =>
+    api.post('/tasks', data),
+
+  update: (id, data) =>
+    api.put(`/tasks/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/tasks/${id}`),
+};
+
 export default api;

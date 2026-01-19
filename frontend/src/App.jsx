@@ -7,9 +7,9 @@ import ChecklistDetail from './components/ChecklistDetail';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
+import LeadsPage from './components/LeadsPage';
 import {
   DashboardPage,
-  LeadsPage,
   DealsPage,
   TasksPage,
   AccountsPage,
