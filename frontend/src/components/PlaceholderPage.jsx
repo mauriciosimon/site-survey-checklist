@@ -21,16 +21,6 @@ export default function PlaceholderPage({ title, icon, description }) {
 }
 
 // Specific placeholder pages
-export function DealsPage() {
-  return (
-    <PlaceholderPage
-      title="Deals"
-      icon="💰"
-      description="Monitor deal progress from prospect to close."
-    />
-  );
-}
-
 export function TasksPage() {
   return (
     <PlaceholderPage

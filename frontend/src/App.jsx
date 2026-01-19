@@ -8,9 +8,9 @@ import Login from './components/Login';
 import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import LeadsPage from './components/LeadsPage';
+import DealsPage from './components/DealsPage';
 import {
   DashboardPage,
-  DealsPage,
   TasksPage,
   AccountsPage,
   ContactsPage,
