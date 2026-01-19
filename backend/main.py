@@ -10,7 +10,8 @@ from database import engine, get_db, Base, SessionLocal
 from schemas import (
     ChecklistCreate, ChecklistUpdate, ChecklistResponse, ChecklistWithOwner,
     UserCreate, UserLogin, UserResponse, UserWithStats, Token,
-    DealCreate, DealUpdate, DealResponse
+    DealCreate, DealUpdate, DealResponse,
+    LeadCreate, LeadUpdate, LeadResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -29,17 +30,47 @@ def run_migrations():
 
     with engine.connect() as conn:
         inspector = inspect(engine)
+        tables = inspector.get_table_names()
 
         # Check if deal_id column exists in checklists table
-        columns = [col['name'] for col in inspector.get_columns('checklists')]
+        if 'checklists' in tables:
+            columns = [col['name'] for col in inspector.get_columns('checklists')]
+            if 'deal_id' not in columns:
+                print("Running migration: Adding deal_id column to checklists table...")
+                conn.execute(text('ALTER TABLE checklists ADD COLUMN deal_id INTEGER REFERENCES deals(id)'))
+                conn.commit()
+                print("Migration complete: deal_id column added")
 
-        if 'deal_id' not in columns:
-            print("Running migration: Adding deal_id column to checklists table...")
-            conn.execute(text('ALTER TABLE checklists ADD COLUMN deal_id INTEGER REFERENCES deals(id)'))
+        # Create leads table if it doesn't exist
+        if 'leads' not in tables:
+            print("Running migration: Creating leads table...")
+            conn.execute(text('''
+                CREATE TABLE leads (
+                    id SERIAL PRIMARY KEY,
+                    monday_item_id VARCHAR(50) UNIQUE,
+                    name VARCHAR(255) NOT NULL,
+                    status VARCHAR(30) DEFAULT 'New Lead',
+                    priority VARCHAR(20),
+                    source VARCHAR(50),
+                    owner_id INTEGER REFERENCES users(id),
+                    owner_name VARCHAR(255),
+                    contact_name VARCHAR(255),
+                    job_title VARCHAR(255),
+                    email VARCHAR(255),
+                    phone VARCHAR(50),
+                    next_interaction_date DATE,
+                    qualified_date DATE,
+                    notes TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_leads_id ON leads(id)'))
+            conn.execute(text('CREATE INDEX ix_leads_monday_item_id ON leads(monday_item_id)'))
             conn.commit()
-            print("Migration complete: deal_id column added")
+            print("Migration complete: leads table created")
         else:
-            print("Schema up to date: deal_id column exists")
+            print("Schema up to date: leads table exists")
 
 
 # Run migrations on startup
@@ -366,6 +397,84 @@ def delete_deal(
     if not success:
         raise HTTPException(status_code=404, detail="Deal not found")
     return {"message": "Deal deleted successfully"}
+
+
+# ============ Lead Endpoints ============
+
+@app.get("/leads", response_model=List[LeadResponse])
+def list_leads(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    source: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all leads with optional filtering by status, priority, source, or search term."""
+    return crud.get_leads(
+        db, skip=skip, limit=limit,
+        status=status, priority=priority, source=source, search=search
+    )
+
+
+@app.get("/leads/{lead_id}", response_model=LeadResponse)
+def get_lead(
+    lead_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single lead by ID."""
+    lead = crud.get_lead(db, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return lead
+
+
+@app.post("/leads", response_model=LeadResponse)
+def create_lead(
+    lead: LeadCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new lead."""
+    # Check for duplicate Monday item ID if provided
+    if lead.monday_item_id:
+        existing = crud.get_lead_by_monday_id(db, lead.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Lead with this Monday.com item ID already exists"
+            )
+    return crud.create_lead(db, lead, owner_id=current_user.id)
+
+
+@app.put("/leads/{lead_id}", response_model=LeadResponse)
+def update_lead(
+    lead_id: int,
+    lead: LeadUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing lead."""
+    db_lead = crud.update_lead(db, lead_id, lead)
+    if not db_lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return db_lead
+
+
+@app.delete("/leads/{lead_id}")
+def delete_lead(
+    lead_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete a lead."""
+    success = crud.delete_lead(db, lead_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return {"message": "Lead deleted successfully"}
 
 
 if __name__ == "__main__":

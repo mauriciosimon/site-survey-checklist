@@ -25,6 +25,31 @@ class DealGrade(str, enum.Enum):
     grade_3 = "Grade 3"  # Cold - Green (#9cd326)
 
 
+class LeadStatus(str, enum.Enum):
+    """Lead status/stage from Satoris Leads board"""
+    new_lead = "New Lead"           # #ff6d3b (Dark Orange)
+    working_on_it = "Working on it" # #fdab3d (Orange)
+    prospect = "Prospect"           # #0086c0 (Blue)
+    unqualified = "Unqualified"     # #df2f4a (Red)
+
+
+class LeadPriority(str, enum.Enum):
+    """Lead priority levels from Satoris"""
+    low = "Low"                 # #0086c0 (Blue)
+    medium = "Medium"           # #ffcb00 (Yellow)
+    high = "High"               # #fdab3d (Orange)
+    critical = "Critical"       # #df2f4a (Red)
+
+
+class LeadSource(str, enum.Enum):
+    """Lead source/channel from Satoris"""
+    fractional_dubai = "Fractional Dubai"
+    networking = "Networking"
+    existing_contact = "Existing contact"
+    linkedin = "Linkedin"
+    wom = "WOM"  # Word of Mouth
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -87,6 +112,44 @@ class Deal(Base):
 
     # Relationships
     checklists = relationship("Checklist", back_populates="deal")
+
+
+class Lead(Base):
+    """Lead model based on Satoris Monday.com Leads board schema"""
+    __tablename__ = "leads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
+
+    # Core fields
+    name = Column(String(255), nullable=False)  # Lead/Company name (item name)
+    status = Column(String(30), default=LeadStatus.new_lead.value)  # lead_status: New Lead, Working on it, Prospect, Unqualified
+    priority = Column(String(20))  # priority: Low, Medium, High, Critical
+    source = Column(String(50))  # status column: Networking, Linkedin, Existing contact, WOM, Fractional Dubai
+
+    # Owner
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # lead_owner (text representation)
+
+    # Contact Info
+    contact_name = Column(String(255))  # lead_company (confusingly named in Monday - it's the person's name)
+    job_title = Column(String(255))  # text column
+    email = Column(String(255))  # lead_email
+    phone = Column(String(50))  # lead_phone
+
+    # Dates
+    next_interaction_date = Column(Date)  # date column
+    qualified_date = Column(Date)  # date4 column (follow up / date qualified)
+
+    # Notes
+    notes = Column(Text)  # Additional notes
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    owner = relationship("User", backref="leads")
 
 
 class Checklist(Base):

@@ -178,3 +178,50 @@ class DealResponse(DealBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Lead Schemas ============
+
+class LeadBase(BaseModel):
+    """Base schema for Lead matching Satoris Monday.com Leads board"""
+    name: str  # Lead/Company name
+    status: Optional[str] = "New Lead"  # New Lead, Working on it, Prospect, Unqualified
+    priority: Optional[str] = None  # Low, Medium, High, Critical
+    source: Optional[str] = None  # Networking, Linkedin, Existing contact, WOM, Fractional Dubai
+
+    # Owner
+    owner_name: Optional[str] = None
+
+    # Contact Info
+    contact_name: Optional[str] = None  # Person's name
+    job_title: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+    # Dates
+    next_interaction_date: Optional[date] = None
+    qualified_date: Optional[date] = None
+
+    # Notes
+    notes: Optional[str] = None
+
+    # Monday.com sync
+    monday_item_id: Optional[str] = None
+
+
+class LeadCreate(LeadBase):
+    pass
+
+
+class LeadUpdate(LeadBase):
+    name: Optional[str] = None
+
+
+class LeadResponse(LeadBase):
+    id: int
+    owner_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

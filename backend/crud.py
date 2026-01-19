@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate
+from models import Checklist, User, Deal, Lead
+from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate
 from auth import get_password_hash
 from typing import Optional, List
 
@@ -196,6 +196,87 @@ def delete_deal(db: Session, deal_id: int) -> bool:
     db_deal = db.query(Deal).filter(Deal.id == deal_id).first()
     if db_deal:
         db.delete(db_deal)
+        db.commit()
+        return True
+    return False
+
+
+# ============ Lead CRUD ============
+
+def get_lead(db: Session, lead_id: int) -> Optional[Lead]:
+    """Get a single lead by ID."""
+    return db.query(Lead).filter(Lead.id == lead_id).first()
+
+
+def get_lead_by_monday_id(db: Session, monday_item_id: str) -> Optional[Lead]:
+    """Get a lead by Monday.com item ID."""
+    return db.query(Lead).filter(Lead.monday_item_id == monday_item_id).first()
+
+
+def get_leads(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    source: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Lead]:
+    """Get leads with optional filtering."""
+    query = db.query(Lead)
+
+    if status:
+        query = query.filter(Lead.status == status)
+
+    if priority:
+        query = query.filter(Lead.priority == priority)
+
+    if source:
+        query = query.filter(Lead.source == source)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Lead.name.ilike(search_filter),
+                Lead.contact_name.ilike(search_filter),
+                Lead.email.ilike(search_filter),
+                Lead.phone.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Lead.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_lead(db: Session, lead: LeadCreate, owner_id: Optional[int] = None) -> Lead:
+    """Create a new lead."""
+    data = lead.model_dump()
+    if owner_id:
+        data["owner_id"] = owner_id
+    db_lead = Lead(**data)
+    db.add(db_lead)
+    db.commit()
+    db.refresh(db_lead)
+    return db_lead
+
+
+def update_lead(db: Session, lead_id: int, lead: LeadUpdate) -> Optional[Lead]:
+    """Update an existing lead."""
+    db_lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if db_lead:
+        update_data = lead.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_lead, key, value)
+        db.commit()
+        db.refresh(db_lead)
+    return db_lead
+
+
+def delete_lead(db: Session, lead_id: int) -> bool:
+    """Delete a lead."""
+    db_lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if db_lead:
+        db.delete(db_lead)
         db.commit()
         return True
     return False
