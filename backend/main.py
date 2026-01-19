@@ -23,6 +23,29 @@ import crud
 Base.metadata.create_all(bind=engine)
 
 
+def run_migrations():
+    """Run database migrations on startup to ensure schema is up to date."""
+    from sqlalchemy import text, inspect
+
+    with engine.connect() as conn:
+        inspector = inspect(engine)
+
+        # Check if deal_id column exists in checklists table
+        columns = [col['name'] for col in inspector.get_columns('checklists')]
+
+        if 'deal_id' not in columns:
+            print("Running migration: Adding deal_id column to checklists table...")
+            conn.execute(text('ALTER TABLE checklists ADD COLUMN deal_id INTEGER REFERENCES deals(id)'))
+            conn.commit()
+            print("Migration complete: deal_id column added")
+        else:
+            print("Schema up to date: deal_id column exists")
+
+
+# Run migrations on startup
+run_migrations()
+
+
 def seed_admin_user():
     """Seed admin user from environment variables on startup."""
     admin_email = os.getenv("ADMIN_EMAIL")
