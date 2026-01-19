@@ -31,16 +31,6 @@ export function TasksPage() {
   );
 }
 
-export function AccountsPage() {
-  return (
-    <PlaceholderPage
-      title="Accounts"
-      icon="🏢"
-      description="View and manage company accounts."
-    />
-  );
-}
-
 export function ContactsPage() {
   return (
     <PlaceholderPage

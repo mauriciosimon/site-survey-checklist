@@ -9,10 +9,10 @@ import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import LeadsPage from './components/LeadsPage';
 import DealsPage from './components/DealsPage';
+import AccountsPage from './components/AccountsPage';
 import {
   DashboardPage,
   TasksPage,
-  AccountsPage,
   ContactsPage,
   ProjectsPage
 } from './components/PlaceholderPage';

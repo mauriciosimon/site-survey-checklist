@@ -1316,6 +1316,11 @@ header h1 {
   max-width: 700px;
 }
 
+/* Account Form Modal Specific */
+.account-form-modal {
+  max-width: 700px;
+}
+
 .page-actions {
   display: flex;
   gap: 10px;
