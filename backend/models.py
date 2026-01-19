@@ -11,15 +11,38 @@ class UserRole(str, enum.Enum):
 
 
 class DealStage(str, enum.Enum):
-    leads = "Leads"
-    estimating = "Estimating"
-    submitted = "Submitted"
-    won = "Won"
-    lost = "Lost"
-    declined = "Declined"
+    """Deal stage/group from Satoris Deals board"""
+    prospects = "Prospects"              # #0086c0 (Blue)
+    preparing_proposal = "Preparing proposal"  # #fdab3d (Orange)
+    proposal_sent = "Proposal sent"      # #9cd326 (Lime Green)
+    closed_won = "Closed Won"            # #00c875 (Green)
+    lost = "Lost"                        # #df2f4a (Red)
+    completed = "Completed"              # #c4c4c4 (Gray)
+
+
+class DealStatus(str, enum.Enum):
+    """Deal status from Satoris Deals board (deal_stage column)"""
+    new_deal = "New deal"                    # #579bfc (Bright Blue)
+    prospect = "Prospect"                    # #0086c0 (Blue)
+    preparing_proposal = "Preparing proposal"  # #fdab3d (Orange)
+    proposal = "Proposal"                    # #cab641 (Mustered)
+    proposal_sent = "Proposal sent"          # #9cd326 (Lime Green)
+    waiting_for_review = "Waiting for review"  # #784bd1 (Dark Purple)
+    need_info = "Need info"                  # #9d50dd (Purple)
+    qualified = "Qualified"                  # #037f4c (Grass Green)
+    closed_won = "Closed won"                # #00c875 (Green)
+    lost = "Lost"                            # #df2f4a (Red)
+    completed = "Completed"                  # #c4c4c4 (Gray)
+
+
+class DealType(str, enum.Enum):
+    """Deal type from Satoris Deals board"""
+    monthly = "Monthly"    # #00c875 (Green)
+    project = "Project"    # #0086c0 (Blue)
 
 
 class DealGrade(str, enum.Enum):
+    """Deal grade/temperature from Satoris"""
     grade_1 = "Grade 1"  # Hot - Pink (#ffadad)
     grade_2 = "Grade 2"  # Warm - Orange (#fdab3d)
     grade_3 = "Grade 3"  # Cold - Green (#9cd326)
@@ -148,53 +171,53 @@ class User(Base):
 
 
 class Deal(Base):
-    """Deal model based on Monday.com Opportunity board structure"""
+    """Deal model based on Satoris Monday.com Deals board schema"""
     __tablename__ = "deals"
 
     id = Column(Integer, primary_key=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
-    # Core fields (from Monday columns)
-    name = Column(String(255), nullable=False)  # name
-    owner_name = Column(String(255))  # deal_owner
-    stage = Column(String(20), default=DealStage.leads.value)  # deal_stage (group)
-    grade = Column(String(20))  # color_mkt89c3f - Grade 1/2/3 for pipeline dashboards
+    # Core fields
+    name = Column(String(255), nullable=False)  # Item name
+    stage = Column(String(30), default=DealStage.prospects.value)  # Board group: Prospects, Preparing proposal, etc.
+    status = Column(String(30), default=DealStatus.new_deal.value)  # deal_stage column status
+    grade = Column(String(20))  # Grade 1/2/3 for pipeline temperature
 
-    # Company & Contact
-    company_name = Column(String(255))  # text_mksp2w2b (Company - new)
-    contact_name = Column(String(255))  # text0 (Contact - new)
-    email = Column(String(255))  # email_mksyzvf9
-    phone = Column(String(50))  # phone_mksyet5a
+    # Owner
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # deal_owner (text representation)
+
+    # Company & Contact (text fields, not relations)
+    company_name = Column(String(255))  # Company name from account mirror
+    contact_name = Column(String(255))  # text0 (Contact name)
+    email = Column(String(255))  # Email
+    phone = Column(String(50))  # Phone
 
     # Deal details
-    deal_type = Column(String(50))  # dropdown_mkzf2pz2: New business, Renewal, Upsell
-    products = Column(JSON, default=list)  # dropdown_mkzfv82s: Fibre, Support, VoIP, 365, CCTV
+    deal_type = Column(String(20))  # dropdown_mkxsyxw3: Monthly, Project
+    value = Column(Numeric(12, 2))  # deal_value (GBP currency)
+    deal_length = Column(Integer)  # Deal length in months (formula field)
 
     # Dates
-    next_interaction = Column(Date)  # date
-    return_date = Column(Date)  # date_mkt86yvg
-    quote_sent_date = Column(Date)  # date_mkt85aje
-    decision_date = Column(Date)  # date_mkt85f7z
+    next_interaction = Column(Date)  # date column
+    proposal_sent_date = Column(Date)  # date_mksary1j
     close_date = Column(Date)  # deal_close_date
-    status_update_date = Column(Date)  # date_mktzcz9a
 
-    # Probability
-    close_probability = Column(Integer)  # numeric_mkt8frbn (0-100)
+    # Files
+    files = Column(JSON, default=list)  # file_mks57s05
 
-    # Location
-    location_address = Column(Text)  # location_mksy2kz1.address
-    location_lat = Column(Numeric(10, 7))  # location_mksy2kz1.lat
-    location_lng = Column(Numeric(10, 7))  # location_mksy2kz1.lng
-
-    # Links & Files
-    link_url = Column(Text)  # link_mktk2t5j
-    files = Column(JSON, default=list)  # file_mkpkxwgs
+    # Relationships to other entities
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True)
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    owner = relationship("User", backref="deals")
+    account = relationship("Account", backref="deals")
+    lead = relationship("Lead", backref="deals")
     checklists = relationship("Checklist", back_populates="deal")
 
 

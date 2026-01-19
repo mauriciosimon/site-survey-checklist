@@ -343,26 +343,15 @@ export default function KanbanBoard({
 // ============================================
 
 /**
- * Default deal stages matching Satoris Monday.com
+ * Default deal stages matching Satoris Monday.com Deals board
  */
 export const DEAL_STAGES = [
-  { id: 'leads', label: 'Leads', color: '#ff6d3b' },
-  { id: 'estimating', label: 'Estimating', color: '#fdab3d' },
-  { id: 'submitted', label: 'Submitted', color: '#9cd326' },
-  { id: 'won', label: 'Won', color: '#00c875' },
-  { id: 'lost', label: 'Lost', color: '#df2f4a' },
-  { id: 'declined', label: 'Declined', color: '#c4c4c4' },
-];
-
-/**
- * Alternative deal stages (prospects flow)
- */
-export const DEAL_STAGES_ALT = [
   { id: 'prospects', label: 'Prospects', color: '#0086c0' },
-  { id: 'preparing_proposal', label: 'Preparing Proposal', color: '#fdab3d' },
-  { id: 'proposal_sent', label: 'Proposal Sent', color: '#9cd326' },
+  { id: 'preparing_proposal', label: 'Preparing proposal', color: '#fdab3d' },
+  { id: 'proposal_sent', label: 'Proposal sent', color: '#9cd326' },
   { id: 'closed_won', label: 'Closed Won', color: '#00c875' },
   { id: 'lost', label: 'Lost', color: '#df2f4a' },
+  { id: 'completed', label: 'Completed', color: '#c4c4c4' },
 ];
 
 /**

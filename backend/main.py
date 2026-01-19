@@ -185,6 +185,79 @@ def run_migrations():
         else:
             print("Schema up to date: tasks table exists")
 
+        # Update deals table to match Satoris schema
+        if 'deals' in tables:
+            deal_columns = [col['name'] for col in inspector.get_columns('deals')]
+
+            # Add new columns
+            if 'status' not in deal_columns:
+                print("Running migration: Adding status column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN status VARCHAR(30) DEFAULT 'New deal'"))
+                conn.commit()
+                print("Migration complete: status column added to deals")
+
+            if 'value' not in deal_columns:
+                print("Running migration: Adding value column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN value NUMERIC(12, 2)"))
+                conn.commit()
+                print("Migration complete: value column added to deals")
+
+            if 'deal_length' not in deal_columns:
+                print("Running migration: Adding deal_length column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN deal_length INTEGER"))
+                conn.commit()
+                print("Migration complete: deal_length column added to deals")
+
+            if 'proposal_sent_date' not in deal_columns:
+                print("Running migration: Adding proposal_sent_date column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN proposal_sent_date DATE"))
+                conn.commit()
+                print("Migration complete: proposal_sent_date column added to deals")
+
+            if 'owner_id' not in deal_columns:
+                print("Running migration: Adding owner_id column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN owner_id INTEGER REFERENCES users(id)"))
+                conn.commit()
+                print("Migration complete: owner_id column added to deals")
+
+            if 'account_id' not in deal_columns:
+                print("Running migration: Adding account_id column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN account_id INTEGER REFERENCES accounts(id)"))
+                conn.commit()
+                print("Migration complete: account_id column added to deals")
+
+            if 'lead_id' not in deal_columns:
+                print("Running migration: Adding lead_id column to deals table...")
+                conn.execute(text("ALTER TABLE deals ADD COLUMN lead_id INTEGER REFERENCES leads(id)"))
+                conn.commit()
+                print("Migration complete: lead_id column added to deals")
+
+            # Drop deprecated columns (safe to do as they're optional)
+            deprecated_columns = ['products', 'return_date', 'quote_sent_date', 'decision_date',
+                                  'status_update_date', 'close_probability', 'location_address',
+                                  'location_lat', 'location_lng', 'link_url']
+            for col in deprecated_columns:
+                if col in deal_columns:
+                    print(f"Running migration: Dropping deprecated {col} column from deals table...")
+                    conn.execute(text(f"ALTER TABLE deals DROP COLUMN {col}"))
+                    conn.commit()
+                    print(f"Migration complete: {col} column dropped from deals")
+
+            # Update existing deals with old stage values to new stage values
+            print("Running migration: Updating deal stage values to Satoris schema...")
+            conn.execute(text("""
+                UPDATE deals SET stage = CASE
+                    WHEN stage = 'Leads' THEN 'Prospects'
+                    WHEN stage = 'Estimating' THEN 'Preparing proposal'
+                    WHEN stage = 'Submitted' THEN 'Proposal sent'
+                    WHEN stage = 'Won' THEN 'Closed Won'
+                    WHEN stage = 'Declined' THEN 'Lost'
+                    ELSE stage
+                END
+            """))
+            conn.commit()
+            print("Migration complete: deal stage values updated")
+
 
 # Run migrations on startup
 run_migrations()
@@ -445,13 +518,21 @@ def list_deals(
     skip: int = 0,
     limit: int = 100,
     stage: Optional[str] = None,
+    status: Optional[str] = None,
     grade: Optional[str] = None,
+    deal_type: Optional[str] = None,
+    account_id: Optional[int] = None,
+    lead_id: Optional[int] = None,
     search: Optional[str] = None,
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all deals with optional filtering by stage, grade, or search term."""
-    return crud.get_deals(db, skip=skip, limit=limit, stage=stage, grade=grade, search=search)
+    """List all deals with optional filtering by stage, status, grade, deal_type, or search term."""
+    return crud.get_deals(
+        db, skip=skip, limit=limit,
+        stage=stage, status=status, grade=grade, deal_type=deal_type,
+        account_id=account_id, lead_id=lead_id, search=search
+    )
 
 
 @app.get("/deals/{deal_id}", response_model=DealResponse)
@@ -482,7 +563,7 @@ def create_deal(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Deal with this Monday.com item ID already exists"
             )
-    return crud.create_deal(db, deal)
+    return crud.create_deal(db, deal, owner_id=current_user.id)
 
 
 @app.put("/deals/{deal_id}", response_model=DealResponse)

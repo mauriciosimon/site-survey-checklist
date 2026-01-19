@@ -124,40 +124,37 @@ class ChecklistWithOwner(ChecklistResponse):
 # ============ Deal Schemas ============
 
 class DealBase(BaseModel):
+    """Base schema for Deal matching Satoris Monday.com Deals board"""
     name: str
-    owner_name: Optional[str] = None
-    stage: Optional[str] = "Leads"  # Leads, Estimating, Submitted, Won, Lost, Declined
+    stage: Optional[str] = "Prospects"  # Board group: Prospects, Preparing proposal, Proposal sent, Closed Won, Lost, Completed
+    status: Optional[str] = "New deal"  # deal_stage: New deal, Prospect, Preparing proposal, Proposal, Proposal sent, etc.
     grade: Optional[str] = None  # Grade 1, Grade 2, Grade 3
 
-    # Company & Contact
+    # Owner
+    owner_name: Optional[str] = None
+
+    # Company & Contact (text fields)
     company_name: Optional[str] = None
     contact_name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
 
     # Deal details
-    deal_type: Optional[str] = None  # New business, Renewal, Upsell
-    products: Optional[List[str]] = []  # Fibre, Support, VoIP, 365, CCTV
+    deal_type: Optional[str] = None  # Monthly, Project
+    value: Optional[Decimal] = None  # Deal value in GBP
+    deal_length: Optional[int] = None  # Deal length in months
 
     # Dates
     next_interaction: Optional[date] = None
-    return_date: Optional[date] = None
-    quote_sent_date: Optional[date] = None
-    decision_date: Optional[date] = None
+    proposal_sent_date: Optional[date] = None
     close_date: Optional[date] = None
-    status_update_date: Optional[date] = None
 
-    # Probability
-    close_probability: Optional[int] = Field(None, ge=0, le=100)
-
-    # Location
-    location_address: Optional[str] = None
-    location_lat: Optional[Decimal] = None
-    location_lng: Optional[Decimal] = None
-
-    # Links & Files
-    link_url: Optional[str] = None
+    # Files
     files: Optional[List[str]] = []
+
+    # Relationships
+    account_id: Optional[int] = None  # FK to Account
+    lead_id: Optional[int] = None  # FK to Lead (conversion tracking)
 
     # Monday.com sync
     monday_item_id: Optional[str] = None
@@ -173,6 +170,7 @@ class DealUpdate(DealBase):
 
 class DealResponse(DealBase):
     id: int
+    owner_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

@@ -138,10 +138,12 @@ def add_photo_to_checklist(db: Session, checklist_id: int, photo_path: str):
 # ============ Deal CRUD ============
 
 def get_deal(db: Session, deal_id: int) -> Optional[Deal]:
+    """Get a single deal by ID."""
     return db.query(Deal).filter(Deal.id == deal_id).first()
 
 
 def get_deal_by_monday_id(db: Session, monday_item_id: str) -> Optional[Deal]:
+    """Get a deal by Monday.com item ID."""
     return db.query(Deal).filter(Deal.monday_item_id == monday_item_id).first()
 
 
@@ -150,16 +152,37 @@ def get_deals(
     skip: int = 0,
     limit: int = 100,
     stage: Optional[str] = None,
+    status: Optional[str] = None,
     grade: Optional[str] = None,
+    deal_type: Optional[str] = None,
+    owner_id: Optional[int] = None,
+    account_id: Optional[int] = None,
+    lead_id: Optional[int] = None,
     search: Optional[str] = None
 ) -> List[Deal]:
+    """Get deals with optional filtering."""
     query = db.query(Deal)
 
     if stage:
         query = query.filter(Deal.stage == stage)
 
+    if status:
+        query = query.filter(Deal.status == status)
+
     if grade:
         query = query.filter(Deal.grade == grade)
+
+    if deal_type:
+        query = query.filter(Deal.deal_type == deal_type)
+
+    if owner_id:
+        query = query.filter(Deal.owner_id == owner_id)
+
+    if account_id:
+        query = query.filter(Deal.account_id == account_id)
+
+    if lead_id:
+        query = query.filter(Deal.lead_id == lead_id)
 
     if search:
         search_filter = f"%{search}%"
@@ -167,15 +190,20 @@ def get_deals(
             or_(
                 Deal.name.ilike(search_filter),
                 Deal.company_name.ilike(search_filter),
-                Deal.contact_name.ilike(search_filter)
+                Deal.contact_name.ilike(search_filter),
+                Deal.email.ilike(search_filter)
             )
         )
 
     return query.order_by(Deal.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def create_deal(db: Session, deal: DealCreate) -> Deal:
-    db_deal = Deal(**deal.model_dump())
+def create_deal(db: Session, deal: DealCreate, owner_id: Optional[int] = None) -> Deal:
+    """Create a new deal."""
+    data = deal.model_dump()
+    if owner_id:
+        data["owner_id"] = owner_id
+    db_deal = Deal(**data)
     db.add(db_deal)
     db.commit()
     db.refresh(db_deal)
@@ -183,6 +211,7 @@ def create_deal(db: Session, deal: DealCreate) -> Deal:
 
 
 def update_deal(db: Session, deal_id: int, deal: DealUpdate) -> Optional[Deal]:
+    """Update an existing deal."""
     db_deal = db.query(Deal).filter(Deal.id == deal_id).first()
     if db_deal:
         update_data = deal.model_dump(exclude_unset=True)
@@ -194,6 +223,7 @@ def update_deal(db: Session, deal_id: int, deal: DealUpdate) -> Optional[Deal]:
 
 
 def delete_deal(db: Session, deal_id: int) -> bool:
+    """Delete a deal."""
     db_deal = db.query(Deal).filter(Deal.id == deal_id).first()
     if db_deal:
         db.delete(db_deal)
