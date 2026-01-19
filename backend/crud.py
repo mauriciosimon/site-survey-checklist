@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal, Lead
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate
+from models import Checklist, User, Deal, Lead, Account
+from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate
 from auth import get_password_hash
 from typing import Optional, List
 
@@ -277,6 +277,88 @@ def delete_lead(db: Session, lead_id: int) -> bool:
     db_lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if db_lead:
         db.delete(db_lead)
+        db.commit()
+        return True
+    return False
+
+
+# ============ Account CRUD ============
+
+def get_account(db: Session, account_id: int) -> Optional[Account]:
+    """Get a single account by ID."""
+    return db.query(Account).filter(Account.id == account_id).first()
+
+
+def get_account_by_monday_id(db: Session, monday_item_id: str) -> Optional[Account]:
+    """Get an account by Monday.com item ID."""
+    return db.query(Account).filter(Account.monday_item_id == monday_item_id).first()
+
+
+def get_accounts(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    label: Optional[str] = None,
+    industry: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Account]:
+    """Get accounts with optional filtering."""
+    query = db.query(Account)
+
+    if status:
+        query = query.filter(Account.status == status)
+
+    if label:
+        query = query.filter(Account.label == label)
+
+    if industry:
+        # Industry can be comma-separated, so use ilike for partial match
+        query = query.filter(Account.industry.ilike(f"%{industry}%"))
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Account.name.ilike(search_filter),
+                Account.industry.ilike(search_filter),
+                Account.address.ilike(search_filter),
+                Account.website.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Account.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_account(db: Session, account: AccountCreate, owner_id: Optional[int] = None) -> Account:
+    """Create a new account."""
+    data = account.model_dump()
+    if owner_id:
+        data["owner_id"] = owner_id
+    db_account = Account(**data)
+    db.add(db_account)
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
+
+def update_account(db: Session, account_id: int, account: AccountUpdate) -> Optional[Account]:
+    """Update an existing account."""
+    db_account = db.query(Account).filter(Account.id == account_id).first()
+    if db_account:
+        update_data = account.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_account, key, value)
+        db.commit()
+        db.refresh(db_account)
+    return db_account
+
+
+def delete_account(db: Session, account_id: int) -> bool:
+    """Delete an account."""
+    db_account = db.query(Account).filter(Account.id == account_id).first()
+    if db_account:
+        db.delete(db_account)
         db.commit()
         return True
     return False

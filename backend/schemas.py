@@ -225,3 +225,54 @@ class LeadResponse(LeadBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Account Schemas ============
+
+class AccountBase(BaseModel):
+    """Base schema for Account matching Satoris Monday.com Accounts board"""
+    name: str  # Account/Company name
+    status: Optional[str] = "Prospect"  # Qualified, Active, Inactive, Prospect
+    label: Optional[str] = None  # Contractor, Main Contractor, Property Developer, etc.
+
+    # Industry & Business Info
+    industry: Optional[str] = None  # Industry (can be comma-separated for multiple)
+    employee_count: Optional[str] = None  # 1-10, 11-50, 51-100, 101-250, 251-500, 501-1000, 1001+
+    account_type: Optional[str] = None  # Type field
+
+    # Contact & Web
+    website: Optional[str] = None  # Company website
+    company_profile_url: Optional[str] = None  # Link to company profile (e.g., Crunchbase)
+
+    # Location
+    address: Optional[str] = None  # Full address
+    location_lat: Optional[Decimal] = None
+    location_lng: Optional[Decimal] = None
+
+    # Owner
+    owner_name: Optional[str] = None
+    owner_job_title: Optional[str] = None
+
+    # Notes
+    notes: Optional[str] = None
+
+    # Monday.com sync
+    monday_item_id: Optional[str] = None
+
+
+class AccountCreate(AccountBase):
+    pass
+
+
+class AccountUpdate(AccountBase):
+    name: Optional[str] = None
+
+
+class AccountResponse(AccountBase):
+    id: int
+    owner_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

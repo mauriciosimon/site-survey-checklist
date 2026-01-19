@@ -11,7 +11,8 @@ from schemas import (
     ChecklistCreate, ChecklistUpdate, ChecklistResponse, ChecklistWithOwner,
     UserCreate, UserLogin, UserResponse, UserWithStats, Token,
     DealCreate, DealUpdate, DealResponse,
-    LeadCreate, LeadUpdate, LeadResponse
+    LeadCreate, LeadUpdate, LeadResponse,
+    AccountCreate, AccountUpdate, AccountResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -71,6 +72,39 @@ def run_migrations():
             print("Migration complete: leads table created")
         else:
             print("Schema up to date: leads table exists")
+
+        # Create accounts table if it doesn't exist
+        if 'accounts' not in tables:
+            print("Running migration: Creating accounts table...")
+            conn.execute(text('''
+                CREATE TABLE accounts (
+                    id SERIAL PRIMARY KEY,
+                    monday_item_id VARCHAR(50) UNIQUE,
+                    name VARCHAR(255) NOT NULL,
+                    status VARCHAR(30) DEFAULT 'Prospect',
+                    label VARCHAR(50),
+                    industry TEXT,
+                    employee_count VARCHAR(50),
+                    account_type VARCHAR(100),
+                    website TEXT,
+                    company_profile_url TEXT,
+                    address TEXT,
+                    location_lat NUMERIC(10, 7),
+                    location_lng NUMERIC(10, 7),
+                    owner_id INTEGER REFERENCES users(id),
+                    owner_name VARCHAR(255),
+                    owner_job_title VARCHAR(255),
+                    notes TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_accounts_id ON accounts(id)'))
+            conn.execute(text('CREATE INDEX ix_accounts_monday_item_id ON accounts(monday_item_id)'))
+            conn.commit()
+            print("Migration complete: accounts table created")
+        else:
+            print("Schema up to date: accounts table exists")
 
 
 # Run migrations on startup
@@ -475,6 +509,84 @@ def delete_lead(
     if not success:
         raise HTTPException(status_code=404, detail="Lead not found")
     return {"message": "Lead deleted successfully"}
+
+
+# ============ Account Endpoints ============
+
+@app.get("/accounts", response_model=List[AccountResponse])
+def list_accounts(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    label: Optional[str] = None,
+    industry: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all accounts with optional filtering by status, label, industry, or search term."""
+    return crud.get_accounts(
+        db, skip=skip, limit=limit,
+        status=status, label=label, industry=industry, search=search
+    )
+
+
+@app.get("/accounts/{account_id}", response_model=AccountResponse)
+def get_account(
+    account_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single account by ID."""
+    account = crud.get_account(db, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return account
+
+
+@app.post("/accounts", response_model=AccountResponse)
+def create_account(
+    account: AccountCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new account."""
+    # Check for duplicate Monday item ID if provided
+    if account.monday_item_id:
+        existing = crud.get_account_by_monday_id(db, account.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Account with this Monday.com item ID already exists"
+            )
+    return crud.create_account(db, account, owner_id=current_user.id)
+
+
+@app.put("/accounts/{account_id}", response_model=AccountResponse)
+def update_account(
+    account_id: int,
+    account: AccountUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing account."""
+    db_account = crud.update_account(db, account_id, account)
+    if not db_account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return db_account
+
+
+@app.delete("/accounts/{account_id}")
+def delete_account(
+    account_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete an account."""
+    success = crud.delete_account(db, account_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return {"message": "Account deleted successfully"}
 
 
 if __name__ == "__main__":

@@ -50,6 +50,26 @@ class LeadSource(str, enum.Enum):
     wom = "WOM"  # Word of Mouth
 
 
+class AccountStatus(str, enum.Enum):
+    """Account status from Satoris Accounts board"""
+    qualified = "Qualified"     # #fdab3d (Orange)
+    active = "Active"           # #00c875 (Green)
+    inactive = "Inactive"       # #df2f4a (Red)
+    prospect = "Prospect"       # #007eb5 (Blue)
+
+
+class AccountLabel(str, enum.Enum):
+    """Account label/type from Satoris Accounts board"""
+    contractor = "Contractor"                           # #4eccc6 (Australia)
+    main_contractor = "Main Contractor"                 # #00c875 (Green)
+    property_developer = "Property Developer"           # #ff007f (Dark Pink)
+    construction_engineering = "Construction and Engineering"  # #784bd1 (Dark Purple)
+    real_estate = "Real Estate and Property"            # #9d50dd (Purple)
+    interior_design = "Interior Design and Furnishings" # #037f4c (Grass Green)
+    food_hospitality = "Food and Hospitality"           # #579bfc (Bright Blue)
+    consulting_financial = "Consulting and Financial Services"  # #cab641 (Mustered)
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -150,6 +170,48 @@ class Lead(Base):
 
     # Relationships
     owner = relationship("User", backref="leads")
+
+
+class Account(Base):
+    """Account model based on Satoris Monday.com Accounts board schema"""
+    __tablename__ = "accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
+
+    # Core fields
+    name = Column(String(255), nullable=False)  # Account/Company name (item name)
+    status = Column(String(30), default=AccountStatus.prospect.value)  # status9: Qualified, Active, Inactive, Prospect
+    label = Column(String(50))  # color_mkvcf1b0: Contractor, Main Contractor, Property Developer, etc.
+
+    # Industry & Business Info
+    industry = Column(Text)  # industry dropdown (can be multiple, stored as comma-separated or JSON)
+    employee_count = Column(String(50))  # employee_count: 1-10, 11-50, 51-100, 101-250, etc.
+    account_type = Column(String(100))  # text_mkzj1hb9 (Type field)
+
+    # Contact & Web
+    website = Column(Text)  # company_domain
+    company_profile_url = Column(Text)  # company_profile link
+
+    # Location
+    address = Column(Text)  # location.address
+    location_lat = Column(Numeric(10, 7))  # location.lat
+    location_lng = Column(Numeric(10, 7))  # location.lng
+
+    # Owner
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # Owner name (text representation)
+    owner_job_title = Column(String(255))  # text_mkzj6z1z (Job title field)
+
+    # Notes
+    notes = Column(Text)  # Additional notes
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    owner = relationship("User", backref="accounts")
 
 
 class Checklist(Base):
