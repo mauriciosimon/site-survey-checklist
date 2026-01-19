@@ -9,7 +9,8 @@ from typing import List, Optional
 from database import engine, get_db, Base
 from schemas import (
     ChecklistCreate, ChecklistUpdate, ChecklistResponse, ChecklistWithOwner,
-    UserCreate, UserLogin, UserResponse, UserWithStats, Token
+    UserCreate, UserLogin, UserResponse, UserWithStats, Token,
+    DealCreate, DealUpdate, DealResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -230,6 +231,80 @@ async def upload_photo(
     # Add to checklist
     photo_url = f"/uploads/{filename}"
     return crud.add_photo_to_checklist(db, checklist_id, photo_url)
+
+
+# ============ Deal Endpoints ============
+
+@app.get("/deals", response_model=List[DealResponse])
+def list_deals(
+    skip: int = 0,
+    limit: int = 100,
+    stage: Optional[str] = None,
+    grade: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all deals with optional filtering by stage, grade, or search term."""
+    return crud.get_deals(db, skip=skip, limit=limit, stage=stage, grade=grade, search=search)
+
+
+@app.get("/deals/{deal_id}", response_model=DealResponse)
+def get_deal(
+    deal_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single deal by ID."""
+    deal = crud.get_deal(db, deal_id)
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return deal
+
+
+@app.post("/deals", response_model=DealResponse)
+def create_deal(
+    deal: DealCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new deal."""
+    # Check for duplicate Monday item ID if provided
+    if deal.monday_item_id:
+        existing = crud.get_deal_by_monday_id(db, deal.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Deal with this Monday.com item ID already exists"
+            )
+    return crud.create_deal(db, deal)
+
+
+@app.put("/deals/{deal_id}", response_model=DealResponse)
+def update_deal(
+    deal_id: int,
+    deal: DealUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing deal."""
+    db_deal = crud.update_deal(db, deal_id, deal)
+    if not db_deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return db_deal
+
+
+@app.delete("/deals/{deal_id}")
+def delete_deal(
+    deal_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete a deal."""
+    success = crud.delete_deal(db, deal_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return {"message": "Deal deleted successfully"}
 
 
 if __name__ == "__main__":

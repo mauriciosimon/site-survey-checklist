@@ -41,6 +41,9 @@ class Token(BaseModel):
 # ============ Checklist Schemas ============
 
 class ChecklistBase(BaseModel):
+    # Deal link (optional)
+    deal_id: Optional[int] = None
+
     # Header Info
     site_name: str
     surveyor_name: Optional[str] = None
@@ -116,3 +119,62 @@ class ChecklistResponse(ChecklistBase):
 class ChecklistWithOwner(ChecklistResponse):
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
+
+
+# ============ Deal Schemas ============
+
+class DealBase(BaseModel):
+    name: str
+    owner_name: Optional[str] = None
+    stage: Optional[str] = "Leads"  # Leads, Estimating, Submitted, Won, Lost, Declined
+    grade: Optional[str] = None  # Grade 1, Grade 2, Grade 3
+
+    # Company & Contact
+    company_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+    # Deal details
+    deal_type: Optional[str] = None  # New business, Renewal, Upsell
+    products: Optional[List[str]] = []  # Fibre, Support, VoIP, 365, CCTV
+
+    # Dates
+    next_interaction: Optional[date] = None
+    return_date: Optional[date] = None
+    quote_sent_date: Optional[date] = None
+    decision_date: Optional[date] = None
+    close_date: Optional[date] = None
+    status_update_date: Optional[date] = None
+
+    # Probability
+    close_probability: Optional[int] = Field(None, ge=0, le=100)
+
+    # Location
+    location_address: Optional[str] = None
+    location_lat: Optional[Decimal] = None
+    location_lng: Optional[Decimal] = None
+
+    # Links & Files
+    link_url: Optional[str] = None
+    files: Optional[List[str]] = []
+
+    # Monday.com sync
+    monday_item_id: Optional[str] = None
+
+
+class DealCreate(DealBase):
+    pass
+
+
+class DealUpdate(DealBase):
+    name: Optional[str] = None
+
+
+class DealResponse(DealBase):
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate
+from models import Checklist, User, Deal
+from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate
 from auth import get_password_hash
 from typing import Optional, List
 
@@ -132,3 +132,70 @@ def add_photo_to_checklist(db: Session, checklist_id: int, photo_path: str):
         db.commit()
         db.refresh(db_checklist)
     return db_checklist
+
+
+# ============ Deal CRUD ============
+
+def get_deal(db: Session, deal_id: int) -> Optional[Deal]:
+    return db.query(Deal).filter(Deal.id == deal_id).first()
+
+
+def get_deal_by_monday_id(db: Session, monday_item_id: str) -> Optional[Deal]:
+    return db.query(Deal).filter(Deal.monday_item_id == monday_item_id).first()
+
+
+def get_deals(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    stage: Optional[str] = None,
+    grade: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Deal]:
+    query = db.query(Deal)
+
+    if stage:
+        query = query.filter(Deal.stage == stage)
+
+    if grade:
+        query = query.filter(Deal.grade == grade)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Deal.name.ilike(search_filter),
+                Deal.company_name.ilike(search_filter),
+                Deal.contact_name.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Deal.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_deal(db: Session, deal: DealCreate) -> Deal:
+    db_deal = Deal(**deal.model_dump())
+    db.add(db_deal)
+    db.commit()
+    db.refresh(db_deal)
+    return db_deal
+
+
+def update_deal(db: Session, deal_id: int, deal: DealUpdate) -> Optional[Deal]:
+    db_deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    if db_deal:
+        update_data = deal.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_deal, key, value)
+        db.commit()
+        db.refresh(db_deal)
+    return db_deal
+
+
+def delete_deal(db: Session, deal_id: int) -> bool:
+    db_deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    if db_deal:
+        db.delete(db_deal)
+        db.commit()
+        return True
+    return False
