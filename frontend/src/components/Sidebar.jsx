@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Children } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 // Folder component with expand/collapse
@@ -6,10 +6,13 @@ function Folder({ title, icon, children, defaultOpen = false }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const location = useLocation();
 
-  // Check if any child route is active
-  const hasActiveChild = children?.some(child =>
-    location.pathname === child.props.to ||
-    location.pathname.startsWith(child.props.to + '/')
+  // Check if any child route is active (use Children.toArray for safe iteration)
+  const childArray = Children.toArray(children);
+  const hasActiveChild = childArray.some(child =>
+    child.props?.to && (
+      location.pathname === child.props.to ||
+      location.pathname.startsWith(child.props.to + '/')
+    )
   );
 
   return (
