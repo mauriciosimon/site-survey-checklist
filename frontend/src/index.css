@@ -648,3 +648,103 @@ header h1 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   STATUS BADGE COMPONENT STYLES
+   ============================================ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-transform: capitalize;
+  line-height: 1;
+}
+
+/* Size variants */
+.status-badge-sm {
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 3px;
+}
+
+.status-badge-md {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.status-badge-lg {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+/* Pre-defined color classes (optional, for non-dynamic usage) */
+.status-badge-success {
+  background-color: #00c875;
+  color: white;
+}
+
+.status-badge-error {
+  background-color: #df2f4a;
+  color: white;
+}
+
+.status-badge-warning {
+  background-color: #fdab3d;
+  color: white;
+}
+
+.status-badge-info {
+  background-color: #0086c0;
+  color: white;
+}
+
+.status-badge-neutral {
+  background-color: #c4c4c4;
+  color: #333;
+}
+
+/* Grade badges with specific styling */
+.status-badge-grade-1,
+.status-badge-hot {
+  background-color: #ffadad;
+  color: #333;
+}
+
+.status-badge-grade-2,
+.status-badge-warm {
+  background-color: #fdab3d;
+  color: white;
+}
+
+.status-badge-grade-3,
+.status-badge-cold {
+  background-color: #9cd326;
+  color: #333;
+}
+
+/* Priority badges */
+.status-badge-critical {
+  background-color: #df2f4a;
+  color: white;
+}
+
+.status-badge-high {
+  background-color: #fdab3d;
+  color: white;
+}
+
+.status-badge-medium {
+  background-color: #ffcb00;
+  color: #333;
+}
+
+.status-badge-low {
+  background-color: #0086c0;
+  color: white;
+}
