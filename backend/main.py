@@ -12,7 +12,8 @@ from schemas import (
     UserCreate, UserLogin, UserResponse, UserWithStats, Token,
     DealCreate, DealUpdate, DealResponse,
     LeadCreate, LeadUpdate, LeadResponse,
-    AccountCreate, AccountUpdate, AccountResponse
+    AccountCreate, AccountUpdate, AccountResponse,
+    ContactCreate, ContactUpdate, ContactResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -105,6 +106,47 @@ def run_migrations():
             print("Migration complete: accounts table created")
         else:
             print("Schema up to date: accounts table exists")
+
+        # Create contacts table if it doesn't exist
+        if 'contacts' not in tables:
+            print("Running migration: Creating contacts table...")
+            conn.execute(text('''
+                CREATE TABLE contacts (
+                    id SERIAL PRIMARY KEY,
+                    monday_item_id VARCHAR(50) UNIQUE,
+                    name VARCHAR(255) NOT NULL,
+                    company VARCHAR(255),
+                    contact_type VARCHAR(50),
+                    job_title VARCHAR(255),
+                    title_role VARCHAR(50),
+                    tier VARCHAR(50),
+                    email VARCHAR(255),
+                    phone VARCHAR(50),
+                    linkedin_url TEXT,
+                    location VARCHAR(255),
+                    icp_fit VARCHAR(20),
+                    outreach_stage VARCHAR(50),
+                    source VARCHAR(50),
+                    next_action_date DATE,
+                    industry VARCHAR(255),
+                    description TEXT,
+                    about TEXT,
+                    birthday DATE,
+                    tags JSON DEFAULT '[]',
+                    account_id INTEGER REFERENCES accounts(id),
+                    owner_id INTEGER REFERENCES users(id),
+                    owner_name VARCHAR(255),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_contacts_id ON contacts(id)'))
+            conn.execute(text('CREATE INDEX ix_contacts_monday_item_id ON contacts(monday_item_id)'))
+            conn.execute(text('CREATE INDEX ix_contacts_account_id ON contacts(account_id)'))
+            conn.commit()
+            print("Migration complete: contacts table created")
+        else:
+            print("Schema up to date: contacts table exists")
 
 
 # Run migrations on startup
@@ -587,6 +629,86 @@ def delete_account(
     if not success:
         raise HTTPException(status_code=404, detail="Account not found")
     return {"message": "Account deleted successfully"}
+
+
+# ============ Contact Endpoints ============
+
+@app.get("/contacts", response_model=List[ContactResponse])
+def list_contacts(
+    skip: int = 0,
+    limit: int = 100,
+    contact_type: Optional[str] = None,
+    account_id: Optional[int] = None,
+    icp_fit: Optional[str] = None,
+    outreach_stage: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all contacts with optional filtering."""
+    return crud.get_contacts(
+        db, skip=skip, limit=limit,
+        contact_type=contact_type, account_id=account_id,
+        icp_fit=icp_fit, outreach_stage=outreach_stage, search=search
+    )
+
+
+@app.get("/contacts/{contact_id}", response_model=ContactResponse)
+def get_contact(
+    contact_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single contact by ID."""
+    contact = crud.get_contact(db, contact_id)
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return contact
+
+
+@app.post("/contacts", response_model=ContactResponse)
+def create_contact(
+    contact: ContactCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new contact."""
+    # Check for duplicate Monday item ID if provided
+    if contact.monday_item_id:
+        existing = crud.get_contact_by_monday_id(db, contact.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Contact with this Monday.com item ID already exists"
+            )
+    return crud.create_contact(db, contact, owner_id=current_user.id)
+
+
+@app.put("/contacts/{contact_id}", response_model=ContactResponse)
+def update_contact(
+    contact_id: int,
+    contact: ContactUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing contact."""
+    db_contact = crud.update_contact(db, contact_id, contact)
+    if not db_contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return db_contact
+
+
+@app.delete("/contacts/{contact_id}")
+def delete_contact(
+    contact_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete a contact."""
+    success = crud.delete_contact(db, contact_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return {"message": "Contact deleted successfully"}
 
 
 if __name__ == "__main__":

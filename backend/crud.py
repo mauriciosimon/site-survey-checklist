@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal, Lead, Account
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate
+from models import Checklist, User, Deal, Lead, Account, Contact
+from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate, ContactCreate, ContactUpdate
 from auth import get_password_hash
 from typing import Optional, List
 
@@ -359,6 +359,92 @@ def delete_account(db: Session, account_id: int) -> bool:
     db_account = db.query(Account).filter(Account.id == account_id).first()
     if db_account:
         db.delete(db_account)
+        db.commit()
+        return True
+    return False
+
+
+# ============ Contact CRUD ============
+
+def get_contact(db: Session, contact_id: int) -> Optional[Contact]:
+    """Get a single contact by ID."""
+    return db.query(Contact).filter(Contact.id == contact_id).first()
+
+
+def get_contact_by_monday_id(db: Session, monday_item_id: str) -> Optional[Contact]:
+    """Get a contact by Monday.com item ID."""
+    return db.query(Contact).filter(Contact.monday_item_id == monday_item_id).first()
+
+
+def get_contacts(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    contact_type: Optional[str] = None,
+    account_id: Optional[int] = None,
+    icp_fit: Optional[str] = None,
+    outreach_stage: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Contact]:
+    """Get contacts with optional filtering."""
+    query = db.query(Contact)
+
+    if contact_type:
+        query = query.filter(Contact.contact_type == contact_type)
+
+    if account_id:
+        query = query.filter(Contact.account_id == account_id)
+
+    if icp_fit:
+        query = query.filter(Contact.icp_fit == icp_fit)
+
+    if outreach_stage:
+        query = query.filter(Contact.outreach_stage == outreach_stage)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Contact.name.ilike(search_filter),
+                Contact.company.ilike(search_filter),
+                Contact.email.ilike(search_filter),
+                Contact.job_title.ilike(search_filter),
+                Contact.location.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Contact.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_contact(db: Session, contact: ContactCreate, owner_id: Optional[int] = None) -> Contact:
+    """Create a new contact."""
+    data = contact.model_dump()
+    if owner_id:
+        data["owner_id"] = owner_id
+    db_contact = Contact(**data)
+    db.add(db_contact)
+    db.commit()
+    db.refresh(db_contact)
+    return db_contact
+
+
+def update_contact(db: Session, contact_id: int, contact: ContactUpdate) -> Optional[Contact]:
+    """Update an existing contact."""
+    db_contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if db_contact:
+        update_data = contact.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_contact, key, value)
+        db.commit()
+        db.refresh(db_contact)
+    return db_contact
+
+
+def delete_contact(db: Session, contact_id: int) -> bool:
+    """Delete a contact."""
+    db_contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if db_contact:
+        db.delete(db_contact)
         db.commit()
         return True
     return False

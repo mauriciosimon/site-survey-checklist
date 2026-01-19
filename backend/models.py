@@ -70,6 +70,43 @@ class AccountLabel(str, enum.Enum):
     consulting_financial = "Consulting and Financial Services"  # #cab641 (Mustered)
 
 
+class ContactType(str, enum.Enum):
+    """Contact type from Satoris Contacts board"""
+    client = "Client"                           # #00c875 (Green)
+    past_client = "Past client"                 # #cd9282 (Old Rose)
+    potential_lead = "Potential Lead"           # #784bd1 (Dark Purple)
+    in_progress = "In progress"                 # #5559df (Indigo)
+    architecture = "Architecture"               # #579bfc (Bright Blue)
+    interior_design = "Interior design"         # #9d50dd (Purple)
+    design_build = "Design & Build"             # #cab641 (Mustered)
+    fit_out_contractor = "Fit-Out Contractor"   # #fdab3d (Orange)
+    smart_building = "Smart Building Solutions" # #333333 (Soft Black)
+    main_contractor = "Main contractor"         # #bb3354 (Dark Red)
+    joinery = "Joinery"                         # #ff007f (Dark Pink)
+    partner = "Partner"                         # #ff5ac4 (Light Pink)
+    mep_contractor = "MEP Contractors"          # #225091 (Navy)
+
+
+class ContactIcpFit(str, enum.Enum):
+    """Contact ICP Fit status from Satoris"""
+    yes = "Yes"       # #00c875 (Green)
+    maybe = "Maybe"   # #fdab3d (Orange)
+    no = "No"         # #df2f4a (Red)
+
+
+class ContactOutreachStage(str, enum.Enum):
+    """Contact outreach stage from Satoris"""
+    not_touched = "Not touched"           # #df2f4a (Red)
+    profile_viewed = "Profile viewed"     # #007eb5 (Blue Links)
+    engaged = "Engaged (Like/comment)"    # #9d50dd (Purple)
+    connection_sent = "Connection sent"   # #037f4c (Grass Green)
+    connected = "Connected"               # #579bfc (Bright Blue)
+    dm_sent = "DM Sent"                   # #cab641 (Mustered)
+    conversation_live = "Conversation live"  # #fdab3d (Orange)
+    qualified = "Qualified"               # #00c875 (Green)
+    parked = "Parked/not ICP"             # #ff007f (Dark Pink)
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -212,6 +249,57 @@ class Account(Base):
 
     # Relationships
     owner = relationship("User", backref="accounts")
+    contacts = relationship("Contact", back_populates="account")
+
+
+class Contact(Base):
+    """Contact model based on Satoris Monday.com Contacts board schema"""
+    __tablename__ = "contacts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
+
+    # Core fields
+    name = Column(String(255), nullable=False)  # Contact name (item name)
+    company = Column(String(255))  # text column - Company name
+    contact_type = Column(String(50))  # status: Client, Past client, Potential Lead, Architecture, etc.
+
+    # Job info
+    job_title = Column(String(255))  # text_mkzj9zfp
+    title_role = Column(String(50))  # title5 dropdown: CEO, COO, CIO, BDM, PM, Co-founder, etc.
+    tier = Column(String(50))  # text_mkzj1q6x: Tier 1, Tier 2, Tier 3
+
+    # Contact info
+    email = Column(String(255))  # contact_email
+    phone = Column(String(50))  # contact_phone
+    linkedin_url = Column(Text)  # linkedin__1
+    location = Column(String(255))  # location__1
+
+    # Sales/Outreach fields
+    icp_fit = Column(String(20))  # color_mkzj6yzf: Yes, Maybe, No
+    outreach_stage = Column(String(50))  # color_mkzjj431: Not touched, Profile viewed, Connected, etc.
+    source = Column(String(50))  # color_mkveb8kg
+    next_action_date = Column(Date)  # date_mkzjzmwx
+
+    # Additional info
+    industry = Column(String(255))  # text_mkv6vp03
+    description = Column(Text)  # about__1
+    about = Column(Text)  # long_text_mksawnbc
+    birthday = Column(Date)  # date
+    tags = Column(JSON, default=list)  # tag_mkveenam
+
+    # Relationships
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # Owner name (text representation)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    account = relationship("Account", back_populates="contacts")
+    owner = relationship("User", backref="contacts")
 
 
 class Checklist(Base):

@@ -276,3 +276,61 @@ class AccountResponse(AccountBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Contact Schemas ============
+
+class ContactBase(BaseModel):
+    """Base schema for Contact matching Satoris Monday.com Contacts board"""
+    name: str  # Contact name
+    company: Optional[str] = None  # Company name
+    contact_type: Optional[str] = None  # Client, Past client, Potential Lead, Architecture, etc.
+
+    # Job info
+    job_title: Optional[str] = None
+    title_role: Optional[str] = None  # CEO, COO, CIO, BDM, PM, Co-founder, etc.
+    tier: Optional[str] = None  # Tier 1, Tier 2, Tier 3
+
+    # Contact info
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    location: Optional[str] = None
+
+    # Sales/Outreach fields
+    icp_fit: Optional[str] = None  # Yes, Maybe, No
+    outreach_stage: Optional[str] = None  # Not touched, Profile viewed, Connected, etc.
+    source: Optional[str] = None
+    next_action_date: Optional[date] = None
+
+    # Additional info
+    industry: Optional[str] = None
+    description: Optional[str] = None
+    about: Optional[str] = None
+    birthday: Optional[date] = None
+    tags: Optional[List[str]] = []
+
+    # Relationships
+    account_id: Optional[int] = None
+    owner_name: Optional[str] = None
+
+    # Monday.com sync
+    monday_item_id: Optional[str] = None
+
+
+class ContactCreate(ContactBase):
+    pass
+
+
+class ContactUpdate(ContactBase):
+    name: Optional[str] = None
+
+
+class ContactResponse(ContactBase):
+    id: int
+    owner_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
