@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from database import engine, get_db, Base
+from database import engine, get_db, Base, SessionLocal
 from schemas import (
     ChecklistCreate, ChecklistUpdate, ChecklistResponse, ChecklistWithOwner,
     UserCreate, UserLogin, UserResponse, UserWithStats, Token,
@@ -14,13 +14,51 @@ from schemas import (
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
-    authenticate_user, create_access_token
+    authenticate_user, create_access_token, get_password_hash
 )
 from models import User
 import crud
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+
+def seed_admin_user():
+    """Seed admin user from environment variables on startup."""
+    admin_email = os.getenv("ADMIN_EMAIL")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_name = os.getenv("ADMIN_NAME", "Admin User")
+
+    if not admin_email or not admin_password:
+        print("No ADMIN_EMAIL/ADMIN_PASSWORD set, skipping admin seeding")
+        return
+
+    db = SessionLocal()
+    try:
+        existing_user = crud.get_user_by_email(db, admin_email)
+        if existing_user:
+            if existing_user.role != "admin":
+                existing_user.role = "admin"
+                db.commit()
+                print(f"Updated {admin_email} to admin role")
+            else:
+                print(f"Admin user {admin_email} already exists")
+        else:
+            new_admin = User(
+                email=admin_email,
+                password_hash=get_password_hash(admin_password),
+                full_name=admin_name,
+                role="admin"
+            )
+            db.add(new_admin)
+            db.commit()
+            print(f"Created admin user: {admin_email}")
+    finally:
+        db.close()
+
+
+# Seed admin user on startup
+seed_admin_user()
 
 app = FastAPI(
     title="Site Visit Checklist API",
