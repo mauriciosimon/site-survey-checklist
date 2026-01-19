@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal, Lead, Account, Contact
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate, ContactCreate, ContactUpdate
+from models import Checklist, User, Deal, Lead, Account, Contact, Task
+from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate, ContactCreate, ContactUpdate, TaskCreate, TaskUpdate
+from datetime import date as date_type
 from auth import get_password_hash
 from typing import Optional, List
 
@@ -445,6 +446,110 @@ def delete_contact(db: Session, contact_id: int) -> bool:
     db_contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if db_contact:
         db.delete(db_contact)
+        db.commit()
+        return True
+    return False
+
+
+# ============ Task CRUD ============
+
+def get_task(db: Session, task_id: int) -> Optional[Task]:
+    """Get a single task by ID."""
+    return db.query(Task).filter(Task.id == task_id).first()
+
+
+def get_task_by_monday_id(db: Session, monday_item_id: str) -> Optional[Task]:
+    """Get a task by Monday.com item ID."""
+    return db.query(Task).filter(Task.monday_item_id == monday_item_id).first()
+
+
+def get_tasks(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    task_type: Optional[str] = None,
+    owner_id: Optional[int] = None,
+    due_date_from: Optional[date_type] = None,
+    due_date_to: Optional[date_type] = None,
+    deal_id: Optional[int] = None,
+    lead_id: Optional[int] = None,
+    account_id: Optional[int] = None,
+    search: Optional[str] = None
+) -> List[Task]:
+    """Get tasks with optional filtering."""
+    query = db.query(Task)
+
+    if status:
+        query = query.filter(Task.status == status)
+
+    if priority:
+        query = query.filter(Task.priority == priority)
+
+    if task_type:
+        query = query.filter(Task.task_type == task_type)
+
+    if owner_id:
+        query = query.filter(Task.owner_id == owner_id)
+
+    if due_date_from:
+        query = query.filter(Task.due_date >= due_date_from)
+
+    if due_date_to:
+        query = query.filter(Task.due_date <= due_date_to)
+
+    if deal_id:
+        query = query.filter(Task.deal_id == deal_id)
+
+    if lead_id:
+        query = query.filter(Task.lead_id == lead_id)
+
+    if account_id:
+        query = query.filter(Task.account_id == account_id)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Task.name.ilike(search_filter),
+                Task.related_to.ilike(search_filter),
+                Task.notes.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Task.due_date.asc().nullslast(), Task.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def create_task(db: Session, task: TaskCreate, owner_id: Optional[int] = None) -> Task:
+    """Create a new task."""
+    data = task.model_dump()
+    if owner_id:
+        data["owner_id"] = owner_id
+    db_task = Task(**data)
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+
+def update_task(db: Session, task_id: int, task: TaskUpdate) -> Optional[Task]:
+    """Update an existing task."""
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if db_task:
+        update_data = task.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_task, key, value)
+        db.commit()
+        db.refresh(db_task)
+    return db_task
+
+
+def delete_task(db: Session, task_id: int) -> bool:
+    """Delete a task."""
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if db_task:
+        db.delete(db_task)
         db.commit()
         return True
     return False

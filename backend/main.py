@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import date
 
 from database import engine, get_db, Base, SessionLocal
 from schemas import (
@@ -13,7 +14,8 @@ from schemas import (
     DealCreate, DealUpdate, DealResponse,
     LeadCreate, LeadUpdate, LeadResponse,
     AccountCreate, AccountUpdate, AccountResponse,
-    ContactCreate, ContactUpdate, ContactResponse
+    ContactCreate, ContactUpdate, ContactResponse,
+    TaskCreate, TaskUpdate, TaskResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -147,6 +149,41 @@ def run_migrations():
             print("Migration complete: contacts table created")
         else:
             print("Schema up to date: contacts table exists")
+
+        # Create tasks table if it doesn't exist
+        if 'tasks' not in tables:
+            print("Running migration: Creating tasks table...")
+            conn.execute(text('''
+                CREATE TABLE tasks (
+                    id SERIAL PRIMARY KEY,
+                    monday_item_id VARCHAR(50) UNIQUE,
+                    name VARCHAR(255) NOT NULL,
+                    status VARCHAR(30) DEFAULT 'To do',
+                    priority VARCHAR(20),
+                    task_type VARCHAR(30),
+                    due_date DATE,
+                    close_date DATE,
+                    related_to VARCHAR(255),
+                    deal_id INTEGER REFERENCES deals(id),
+                    lead_id INTEGER REFERENCES leads(id),
+                    account_id INTEGER REFERENCES accounts(id),
+                    contact_id INTEGER REFERENCES contacts(id),
+                    owner_id INTEGER REFERENCES users(id),
+                    owner_name VARCHAR(255),
+                    notes TEXT,
+                    files JSON DEFAULT '[]',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_tasks_id ON tasks(id)'))
+            conn.execute(text('CREATE INDEX ix_tasks_monday_item_id ON tasks(monday_item_id)'))
+            conn.execute(text('CREATE INDEX ix_tasks_owner_id ON tasks(owner_id)'))
+            conn.execute(text('CREATE INDEX ix_tasks_due_date ON tasks(due_date)'))
+            conn.commit()
+            print("Migration complete: tasks table created")
+        else:
+            print("Schema up to date: tasks table exists")
 
 
 # Run migrations on startup
@@ -709,6 +746,92 @@ def delete_contact(
     if not success:
         raise HTTPException(status_code=404, detail="Contact not found")
     return {"message": "Contact deleted successfully"}
+
+
+# ============ Task Endpoints ============
+
+@app.get("/tasks", response_model=List[TaskResponse])
+def list_tasks(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    task_type: Optional[str] = None,
+    owner_id: Optional[int] = None,
+    due_date_from: Optional[date] = None,
+    due_date_to: Optional[date] = None,
+    deal_id: Optional[int] = None,
+    lead_id: Optional[int] = None,
+    account_id: Optional[int] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all tasks with optional filtering."""
+    return crud.get_tasks(
+        db, skip=skip, limit=limit,
+        status=status, priority=priority, task_type=task_type,
+        owner_id=owner_id, due_date_from=due_date_from, due_date_to=due_date_to,
+        deal_id=deal_id, lead_id=lead_id, account_id=account_id, search=search
+    )
+
+
+@app.get("/tasks/{task_id}", response_model=TaskResponse)
+def get_task(
+    task_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single task by ID."""
+    task = crud.get_task(db, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+
+@app.post("/tasks", response_model=TaskResponse)
+def create_task(
+    task: TaskCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new task."""
+    # Check for duplicate Monday item ID if provided
+    if task.monday_item_id:
+        existing = crud.get_task_by_monday_id(db, task.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Task with this Monday.com item ID already exists"
+            )
+    return crud.create_task(db, task, owner_id=current_user.id)
+
+
+@app.put("/tasks/{task_id}", response_model=TaskResponse)
+def update_task(
+    task_id: int,
+    task: TaskUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing task."""
+    db_task = crud.update_task(db, task_id, task)
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return db_task
+
+
+@app.delete("/tasks/{task_id}")
+def delete_task(
+    task_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete a task."""
+    success = crud.delete_task(db, task_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task deleted successfully"}
 
 
 if __name__ == "__main__":

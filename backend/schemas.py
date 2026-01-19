@@ -334,3 +334,54 @@ class ContactResponse(ContactBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Task Schemas ============
+
+class TaskBase(BaseModel):
+    """Base schema for Task matching Satoris Monday.com Tasks board"""
+    name: str  # Task name
+    status: Optional[str] = "To do"  # To do, Working on it, Done, Stuck, On hold, Need info, Waiting for review
+    priority: Optional[str] = None  # Critical, High, Medium, Low
+    task_type: Optional[str] = None  # Finance, Birocratic, Marketing, Other
+
+    # Dates
+    due_date: Optional[date] = None
+    close_date: Optional[date] = None
+
+    # Context/Related items
+    related_to: Optional[str] = None  # Text field for linking context
+
+    # Foreign keys
+    deal_id: Optional[int] = None
+    lead_id: Optional[int] = None
+    account_id: Optional[int] = None
+    contact_id: Optional[int] = None
+
+    # Assignment
+    owner_name: Optional[str] = None
+
+    # Additional info
+    notes: Optional[str] = None
+    files: Optional[List[str]] = []
+
+    # Monday.com sync
+    monday_item_id: Optional[str] = None
+
+
+class TaskCreate(TaskBase):
+    pass
+
+
+class TaskUpdate(TaskBase):
+    name: Optional[str] = None
+
+
+class TaskResponse(TaskBase):
+    id: int
+    owner_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

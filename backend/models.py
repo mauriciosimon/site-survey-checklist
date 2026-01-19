@@ -107,6 +107,33 @@ class ContactOutreachStage(str, enum.Enum):
     parked = "Parked/not ICP"             # #ff007f (Dark Pink)
 
 
+class TaskStatus(str, enum.Enum):
+    """Task status from Satoris Tasks board"""
+    to_do = "To do"                       # #ff6d3b (Dark Orange)
+    working_on_it = "Working on it"       # #fdab3d (Orange)
+    done = "Done"                         # #00c875 (Green)
+    stuck = "Stuck"                       # #df2f4a (Red)
+    on_hold = "On hold"                   # #cd9282 (Old Rose)
+    need_info = "Need info"               # #9d50dd (Purple)
+    waiting_for_review = "Waiting for review"  # #579bfc (Bright Blue)
+
+
+class TaskPriority(str, enum.Enum):
+    """Task priority levels"""
+    critical = "Critical"   # #df2f4a (Red)
+    high = "High"           # #fdab3d (Orange)
+    medium = "Medium"       # #ffcb00 (Yellow)
+    low = "Low"             # #0086c0 (Blue)
+
+
+class TaskType(str, enum.Enum):
+    """Task type from Satoris Tasks board"""
+    finance = "Finance"         # #9cd326 (Lime Green)
+    birocratic = "Birocratic"   # #66ccff (Turquoise)
+    marketing = "Marketing"     # #ffadad (Peach)
+    other = "Other"             # #cab641 (Mustered)
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -300,6 +327,52 @@ class Contact(Base):
     # Relationships
     account = relationship("Account", back_populates="contacts")
     owner = relationship("User", backref="contacts")
+
+
+class Task(Base):
+    """Task model based on Satoris Monday.com Tasks board schema"""
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
+
+    # Core fields
+    name = Column(String(255), nullable=False)  # Task name (item name)
+    status = Column(String(30), default=TaskStatus.to_do.value)  # To do, Working on it, Done, Stuck, etc.
+    priority = Column(String(20))  # Critical, High, Medium, Low
+    task_type = Column(String(30))  # Finance, Birocratic, Marketing, Other
+
+    # Dates
+    due_date = Column(Date)  # date4
+    close_date = Column(Date)  # date
+
+    # Context/Related items
+    related_to = Column(String(255))  # Text field for linking context (deal name, lead name, etc.)
+
+    # Foreign keys for relationships
+    deal_id = Column(Integer, ForeignKey("deals.id"), nullable=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True)
+
+    # Assignment
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # Owner name (text representation)
+
+    # Additional info
+    notes = Column(Text)
+    files = Column(JSON, default=list)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    deal = relationship("Deal", backref="tasks")
+    lead = relationship("Lead", backref="tasks")
+    account = relationship("Account", backref="tasks")
+    contact = relationship("Contact", backref="tasks")
+    owner = relationship("User", backref="tasks")
 
 
 class Checklist(Base):
