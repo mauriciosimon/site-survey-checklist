@@ -31,16 +31,6 @@ export function TasksPage() {
   );
 }
 
-export function ContactsPage() {
-  return (
-    <PlaceholderPage
-      title="Contacts"
-      icon="👤"
-      description="Manage your business contacts and relationships."
-    />
-  );
-}
-
 export function ProjectsPage() {
   return (
     <PlaceholderPage
