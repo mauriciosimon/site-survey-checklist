@@ -1326,6 +1326,40 @@ header h1 {
   max-width: 700px;
 }
 
+/* Task Form Modal Specific */
+.task-form-modal {
+  max-width: 700px;
+}
+
+/* Task Stats */
+.task-stats {
+  display: flex;
+  gap: 12px;
+  margin-left: 16px;
+}
+
+.stat-item {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.stat-todo {
+  background: #fff3e6;
+  color: #ff6d3b;
+}
+
+.stat-progress {
+  background: #fff8e6;
+  color: #fdab3d;
+}
+
+.stat-done {
+  background: #e6f7ef;
+  color: #00c875;
+}
+
 .page-actions {
   display: flex;
   gap: 10px;

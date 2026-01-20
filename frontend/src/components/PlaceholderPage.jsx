@@ -21,16 +21,6 @@ export default function PlaceholderPage({ title, icon, description }) {
 }
 
 // Specific placeholder pages
-export function TasksPage() {
-  return (
-    <PlaceholderPage
-      title="Tasks"
-      icon="✓"
-      description="Manage your sales tasks and activities."
-    />
-  );
-}
-
 export function ProjectsPage() {
   return (
     <PlaceholderPage

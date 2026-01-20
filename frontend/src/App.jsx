@@ -11,9 +11,9 @@ import LeadsPage from './components/LeadsPage';
 import DealsPage from './components/DealsPage';
 import AccountsPage from './components/AccountsPage';
 import ContactsPage from './components/ContactsPage';
+import TasksPage from './components/TasksPage';
 import {
   DashboardPage,
-  TasksPage,
   ProjectsPage
 } from './components/PlaceholderPage';
 
