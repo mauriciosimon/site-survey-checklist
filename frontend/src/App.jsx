@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
+import { Search, Bell, Settings, LogOut } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChecklistList from './components/ChecklistList';
 import ChecklistForm from './components/ChecklistForm';
@@ -35,39 +37,73 @@ function ProtectedRoute({ children }) {
 function Header() {
   const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  // Get user initials
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   return (
     <header>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none' }} className="logo-section">
-        <img src="/logo.png" alt="West Park Contracting" className="logo" />
-        <h1>Site Survey Checklists</h1>
-      </Link>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <div className="header-left">
+        <Link to="/" className="logo-section">
+          <img src="/logo.png" alt="West Park Contracting" className="logo" />
+        </Link>
+        {user && (
+          <div className="header-search">
+            <Search size={16} className="search-icon" />
+            <input type="text" placeholder="Search..." />
+          </div>
+        )}
+      </div>
+
+      <div className="header-right">
         {user ? (
           <>
+            <button className="header-icon-btn" title="Notifications">
+              <Bell size={20} />
+            </button>
             {isAdmin && (
-              <button className="btn btn-secondary" onClick={() => navigate('/admin')}>
-                Admin
+              <button className="header-icon-btn" onClick={() => navigate('/admin')} title="Admin Settings">
+                <Settings size={20} />
               </button>
             )}
-            <div className="user-menu">
-              <span style={{ color: 'white', marginRight: '10px' }}>
-                {user.full_name}
-                {isAdmin && <span style={{ marginLeft: '5px', fontSize: '12px', opacity: 0.8 }}>(Admin)</span>}
-              </span>
-              <button className="btn btn-secondary" onClick={handleLogout}>
-                Logout
+            <div className="user-menu-container">
+              <button
+                className="user-avatar"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                title={user.full_name}
+              >
+                {getInitials(user.full_name)}
               </button>
+              {showUserMenu && (
+                <div className="user-dropdown">
+                  <div className="user-dropdown-header">
+                    <div className="user-avatar-large">{getInitials(user.full_name)}</div>
+                    <div className="user-info">
+                      <span className="user-name">{user.full_name}</span>
+                      <span className="user-email">{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="user-dropdown-divider" />
+                  <button className="user-dropdown-item" onClick={handleLogout}>
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (
           <>
-            <button className="btn btn-secondary" onClick={() => navigate('/login')}>
+            <button className="btn btn-ghost" onClick={() => navigate('/login')}>
               Sign In
             </button>
             <button className="btn btn-primary" onClick={() => navigate('/register')}>
