@@ -143,6 +143,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
         <Folder title="SALES" defaultOpen={true}>
           <NavItem to="/leads" icon={Target} label="Leads" />
           <NavItem to="/deals" icon={DollarSign} label="Deals" />
+          <NavItem to="/opportunities" icon={TrendingUp} label="Opportunities" />
           <NavItem to="/tasks" icon={CheckSquare} label="Tasks" />
         </Folder>
 

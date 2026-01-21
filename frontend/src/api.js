@@ -240,4 +240,30 @@ export const taskApi = {
     api.delete(`/tasks/${id}`),
 };
 
+export const opportunityApi = {
+  getAll: (filters = {}) =>
+    api.get('/opportunities', {
+      params: {
+        workspace_id: filters.workspace_id || undefined,
+        stage: filters.stage || undefined,
+        grade: filters.grade || undefined,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/opportunities/${id}`),
+
+  create: (data) =>
+    api.post('/opportunities', data),
+
+  update: (id, data) =>
+    api.put(`/opportunities/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/opportunities/${id}`),
+};
+
 export default api;

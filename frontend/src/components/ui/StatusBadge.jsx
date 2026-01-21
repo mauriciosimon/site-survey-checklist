@@ -93,6 +93,19 @@ const DEAL_STAGE_COLORS = {
   'completed': '#037f4c',       // Dark Green
 };
 
+// Opportunity stage colors (BTG board)
+const OPPORTUNITY_STAGE_COLORS = {
+  'leads': '#ff6d3b',                  // Dark Orange - New lead
+  'estimating': '#ffcb00',             // Yellow
+  'submitted': '#cab641',              // Mustered
+  'submitted revisions': '#fdab3d',    // Orange
+  'small works': '#66ccff',            // Turquoise
+  'won': '#00c875',                    // Green
+  'signed - small works': '#037f4c',   // Grass Green
+  'lost': '#df2f4a',                   // Red
+  'declined': '#c4c4c4',               // Gray
+};
+
 // Lead status colors
 const LEAD_STATUS_COLORS = {
   'new leads': '#ff6d3b',       // Dark Orange
@@ -118,11 +131,14 @@ export function getStatusColor(type, value) {
 
   switch (type) {
     case 'grade':
+    case 'opportunity_grade':
       return GRADE_COLORS[normalizedValue] || '#c4c4c4';
     case 'priority':
       return PRIORITY_COLORS[normalizedValue] || '#c4c4c4';
     case 'deal_stage':
       return DEAL_STAGE_COLORS[normalizedValue] || STATUS_COLORS[normalizedValue] || '#c4c4c4';
+    case 'opportunity_stage':
+      return OPPORTUNITY_STAGE_COLORS[normalizedValue] || DEAL_STAGE_COLORS[normalizedValue] || STATUS_COLORS[normalizedValue] || '#c4c4c4';
     case 'lead_status':
       return LEAD_STATUS_COLORS[normalizedValue] || STATUS_COLORS[normalizedValue] || '#c4c4c4';
     case 'status':
@@ -225,5 +241,6 @@ export const colorMaps = {
   GRADE_COLORS,
   PRIORITY_COLORS,
   DEAL_STAGE_COLORS,
+  OPPORTUNITY_STAGE_COLORS,
   LEAD_STATUS_COLORS,
 };

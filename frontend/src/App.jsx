@@ -15,6 +15,7 @@ import DealsPage from './components/DealsPage';
 import AccountsPage from './components/AccountsPage';
 import ContactsPage from './components/ContactsPage';
 import TasksPage from './components/TasksPage';
+import OpportunitiesPage from './components/OpportunitiesPage';
 import {
   DashboardPage,
   ProjectsPage
@@ -176,6 +177,11 @@ function AppContent() {
           <Route path="/tasks" element={
             <ProtectedRoute>
               <TasksPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/opportunities" element={
+            <ProtectedRoute>
+              <OpportunitiesPage />
             </ProtectedRoute>
           } />
 
