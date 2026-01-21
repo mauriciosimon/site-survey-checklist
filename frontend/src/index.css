@@ -299,9 +299,10 @@ header .logo {
   padding: 0 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
+  overflow: hidden;
 }
 
 .workspace-icon {
@@ -320,10 +321,11 @@ header .logo {
 }
 
 .workspace-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--sidebar-text);
   flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -336,8 +338,9 @@ header .logo {
 .workspace-selector {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
+  min-width: 0;
   padding: 4px 8px;
   margin: -4px -8px;
   border: none;
@@ -1753,7 +1756,56 @@ header .logo {
 
   .sidebar {
     width: 100%;
-    max-height: 200px;
+    max-height: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-header {
+    padding: 0 16px;
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .workspace-selector {
+    padding: 8px 12px;
+    margin: 0;
+  }
+
+  .workspace-name {
+    font-size: 16px;
+  }
+
+  .workspace-dropdown {
+    left: 16px;
+    right: 16px;
+    min-width: auto;
+  }
+
+  .workspace-option {
+    padding: 14px 16px;
+  }
+
+  .workspace-option-name {
+    font-size: 15px;
+  }
+
+  .main-content {
+    padding: 16px;
+    margin-left: 0;
   }
 
   .header-search {
@@ -1770,10 +1822,39 @@ header .logo {
     gap: 12px;
   }
 
+  .page-title-section {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .page-title-section h1 {
+    font-size: 20px;
+    width: 100%;
+  }
+
+  .record-count {
+    font-size: 13px;
+  }
+
+  .task-stats {
+    width: 100%;
+    margin-top: 4px;
+  }
+
   .page-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 120px;
   }
 
   .search-box {
@@ -1785,12 +1866,92 @@ header .logo {
     width: 100%;
   }
 
+  /* Table mobile styles */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  /* Modal mobile styles */
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    margin: 16px;
+    max-height: calc(100vh - 32px);
+  }
+
   .modal-content .form-grid {
     grid-template-columns: 1fr;
   }
 
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+
+  /* Kanban mobile */
   .kanban-column {
-    flex: 0 0 260px;
-    min-width: 260px;
+    flex: 0 0 280px;
+    min-width: 280px;
+  }
+
+  /* Nav items */
+  .nav-item {
+    padding: 14px 20px;
+  }
+
+  .folder-header {
+    padding: 10px 20px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  header {
+    padding: 0 12px;
+    height: 56px;
+  }
+
+  .logo {
+    height: 28px;
+  }
+
+  .sidebar {
+    top: 56px;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .page-header {
+    margin-bottom: 12px;
+  }
+
+  .page-title-section h1 {
+    font-size: 18px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .card {
+    padding: 12px;
   }
 }
