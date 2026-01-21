@@ -16,6 +16,7 @@ from schemas import (
     AccountCreate, AccountUpdate, AccountResponse,
     ContactCreate, ContactUpdate, ContactResponse,
     TaskCreate, TaskUpdate, TaskResponse,
+    OpportunityCreate, OpportunityUpdate, OpportunityResponse,
     WorkspaceCreate, WorkspaceUpdate, WorkspaceResponse, WorkspaceWithCounts
 )
 from auth import (
@@ -328,6 +329,57 @@ def run_migrations():
             """))
             conn.commit()
             print("Migration complete: deal stage values updated")
+
+        # Create opportunities table if it doesn't exist
+        if 'opportunities' not in tables:
+            print("Running migration: Creating opportunities table...")
+            conn.execute(text('''
+                CREATE TABLE opportunities (
+                    id SERIAL PRIMARY KEY,
+                    workspace_id INTEGER REFERENCES workspaces(id),
+                    monday_item_id VARCHAR(50) UNIQUE,
+                    name VARCHAR(255) NOT NULL,
+                    stage VARCHAR(50) DEFAULT 'Leads',
+                    grade VARCHAR(20),
+                    contact_name VARCHAR(255),
+                    company_name VARCHAR(255),
+                    email VARCHAR(255),
+                    phone VARCHAR(50),
+                    sale_price NUMERIC(12, 2),
+                    close_probability INTEGER,
+                    owner_id INTEGER REFERENCES users(id),
+                    owner_name VARCHAR(255),
+                    survey_required BOOLEAN DEFAULT FALSE,
+                    quote_template VARCHAR(50),
+                    quotes_done INTEGER,
+                    revisions_made BOOLEAN DEFAULT FALSE,
+                    num_revisions INTEGER,
+                    next_interaction DATE,
+                    return_date DATE,
+                    quote_sent_date DATE,
+                    decision_date DATE,
+                    close_date DATE,
+                    start_date DATE,
+                    end_date DATE,
+                    location_address TEXT,
+                    location_lat NUMERIC(10, 7),
+                    location_lng NUMERIC(10, 7),
+                    files JSON DEFAULT '[]',
+                    link TEXT,
+                    supplier_quotes JSON DEFAULT '[]',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_opportunities_id ON opportunities(id)'))
+            conn.execute(text('CREATE INDEX ix_opportunities_workspace_id ON opportunities(workspace_id)'))
+            conn.execute(text('CREATE INDEX ix_opportunities_monday_item_id ON opportunities(monday_item_id)'))
+            conn.execute(text('CREATE INDEX ix_opportunities_stage ON opportunities(stage)'))
+            conn.execute(text('CREATE INDEX ix_opportunities_grade ON opportunities(grade)'))
+            conn.commit()
+            print("Migration complete: opportunities table created")
+        else:
+            print("Schema up to date: opportunities table exists")
 
 
 # Run migrations on startup
@@ -1071,6 +1123,84 @@ def delete_task(
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task deleted successfully"}
+
+
+# ============ Opportunity Endpoints ============
+
+@app.get("/opportunities", response_model=List[OpportunityResponse])
+def get_opportunities(
+    skip: int = 0,
+    limit: int = 100,
+    workspace_id: Optional[int] = None,
+    stage: Optional[str] = None,
+    grade: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get all opportunities with optional filters."""
+    return crud.get_opportunities(
+        db, skip=skip, limit=limit,
+        workspace_id=workspace_id, stage=stage, grade=grade, search=search
+    )
+
+
+@app.get("/opportunities/{opportunity_id}", response_model=OpportunityResponse)
+def get_opportunity(
+    opportunity_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single opportunity by ID."""
+    opportunity = crud.get_opportunity(db, opportunity_id)
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+    return opportunity
+
+
+@app.post("/opportunities", response_model=OpportunityResponse)
+def create_opportunity(
+    opportunity: OpportunityCreate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Create a new opportunity."""
+    # Check for duplicate monday_item_id
+    if opportunity.monday_item_id:
+        existing = crud.get_opportunity_by_monday_id(db, opportunity.monday_item_id)
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail="Opportunity with this Monday.com item ID already exists"
+            )
+    return crud.create_opportunity(db, opportunity, owner_id=current_user.id)
+
+
+@app.put("/opportunities/{opportunity_id}", response_model=OpportunityResponse)
+def update_opportunity(
+    opportunity_id: int,
+    opportunity: OpportunityUpdate,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Update an existing opportunity."""
+    db_opportunity = crud.update_opportunity(db, opportunity_id, opportunity)
+    if not db_opportunity:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+    return db_opportunity
+
+
+@app.delete("/opportunities/{opportunity_id}")
+def delete_opportunity(
+    opportunity_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete an opportunity."""
+    success = crud.delete_opportunity(db, opportunity_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+    return {"message": "Opportunity deleted successfully"}
 
 
 if __name__ == "__main__":

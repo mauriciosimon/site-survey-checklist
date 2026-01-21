@@ -157,6 +157,26 @@ class TaskType(str, enum.Enum):
     other = "Other"             # #cab641 (Mustered)
 
 
+class OpportunityStage(str, enum.Enum):
+    """Opportunity stage from BTG Opportunity board"""
+    leads = "Leads"                     # #ff6d3b (Dark Orange) - New lead
+    estimating = "Estimating"           # #ffcb00 (Yellow)
+    submitted = "Submitted"             # #cab641 (Mustered)
+    submitted_revisions = "Submitted Revisions"  # #fdab3d (Orange)
+    small_works = "Small works"         # #66ccff (Turquoise)
+    won = "Won"                         # #00c875 (Green)
+    signed_small_works = "Signed - Small works"  # #037f4c (Grass Green)
+    lost = "Lost"                       # #df2f4a (Red)
+    declined = "Declined"               # #c4c4c4 (Grey)
+
+
+class OpportunityGrade(str, enum.Enum):
+    """Opportunity grade/temperature - color-coded priority tiers"""
+    grade_1 = "Grade 1"  # #ffadad (Peach/Pink) - Highest Priority / Hot
+    grade_2 = "Grade 2"  # #fdab3d (Orange) - Medium Priority / Warm
+    grade_3 = "Grade 3"  # #9cd326 (Lime Green) - Lower Priority / Cold
+
+
 class Workspace(Base):
     """Workspace model to organize data like Monday.com workspaces"""
     __tablename__ = "workspaces"
@@ -177,6 +197,7 @@ class Workspace(Base):
     accounts = relationship("Account", back_populates="workspace")
     contacts = relationship("Contact", back_populates="workspace")
     tasks = relationship("Task", back_populates="workspace")
+    opportunities = relationship("Opportunity", back_populates="workspace")
     checklists = relationship("Checklist", back_populates="workspace")
 
 
@@ -429,6 +450,72 @@ class Task(Base):
     account = relationship("Account", backref="tasks")
     contact = relationship("Contact", backref="tasks")
     owner = relationship("User", backref="tasks")
+
+
+class Opportunity(Base):
+    """Opportunity model based on BTG Monday.com Opportunity board schema"""
+    __tablename__ = "opportunities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
+    monday_item_id = Column(String(50), unique=True, index=True, nullable=True)
+
+    # Core fields
+    name = Column(String(255), nullable=False)  # Opportunity name
+    stage = Column(String(50), default=OpportunityStage.leads.value)  # Leads, Estimating, Submitted, Won, Lost
+    grade = Column(String(20))  # Grade 1, Grade 2, Grade 3 (color-coded priority)
+
+    # Contact & Company
+    contact_name = Column(String(255))  # text0 - Contact name
+    company_name = Column(String(255))  # text_mksp2w2b - Company name
+    email = Column(String(255))
+    phone = Column(String(50))
+
+    # Financial
+    sale_price = Column(Numeric(12, 2))  # numeric_mkt4jyp4 - Sale price in GBP
+    close_probability = Column(Integer)  # numeric_mkt8frbn - Close probability %
+
+    # Owner/Estimator
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner_name = Column(String(255))  # Estimator name
+
+    # Survey
+    survey_required = Column(Boolean, default=False)  # color_mktk467z - Is survey required
+
+    # Quote info
+    quote_template = Column(String(50))  # West Park, Client
+    quotes_done = Column(Integer)  # No. of quotes done
+    revisions_made = Column(Boolean, default=False)
+    num_revisions = Column(Integer)
+
+    # Dates
+    next_interaction = Column(Date)  # date - Next interaction
+    return_date = Column(Date)  # date_mkt86yvg
+    quote_sent_date = Column(Date)  # date_mkt85aje
+    decision_date = Column(Date)  # date_mkt85f7z
+    close_date = Column(Date)  # deal_close_date
+    start_date = Column(Date)  # Start from timeline
+    end_date = Column(Date)  # End from timeline
+
+    # Location
+    location_address = Column(Text)
+    location_lat = Column(Numeric(10, 7))
+    location_lng = Column(Numeric(10, 7))
+
+    # Files & Links
+    files = Column(JSON, default=list)
+    link = Column(Text)
+
+    # Supplier quotes
+    supplier_quotes = Column(JSON, default=list)  # dropdown_mktkt0j7 - SIG, FORZA, SAS, FUSION
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    workspace = relationship("Workspace", back_populates="opportunities")
+    owner = relationship("User", backref="opportunities")
 
 
 class Checklist(Base):

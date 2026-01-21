@@ -440,3 +440,75 @@ class TaskResponse(TaskBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Opportunity Schemas ============
+
+class OpportunityBase(BaseModel):
+    """Base schema for Opportunity matching BTG Monday.com Opportunity board"""
+    workspace_id: Optional[int] = None
+    monday_item_id: Optional[str] = None
+
+    # Core fields
+    name: str
+    stage: Optional[str] = "Leads"  # Leads, Estimating, Submitted, Won, Lost, etc.
+    grade: Optional[str] = None  # Grade 1, Grade 2, Grade 3
+
+    # Contact & Company
+    contact_name: Optional[str] = None
+    company_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+    # Financial
+    sale_price: Optional[Decimal] = None
+    close_probability: Optional[int] = None
+
+    # Owner
+    owner_name: Optional[str] = None
+
+    # Survey
+    survey_required: Optional[bool] = False
+
+    # Quote info
+    quote_template: Optional[str] = None
+    quotes_done: Optional[int] = None
+    revisions_made: Optional[bool] = False
+    num_revisions: Optional[int] = None
+
+    # Dates
+    next_interaction: Optional[date] = None
+    return_date: Optional[date] = None
+    quote_sent_date: Optional[date] = None
+    decision_date: Optional[date] = None
+    close_date: Optional[date] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+    # Location
+    location_address: Optional[str] = None
+    location_lat: Optional[Decimal] = None
+    location_lng: Optional[Decimal] = None
+
+    # Files & Links
+    files: Optional[List[dict]] = None
+    link: Optional[str] = None
+    supplier_quotes: Optional[List[str]] = None
+
+
+class OpportunityCreate(OpportunityBase):
+    pass
+
+
+class OpportunityUpdate(OpportunityBase):
+    name: Optional[str] = None
+
+
+class OpportunityResponse(OpportunityBase):
+    id: int
+    owner_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

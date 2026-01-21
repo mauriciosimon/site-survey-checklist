@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal, Lead, Account, Contact, Task, Workspace
+from models import Checklist, User, Deal, Lead, Account, Contact, Task, Workspace, Opportunity
 from schemas import (
     ChecklistCreate, ChecklistUpdate, UserCreate,
     DealCreate, DealUpdate, LeadCreate, LeadUpdate,
     AccountCreate, AccountUpdate, ContactCreate, ContactUpdate,
-    TaskCreate, TaskUpdate, WorkspaceCreate, WorkspaceUpdate
+    TaskCreate, TaskUpdate, WorkspaceCreate, WorkspaceUpdate,
+    OpportunityCreate, OpportunityUpdate
 )
 from datetime import date as date_type
 from auth import get_password_hash
@@ -695,6 +696,86 @@ def delete_task(db: Session, task_id: int) -> bool:
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if db_task:
         db.delete(db_task)
+        db.commit()
+        return True
+    return False
+
+
+# ============ Opportunity CRUD ============
+
+def get_opportunities(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    workspace_id: Optional[int] = None,
+    stage: Optional[str] = None,
+    grade: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Opportunity]:
+    """Get opportunities with optional filters"""
+    query = db.query(Opportunity)
+
+    if workspace_id:
+        query = query.filter(Opportunity.workspace_id == workspace_id)
+
+    if stage:
+        query = query.filter(Opportunity.stage == stage)
+
+    if grade:
+        query = query.filter(Opportunity.grade == grade)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Opportunity.name.ilike(search_filter),
+                Opportunity.company_name.ilike(search_filter),
+                Opportunity.contact_name.ilike(search_filter),
+            )
+        )
+
+    return query.order_by(Opportunity.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def get_opportunity(db: Session, opportunity_id: int) -> Optional[Opportunity]:
+    """Get a single opportunity by ID"""
+    return db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+
+
+def get_opportunity_by_monday_id(db: Session, monday_item_id: str) -> Optional[Opportunity]:
+    """Get an opportunity by Monday.com item ID"""
+    return db.query(Opportunity).filter(Opportunity.monday_item_id == monday_item_id).first()
+
+
+def create_opportunity(db: Session, opportunity: OpportunityCreate, owner_id: Optional[int] = None) -> Opportunity:
+    """Create a new opportunity"""
+    opportunity_data = opportunity.model_dump(exclude_unset=True)
+    if owner_id:
+        opportunity_data['owner_id'] = owner_id
+    db_opportunity = Opportunity(**opportunity_data)
+    db.add(db_opportunity)
+    db.commit()
+    db.refresh(db_opportunity)
+    return db_opportunity
+
+
+def update_opportunity(db: Session, opportunity_id: int, opportunity: OpportunityUpdate) -> Optional[Opportunity]:
+    """Update an existing opportunity"""
+    db_opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+    if db_opportunity:
+        update_data = opportunity.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_opportunity, key, value)
+        db.commit()
+        db.refresh(db_opportunity)
+    return db_opportunity
+
+
+def delete_opportunity(db: Session, opportunity_id: int) -> bool:
+    """Delete an opportunity"""
+    db_opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+    if db_opportunity:
+        db.delete(db_opportunity)
         db.commit()
         return True
     return False

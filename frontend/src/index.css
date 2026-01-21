@@ -316,6 +316,7 @@ header .logo {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .workspace-name {
@@ -327,6 +328,8 @@ header .logo {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Workspace Selector Dropdown */
@@ -367,7 +370,7 @@ header .logo {
   position: absolute;
   top: 100%;
   left: 8px;
-  right: 8px;
+  min-width: 220px;
   background: var(--sidebar-bg);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
@@ -419,8 +422,6 @@ header .logo {
 
 .workspace-option-name {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
