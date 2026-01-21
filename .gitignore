@@ -24,3 +24,4 @@ uploads/
 # Deployment
 .vercel/
 .railway/
+.vercel
