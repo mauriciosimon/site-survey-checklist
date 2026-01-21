@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { taskApi, dealApi, leadApi, accountApi, contactApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 import TableView from './ui/TableView';
 
 // ============================================
@@ -304,6 +305,9 @@ function TaskFormModal({ task, onClose, onSave }) {
 // ============================================
 
 export default function TasksPage() {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+
   // Data state
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -326,18 +330,23 @@ export default function TasksPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await taskApi.getAll(filters);
+      const response = await taskApi.getAll({
+        ...filters,
+        workspace_id: currentWorkspace?.id,
+      });
       setTasks(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load tasks');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentWorkspace]);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    if (currentWorkspace) {
+      fetchTasks();
+    }
+  }, [fetchTasks, currentWorkspace]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

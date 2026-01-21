@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { contactApi, accountApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 import TableView from './ui/TableView';
 
 // ============================================
@@ -394,6 +395,9 @@ function ContactFormModal({ contact, onClose, onSave }) {
 // ============================================
 
 export default function ContactsPage() {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+
   // Data state
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -416,18 +420,23 @@ export default function ContactsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await contactApi.getAll(filters);
+      const response = await contactApi.getAll({
+        ...filters,
+        workspace_id: currentWorkspace?.id,
+      });
       setContacts(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load contacts');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentWorkspace]);
 
   useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+    if (currentWorkspace) {
+      fetchContacts();
+    }
+  }, [fetchContacts, currentWorkspace]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

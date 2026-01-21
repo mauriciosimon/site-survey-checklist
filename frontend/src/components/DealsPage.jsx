@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { dealApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 import KanbanBoard, { DEAL_STAGES } from './ui/KanbanBoard';
 import TableView from './ui/TableView';
 import StatusBadge from './ui/StatusBadge';
@@ -280,6 +281,9 @@ function DealFormModal({ deal, onClose, onSave }) {
 // ============================================
 
 export default function DealsPage() {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+
   // View state
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'table'
 
@@ -305,18 +309,23 @@ export default function DealsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await dealApi.getAll(filters);
+      const response = await dealApi.getAll({
+        ...filters,
+        workspace_id: currentWorkspace?.id,
+      });
       setDeals(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load deals');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentWorkspace]);
 
   useEffect(() => {
-    fetchDeals();
-  }, [fetchDeals]);
+    if (currentWorkspace) {
+      fetchDeals();
+    }
+  }, [fetchDeals, currentWorkspace]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

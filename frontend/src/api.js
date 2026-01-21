@@ -43,9 +43,38 @@ export const adminApi = {
     api.get('/admin/checklists', { params: { user_id: userId || undefined } }),
 };
 
+export const workspaceApi = {
+  getAll: (filters = {}) =>
+    api.get('/workspaces', {
+      params: {
+        is_active: filters.is_active,
+        search: filters.search || undefined,
+        skip: filters.skip || undefined,
+        limit: filters.limit || undefined,
+      },
+    }),
+
+  getById: (id) =>
+    api.get(`/workspaces/${id}`),
+
+  create: (data) =>
+    api.post('/workspaces', data),
+
+  update: (id, data) =>
+    api.put(`/workspaces/${id}`, data),
+
+  delete: (id) =>
+    api.delete(`/workspaces/${id}`),
+};
+
 export const checklistApi = {
-  getAll: (search = '') =>
-    api.get('/checklists', { params: { search: search || undefined } }),
+  getAll: (filters = {}) =>
+    api.get('/checklists', {
+      params: {
+        workspace_id: filters.workspace_id || undefined,
+        search: filters.search || undefined,
+      },
+    }),
 
   getById: (id) =>
     api.get(`/checklists/${id}`),
@@ -72,6 +101,7 @@ export const leadApi = {
   getAll: (filters = {}) =>
     api.get('/leads', {
       params: {
+        workspace_id: filters.workspace_id || undefined,
         status: filters.status || undefined,
         priority: filters.priority || undefined,
         source: filters.source || undefined,
@@ -98,6 +128,7 @@ export const dealApi = {
   getAll: (filters = {}) =>
     api.get('/deals', {
       params: {
+        workspace_id: filters.workspace_id || undefined,
         stage: filters.stage || undefined,
         status: filters.status || undefined,
         grade: filters.grade || undefined,
@@ -125,6 +156,7 @@ export const accountApi = {
   getAll: (filters = {}) =>
     api.get('/accounts', {
       params: {
+        workspace_id: filters.workspace_id || undefined,
         status: filters.status || undefined,
         label: filters.label || undefined,
         industry: filters.industry || undefined,
@@ -151,6 +183,7 @@ export const contactApi = {
   getAll: (filters = {}) =>
     api.get('/contacts', {
       params: {
+        workspace_id: filters.workspace_id || undefined,
         contact_type: filters.contact_type || undefined,
         account_id: filters.account_id || undefined,
         icp_fit: filters.icp_fit || undefined,
@@ -178,6 +211,7 @@ export const taskApi = {
   getAll: (filters = {}) =>
     api.get('/tasks', {
       params: {
+        workspace_id: filters.workspace_id || undefined,
         status: filters.status || undefined,
         priority: filters.priority || undefined,
         task_type: filters.task_type || undefined,

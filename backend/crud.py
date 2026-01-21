@@ -1,10 +1,101 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from models import Checklist, User, Deal, Lead, Account, Contact, Task
-from schemas import ChecklistCreate, ChecklistUpdate, UserCreate, DealCreate, DealUpdate, LeadCreate, LeadUpdate, AccountCreate, AccountUpdate, ContactCreate, ContactUpdate, TaskCreate, TaskUpdate
+from models import Checklist, User, Deal, Lead, Account, Contact, Task, Workspace
+from schemas import (
+    ChecklistCreate, ChecklistUpdate, UserCreate,
+    DealCreate, DealUpdate, LeadCreate, LeadUpdate,
+    AccountCreate, AccountUpdate, ContactCreate, ContactUpdate,
+    TaskCreate, TaskUpdate, WorkspaceCreate, WorkspaceUpdate
+)
 from datetime import date as date_type
 from auth import get_password_hash
 from typing import Optional, List
+
+
+# ============ Workspace CRUD ============
+
+def get_workspace(db: Session, workspace_id: int) -> Optional[Workspace]:
+    """Get a single workspace by ID."""
+    return db.query(Workspace).filter(Workspace.id == workspace_id).first()
+
+
+def get_workspace_by_monday_id(db: Session, monday_workspace_id: str) -> Optional[Workspace]:
+    """Get a workspace by Monday.com workspace ID."""
+    return db.query(Workspace).filter(Workspace.monday_workspace_id == monday_workspace_id).first()
+
+
+def get_workspaces(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    is_active: Optional[bool] = None,
+    search: Optional[str] = None
+) -> List[Workspace]:
+    """Get workspaces with optional filtering."""
+    query = db.query(Workspace)
+
+    if is_active is not None:
+        query = query.filter(Workspace.is_active == is_active)
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.filter(
+            or_(
+                Workspace.name.ilike(search_filter),
+                Workspace.description.ilike(search_filter)
+            )
+        )
+
+    return query.order_by(Workspace.name.asc()).offset(skip).limit(limit).all()
+
+
+def get_workspace_with_counts(db: Session, workspace_id: int):
+    """Get workspace with entity counts."""
+    workspace = get_workspace(db, workspace_id)
+    if not workspace:
+        return None
+
+    counts = {
+        'lead_count': db.query(Lead).filter(Lead.workspace_id == workspace_id).count(),
+        'deal_count': db.query(Deal).filter(Deal.workspace_id == workspace_id).count(),
+        'account_count': db.query(Account).filter(Account.workspace_id == workspace_id).count(),
+        'contact_count': db.query(Contact).filter(Contact.workspace_id == workspace_id).count(),
+        'task_count': db.query(Task).filter(Task.workspace_id == workspace_id).count(),
+        'checklist_count': db.query(Checklist).filter(Checklist.workspace_id == workspace_id).count(),
+    }
+    return workspace, counts
+
+
+def create_workspace(db: Session, workspace: WorkspaceCreate) -> Workspace:
+    """Create a new workspace."""
+    data = workspace.model_dump()
+    db_workspace = Workspace(**data)
+    db.add(db_workspace)
+    db.commit()
+    db.refresh(db_workspace)
+    return db_workspace
+
+
+def update_workspace(db: Session, workspace_id: int, workspace: WorkspaceUpdate) -> Optional[Workspace]:
+    """Update an existing workspace."""
+    db_workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    if db_workspace:
+        update_data = workspace.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_workspace, key, value)
+        db.commit()
+        db.refresh(db_workspace)
+    return db_workspace
+
+
+def delete_workspace(db: Session, workspace_id: int) -> bool:
+    """Delete a workspace."""
+    db_workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    if db_workspace:
+        db.delete(db_workspace)
+        db.commit()
+        return True
+    return False
 
 
 # ============ User CRUD ============
@@ -54,11 +145,15 @@ def get_checklists(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     search: Optional[str] = None,
     user_id: Optional[int] = None,
     is_admin: bool = False
 ):
     query = db.query(Checklist)
+
+    if workspace_id:
+        query = query.filter(Checklist.workspace_id == workspace_id)
 
     # Filter by user unless admin
     if user_id and not is_admin:
@@ -151,6 +246,7 @@ def get_deals(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     stage: Optional[str] = None,
     status: Optional[str] = None,
     grade: Optional[str] = None,
@@ -162,6 +258,9 @@ def get_deals(
 ) -> List[Deal]:
     """Get deals with optional filtering."""
     query = db.query(Deal)
+
+    if workspace_id:
+        query = query.filter(Deal.workspace_id == workspace_id)
 
     if stage:
         query = query.filter(Deal.stage == stage)
@@ -248,6 +347,7 @@ def get_leads(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     priority: Optional[str] = None,
     source: Optional[str] = None,
@@ -255,6 +355,9 @@ def get_leads(
 ) -> List[Lead]:
     """Get leads with optional filtering."""
     query = db.query(Lead)
+
+    if workspace_id:
+        query = query.filter(Lead.workspace_id == workspace_id)
 
     if status:
         query = query.filter(Lead.status == status)
@@ -329,6 +432,7 @@ def get_accounts(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     label: Optional[str] = None,
     industry: Optional[str] = None,
@@ -336,6 +440,9 @@ def get_accounts(
 ) -> List[Account]:
     """Get accounts with optional filtering."""
     query = db.query(Account)
+
+    if workspace_id:
+        query = query.filter(Account.workspace_id == workspace_id)
 
     if status:
         query = query.filter(Account.status == status)
@@ -411,6 +518,7 @@ def get_contacts(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     contact_type: Optional[str] = None,
     account_id: Optional[int] = None,
     icp_fit: Optional[str] = None,
@@ -419,6 +527,9 @@ def get_contacts(
 ) -> List[Contact]:
     """Get contacts with optional filtering."""
     query = db.query(Contact)
+
+    if workspace_id:
+        query = query.filter(Contact.workspace_id == workspace_id)
 
     if contact_type:
         query = query.filter(Contact.contact_type == contact_type)
@@ -497,6 +608,7 @@ def get_tasks(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     priority: Optional[str] = None,
     task_type: Optional[str] = None,
@@ -510,6 +622,9 @@ def get_tasks(
 ) -> List[Task]:
     """Get tasks with optional filtering."""
     query = db.query(Task)
+
+    if workspace_id:
+        query = query.filter(Task.workspace_id == workspace_id)
 
     if status:
         query = query.filter(Task.status == status)

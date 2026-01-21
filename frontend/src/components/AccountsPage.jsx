@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { accountApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 import TableView from './ui/TableView';
 import StatusBadge from './ui/StatusBadge';
 
@@ -302,6 +303,9 @@ function AccountFormModal({ account, onClose, onSave }) {
 // ============================================
 
 export default function AccountsPage() {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+
   // Data state
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -324,18 +328,23 @@ export default function AccountsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await accountApi.getAll(filters);
+      const response = await accountApi.getAll({
+        ...filters,
+        workspace_id: currentWorkspace?.id,
+      });
       setAccounts(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load accounts');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentWorkspace]);
 
   useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+    if (currentWorkspace) {
+      fetchAccounts();
+    }
+  }, [fetchAccounts, currentWorkspace]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

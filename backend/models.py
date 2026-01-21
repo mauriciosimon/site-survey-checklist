@@ -157,6 +157,29 @@ class TaskType(str, enum.Enum):
     other = "Other"             # #cab641 (Mustered)
 
 
+class Workspace(Base):
+    """Workspace model to organize data like Monday.com workspaces"""
+    __tablename__ = "workspaces"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    monday_workspace_id = Column(String(50), unique=True, index=True, nullable=True)
+    icon = Column(String(10))  # Single character or emoji
+    color = Column(String(20))  # Hex color code
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    deals = relationship("Deal", back_populates="workspace")
+    leads = relationship("Lead", back_populates="workspace")
+    accounts = relationship("Account", back_populates="workspace")
+    contacts = relationship("Contact", back_populates="workspace")
+    tasks = relationship("Task", back_populates="workspace")
+    checklists = relationship("Checklist", back_populates="workspace")
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -175,6 +198,7 @@ class Deal(Base):
     __tablename__ = "deals"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
     # Core fields
@@ -215,6 +239,7 @@ class Deal(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    workspace = relationship("Workspace", back_populates="deals")
     owner = relationship("User", backref="deals")
     account = relationship("Account", backref="deals")
     lead = relationship("Lead", backref="deals")
@@ -226,6 +251,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
     # Core fields
@@ -256,6 +282,7 @@ class Lead(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    workspace = relationship("Workspace", back_populates="leads")
     owner = relationship("User", backref="leads")
 
 
@@ -264,6 +291,7 @@ class Account(Base):
     __tablename__ = "accounts"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
     # Core fields
@@ -298,6 +326,7 @@ class Account(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    workspace = relationship("Workspace", back_populates="accounts")
     owner = relationship("User", backref="accounts")
     contacts = relationship("Contact", back_populates="account")
 
@@ -307,6 +336,7 @@ class Contact(Base):
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
     # Core fields
@@ -348,6 +378,7 @@ class Contact(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    workspace = relationship("Workspace", back_populates="contacts")
     account = relationship("Account", back_populates="contacts")
     owner = relationship("User", backref="contacts")
 
@@ -357,6 +388,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     monday_item_id = Column(String(50), unique=True, index=True, nullable=True)  # For Monday.com sync
 
     # Core fields
@@ -391,6 +423,7 @@ class Task(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    workspace = relationship("Workspace", back_populates="tasks")
     deal = relationship("Deal", backref="tasks")
     lead = relationship("Lead", backref="tasks")
     account = relationship("Account", backref="tasks")
@@ -402,6 +435,7 @@ class Checklist(Base):
     __tablename__ = "checklists"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deal_id = Column(Integer, ForeignKey("deals.id"), nullable=True)  # Link to Monday Opportunity
 
@@ -462,5 +496,6 @@ class Checklist(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    workspace = relationship("Workspace", back_populates="checklists")
     owner = relationship("User", back_populates="checklists")
     deal = relationship("Deal", back_populates="checklists")

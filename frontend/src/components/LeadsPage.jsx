@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { leadApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 import KanbanBoard, { LEAD_STAGES } from './ui/KanbanBoard';
 import TableView from './ui/TableView';
 import StatusBadge from './ui/StatusBadge';
@@ -243,6 +244,9 @@ function LeadFormModal({ lead, onClose, onSave }) {
 // ============================================
 
 export default function LeadsPage() {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+
   // View state
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'table'
 
@@ -268,18 +272,23 @@ export default function LeadsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await leadApi.getAll(filters);
+      const response = await leadApi.getAll({
+        ...filters,
+        workspace_id: currentWorkspace?.id,
+      });
       setLeads(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load leads');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentWorkspace]);
 
   useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+    if (currentWorkspace) {
+      fetchLeads();
+    }
+  }, [fetchLeads, currentWorkspace]);
 
   // Handle filter change
   const handleFilterChange = (e) => {

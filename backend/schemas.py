@@ -38,9 +38,51 @@ class Token(BaseModel):
     user: UserResponse
 
 
+# ============ Workspace Schemas ============
+
+class WorkspaceBase(BaseModel):
+    """Base schema for Workspace matching Monday.com workspace structure"""
+    name: str
+    description: Optional[str] = None
+    monday_workspace_id: Optional[str] = None  # For Monday.com sync
+    icon: Optional[str] = None  # Single character or emoji
+    color: Optional[str] = None  # Hex color code
+    is_active: Optional[bool] = True
+
+
+class WorkspaceCreate(WorkspaceBase):
+    pass
+
+
+class WorkspaceUpdate(WorkspaceBase):
+    name: Optional[str] = None
+
+
+class WorkspaceResponse(WorkspaceBase):
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceWithCounts(WorkspaceResponse):
+    """Workspace with entity counts"""
+    lead_count: int = 0
+    deal_count: int = 0
+    account_count: int = 0
+    contact_count: int = 0
+    task_count: int = 0
+    checklist_count: int = 0
+
+
 # ============ Checklist Schemas ============
 
 class ChecklistBase(BaseModel):
+    # Workspace
+    workspace_id: Optional[int] = None
+
     # Deal link (optional)
     deal_id: Optional[int] = None
 
@@ -125,6 +167,9 @@ class ChecklistWithOwner(ChecklistResponse):
 
 class DealBase(BaseModel):
     """Base schema for Deal matching Satoris Monday.com Deals board"""
+    # Workspace
+    workspace_id: Optional[int] = None
+
     name: str
     stage: Optional[str] = "Prospects"  # Board group: Prospects, Preparing proposal, Proposal sent, Closed Won, Lost, Completed
     status: Optional[str] = "New deal"  # deal_stage: New deal, Prospect, Preparing proposal, Proposal, Proposal sent, etc.
@@ -182,6 +227,9 @@ class DealResponse(DealBase):
 
 class LeadBase(BaseModel):
     """Base schema for Lead matching Satoris Monday.com Leads board"""
+    # Workspace
+    workspace_id: Optional[int] = None
+
     name: str  # Lead/Company name
     status: Optional[str] = "New Lead"  # New Lead, Working on it, Prospect, Unqualified
     priority: Optional[str] = None  # Low, Medium, High, Critical
@@ -229,6 +277,9 @@ class LeadResponse(LeadBase):
 
 class AccountBase(BaseModel):
     """Base schema for Account matching Satoris Monday.com Accounts board"""
+    # Workspace
+    workspace_id: Optional[int] = None
+
     name: str  # Account/Company name
     status: Optional[str] = "Prospect"  # Qualified, Active, Inactive, Prospect
     label: Optional[str] = None  # Contractor, Main Contractor, Property Developer, etc.
@@ -280,6 +331,9 @@ class AccountResponse(AccountBase):
 
 class ContactBase(BaseModel):
     """Base schema for Contact matching Satoris Monday.com Contacts board"""
+    # Workspace
+    workspace_id: Optional[int] = None
+
     name: str  # Contact name
     company: Optional[str] = None  # Company name
     contact_type: Optional[str] = None  # Client, Past client, Potential Lead, Architecture, etc.
@@ -338,6 +392,9 @@ class ContactResponse(ContactBase):
 
 class TaskBase(BaseModel):
     """Base schema for Task matching Satoris Monday.com Tasks board"""
+    # Workspace
+    workspace_id: Optional[int] = None
+
     name: str  # Task name
     status: Optional[str] = "To do"  # To do, Working on it, Done, Stuck, On hold, Need info, Waiting for review
     priority: Optional[str] = None  # Critical, High, Medium, Low

@@ -15,7 +15,8 @@ from schemas import (
     LeadCreate, LeadUpdate, LeadResponse,
     AccountCreate, AccountUpdate, AccountResponse,
     ContactCreate, ContactUpdate, ContactResponse,
-    TaskCreate, TaskUpdate, TaskResponse
+    TaskCreate, TaskUpdate, TaskResponse,
+    WorkspaceCreate, WorkspaceUpdate, WorkspaceResponse, WorkspaceWithCounts
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -35,6 +36,59 @@ def run_migrations():
     with engine.connect() as conn:
         inspector = inspect(engine)
         tables = inspector.get_table_names()
+
+        # Create workspaces table if it doesn't exist
+        if 'workspaces' not in tables:
+            print("Running migration: Creating workspaces table...")
+            conn.execute(text('''
+                CREATE TABLE workspaces (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    monday_workspace_id VARCHAR(50) UNIQUE,
+                    icon VARCHAR(10),
+                    color VARCHAR(20),
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE
+                )
+            '''))
+            conn.execute(text('CREATE INDEX ix_workspaces_id ON workspaces(id)'))
+            conn.execute(text('CREATE INDEX ix_workspaces_monday_workspace_id ON workspaces(monday_workspace_id)'))
+            conn.commit()
+            print("Migration complete: workspaces table created")
+
+            # Seed default workspaces
+            print("Running migration: Seeding default workspaces...")
+            conn.execute(text('''
+                INSERT INTO workspaces (name, monday_workspace_id, icon, color, is_active)
+                VALUES
+                    ('CRM - Satoris', '4323419', '💼', '#0086c0', TRUE),
+                    ('Business Technology Group', '5562899', '💻', '#00c875', TRUE),
+                    ('MVP Template', '5556997', '📋', '#fdab3d', TRUE)
+            '''))
+            conn.commit()
+            print("Migration complete: default workspaces seeded")
+        else:
+            print("Schema up to date: workspaces table exists")
+
+        # Add workspace_id column to existing tables
+        for table_name in ['deals', 'leads', 'accounts', 'contacts', 'tasks', 'checklists']:
+            if table_name in tables:
+                columns = [col['name'] for col in inspector.get_columns(table_name)]
+                if 'workspace_id' not in columns:
+                    print(f"Running migration: Adding workspace_id column to {table_name} table...")
+                    conn.execute(text(f'ALTER TABLE {table_name} ADD COLUMN workspace_id INTEGER REFERENCES workspaces(id)'))
+                    conn.execute(text(f'CREATE INDEX ix_{table_name}_workspace_id ON {table_name}(workspace_id)'))
+                    conn.commit()
+                    print(f"Migration complete: workspace_id column added to {table_name}")
+
+                    # Assign existing data to CRM - Satoris workspace (id=1)
+                    if table_name in ['deals', 'leads', 'accounts', 'contacts', 'tasks']:
+                        print(f"Running migration: Assigning existing {table_name} to CRM - Satoris workspace...")
+                        conn.execute(text(f'UPDATE {table_name} SET workspace_id = 1 WHERE workspace_id IS NULL'))
+                        conn.commit()
+                        print(f"Migration complete: existing {table_name} assigned to workspace")
 
         # Check if deal_id column exists in checklists table
         if 'checklists' in tables:
@@ -410,19 +464,101 @@ def admin_get_all_checklists(
     return result
 
 
+# ============ Workspace Endpoints ============
+
+@app.get("/workspaces", response_model=List[WorkspaceResponse])
+def list_workspaces(
+    skip: int = 0,
+    limit: int = 100,
+    is_active: Optional[bool] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """List all workspaces with optional filtering."""
+    return crud.get_workspaces(db, skip=skip, limit=limit, is_active=is_active, search=search)
+
+
+@app.get("/workspaces/{workspace_id}", response_model=WorkspaceWithCounts)
+def get_workspace(
+    workspace_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Get a single workspace by ID with entity counts."""
+    result = crud.get_workspace_with_counts(db, workspace_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    workspace, counts = result
+    response = WorkspaceWithCounts.model_validate(workspace)
+    response.lead_count = counts['lead_count']
+    response.deal_count = counts['deal_count']
+    response.account_count = counts['account_count']
+    response.contact_count = counts['contact_count']
+    response.task_count = counts['task_count']
+    response.checklist_count = counts['checklist_count']
+    return response
+
+
+@app.post("/workspaces", response_model=WorkspaceResponse)
+def create_workspace(
+    workspace: WorkspaceCreate,
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new workspace (admin only)."""
+    # Check for duplicate Monday workspace ID if provided
+    if workspace.monday_workspace_id:
+        existing = crud.get_workspace_by_monday_id(db, workspace.monday_workspace_id)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Workspace with this Monday.com workspace ID already exists"
+            )
+    return crud.create_workspace(db, workspace)
+
+
+@app.put("/workspaces/{workspace_id}", response_model=WorkspaceResponse)
+def update_workspace(
+    workspace_id: int,
+    workspace: WorkspaceUpdate,
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing workspace (admin only)."""
+    db_workspace = crud.update_workspace(db, workspace_id, workspace)
+    if not db_workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    return db_workspace
+
+
+@app.delete("/workspaces/{workspace_id}")
+def delete_workspace(
+    workspace_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a workspace (admin only)."""
+    success = crud.delete_workspace(db, workspace_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    return {"message": "Workspace deleted successfully"}
+
+
 # ============ Checklist Endpoints ============
 
 @app.get("/checklists", response_model=List[ChecklistResponse])
 def list_checklists(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     search: Optional[str] = None,
     current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     user_id = current_user.id if current_user else None
     is_admin = current_user.role == "admin" if current_user else False
-    return crud.get_checklists(db, skip=skip, limit=limit, search=search, user_id=user_id, is_admin=is_admin)
+    return crud.get_checklists(db, skip=skip, limit=limit, workspace_id=workspace_id, search=search, user_id=user_id, is_admin=is_admin)
 
 
 @app.get("/checklists/{checklist_id}", response_model=ChecklistResponse)
@@ -517,6 +653,7 @@ async def upload_photo(
 def list_deals(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     stage: Optional[str] = None,
     status: Optional[str] = None,
     grade: Optional[str] = None,
@@ -527,9 +664,9 @@ def list_deals(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all deals with optional filtering by stage, status, grade, deal_type, or search term."""
+    """List all deals with optional filtering by workspace, stage, status, grade, deal_type, or search term."""
     return crud.get_deals(
-        db, skip=skip, limit=limit,
+        db, skip=skip, limit=limit, workspace_id=workspace_id,
         stage=stage, status=status, grade=grade, deal_type=deal_type,
         account_id=account_id, lead_id=lead_id, search=search
     )
@@ -599,6 +736,7 @@ def delete_deal(
 def list_leads(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     priority: Optional[str] = None,
     source: Optional[str] = None,
@@ -606,9 +744,9 @@ def list_leads(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all leads with optional filtering by status, priority, source, or search term."""
+    """List all leads with optional filtering by workspace, status, priority, source, or search term."""
     return crud.get_leads(
-        db, skip=skip, limit=limit,
+        db, skip=skip, limit=limit, workspace_id=workspace_id,
         status=status, priority=priority, source=source, search=search
     )
 
@@ -677,6 +815,7 @@ def delete_lead(
 def list_accounts(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     label: Optional[str] = None,
     industry: Optional[str] = None,
@@ -684,9 +823,9 @@ def list_accounts(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all accounts with optional filtering by status, label, industry, or search term."""
+    """List all accounts with optional filtering by workspace, status, label, industry, or search term."""
     return crud.get_accounts(
-        db, skip=skip, limit=limit,
+        db, skip=skip, limit=limit, workspace_id=workspace_id,
         status=status, label=label, industry=industry, search=search
     )
 
@@ -755,6 +894,7 @@ def delete_account(
 def list_contacts(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     contact_type: Optional[str] = None,
     account_id: Optional[int] = None,
     icp_fit: Optional[str] = None,
@@ -763,9 +903,9 @@ def list_contacts(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all contacts with optional filtering."""
+    """List all contacts with optional filtering by workspace."""
     return crud.get_contacts(
-        db, skip=skip, limit=limit,
+        db, skip=skip, limit=limit, workspace_id=workspace_id,
         contact_type=contact_type, account_id=account_id,
         icp_fit=icp_fit, outreach_stage=outreach_stage, search=search
     )
@@ -835,6 +975,7 @@ def delete_contact(
 def list_tasks(
     skip: int = 0,
     limit: int = 100,
+    workspace_id: Optional[int] = None,
     status: Optional[str] = None,
     priority: Optional[str] = None,
     task_type: Optional[str] = None,
@@ -848,9 +989,9 @@ def list_tasks(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """List all tasks with optional filtering."""
+    """List all tasks with optional filtering by workspace."""
     return crud.get_tasks(
-        db, skip=skip, limit=limit,
+        db, skip=skip, limit=limit, workspace_id=workspace_id,
         status=status, priority=priority, task_type=task_type,
         owner_id=owner_id, due_date_from=due_date_from, due_date_to=due_date_to,
         deal_id=deal_id, lead_id=lead_id, account_id=account_id, search=search

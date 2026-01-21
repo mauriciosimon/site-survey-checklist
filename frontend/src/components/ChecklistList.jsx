@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { checklistApi } from '../api';
+import { useWorkspace } from '../WorkspaceContext';
 
 function ChecklistList() {
+  const { currentWorkspace } = useWorkspace();
   const [checklists, setChecklists] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const fetchChecklists = async () => {
+  const fetchChecklists = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await checklistApi.getAll(search);
+      const response = await checklistApi.getAll({
+        search,
+        workspace_id: currentWorkspace?.id,
+      });
       setChecklists(response.data);
       setError(null);
     } catch (err) {
@@ -21,11 +26,13 @@ function ChecklistList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, currentWorkspace]);
 
   useEffect(() => {
-    fetchChecklists();
-  }, []);
+    if (currentWorkspace) {
+      fetchChecklists();
+    }
+  }, [fetchChecklists, currentWorkspace]);
 
   const handleSearch = (e) => {
     e.preventDefault();

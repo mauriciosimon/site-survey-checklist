@@ -1,4 +1,4 @@
-import { useState, Children } from 'react';
+import { useState, Children, useRef, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,8 +16,10 @@ import {
   TrendingUp,
   UserCircle,
   Briefcase,
-  FileText
+  FileText,
+  Check
 } from 'lucide-react';
+import { useWorkspace } from '../WorkspaceContext';
 
 // Folder component with expand/collapse
 function Folder({ title, children, defaultOpen = false }) {
@@ -70,15 +72,67 @@ function NavItem({ to, icon: Icon, label, badge }) {
 }
 
 export default function Sidebar({ collapsed = false, onToggle }) {
+  const { workspaces, currentWorkspace, switchWorkspace, loading } = useWorkspace();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleWorkspaceSelect = (workspace) => {
+    switchWorkspace(workspace);
+    setDropdownOpen(false);
+  };
+
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Workspace Header */}
-      <div className="sidebar-header">
-        <div className="workspace-icon">S</div>
-        <span className="workspace-name">Satoris</span>
+      {/* Workspace Header with Dropdown */}
+      <div className="sidebar-header" ref={dropdownRef}>
+        <button
+          className="workspace-selector"
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          disabled={loading}
+        >
+          <div className="workspace-icon">
+            {currentWorkspace?.icon || currentWorkspace?.name?.charAt(0) || 'W'}
+          </div>
+          <span className="workspace-name">
+            {currentWorkspace?.name || 'Select Workspace'}
+          </span>
+          <ChevronDown size={14} className={`workspace-arrow ${dropdownOpen ? 'open' : ''}`} />
+        </button>
         <button className="sidebar-toggle" onClick={onToggle}>
           <Menu size={18} />
         </button>
+
+        {/* Workspace Dropdown */}
+        {dropdownOpen && (
+          <div className="workspace-dropdown">
+            {workspaces.map((workspace) => (
+              <button
+                key={workspace.id}
+                className={`workspace-option ${workspace.id === currentWorkspace?.id ? 'active' : ''}`}
+                onClick={() => handleWorkspaceSelect(workspace)}
+              >
+                <span className="workspace-option-icon">
+                  {workspace.icon || workspace.name?.charAt(0)}
+                </span>
+                <span className="workspace-option-name">{workspace.name}</span>
+                {workspace.id === currentWorkspace?.id && (
+                  <Check size={14} className="workspace-check" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="sidebar-content">

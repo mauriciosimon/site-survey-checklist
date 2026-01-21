@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
+import { WorkspaceProvider } from './WorkspaceContext';
 import { Search, Bell, Settings, LogOut } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChecklistList from './components/ChecklistList';
@@ -235,7 +236,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <WorkspaceProvider>
+          <AppContent />
+        </WorkspaceProvider>
       </AuthProvider>
     </BrowserRouter>
   );
