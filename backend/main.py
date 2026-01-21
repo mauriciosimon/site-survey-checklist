@@ -90,6 +90,23 @@ def run_migrations():
                         conn.commit()
                         print(f"Migration complete: existing {table_name} assigned to workspace")
 
+        # Ensure existing data is assigned to CRM - Satoris workspace (run every time)
+        if 'workspaces' in tables:
+            # Check if workspaces exist
+            result = conn.execute(text('SELECT COUNT(*) FROM workspaces WHERE id = 1'))
+            workspace_exists = result.scalar() > 0
+
+            if workspace_exists:
+                for table_name in ['deals', 'leads', 'accounts', 'contacts', 'tasks']:
+                    if table_name in tables:
+                        result = conn.execute(text(f'SELECT COUNT(*) FROM {table_name} WHERE workspace_id IS NULL'))
+                        null_count = result.scalar()
+                        if null_count > 0:
+                            print(f"Running migration: Assigning {null_count} {table_name} to CRM - Satoris workspace...")
+                            conn.execute(text(f'UPDATE {table_name} SET workspace_id = 1 WHERE workspace_id IS NULL'))
+                            conn.commit()
+                            print(f"Migration complete: {table_name} assigned to workspace")
+
         # Check if deal_id column exists in checklists table
         if 'checklists' in tables:
             columns = [col['name'] for col in inspector.get_columns('checklists')]
