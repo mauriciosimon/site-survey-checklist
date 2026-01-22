@@ -1746,10 +1746,50 @@ header .logo {
 }
 
 /* ============================================
+   MOBILE MENU BUTTON & OVERLAY
+   ============================================ */
+
+.mobile-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+/* ============================================
    RESPONSIVE STYLES
    ============================================ */
 
 @media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
   .app-layout {
     flex-direction: column;
   }

@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, createContext, useContext, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { WorkspaceProvider } from './WorkspaceContext';
-import { Search, Bell, Settings, LogOut } from 'lucide-react';
+import { Search, Bell, Settings, LogOut, Menu, X } from 'lucide-react';
+
+// Mobile sidebar context
+const MobileSidebarContext = createContext();
+export const useMobileSidebar = () => useContext(MobileSidebarContext);
 import Sidebar from './components/Sidebar';
 import ChecklistList from './components/ChecklistList';
 import ChecklistForm from './components/ChecklistForm';
@@ -40,6 +44,7 @@ function Header() {
   const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { mobileOpen, setMobileOpen } = useMobileSidebar();
 
   const handleLogout = () => {
     logout();
@@ -55,6 +60,15 @@ function Header() {
   return (
     <header>
       <div className="header-left">
+        {user && (
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
         <Link to="/" className="logo-section">
           <img src="/logo.png" alt="West Park Contracting" className="logo" />
         </Link>
@@ -122,6 +136,7 @@ function Header() {
 function MainLayout({ children }) {
   const { user } = useAuth();
   const location = useLocation();
+  const { mobileOpen, setMobileOpen } = useMobileSidebar();
 
   // Don't show sidebar on auth pages
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
@@ -132,7 +147,14 @@ function MainLayout({ children }) {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="mobile-overlay"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       <main className="main-content">
         {children}
       </main>
@@ -142,15 +164,23 @@ function MainLayout({ children }) {
 
 function AppContent() {
   const { loading } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
 
   return (
-    <div className="app">
-      <Header />
-      <MainLayout>
+    <MobileSidebarContext.Provider value={{ mobileOpen, setMobileOpen }}>
+      <div className="app">
+        <Header />
+        <MainLayout>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
@@ -234,7 +264,8 @@ function AppContent() {
           } />
         </Routes>
       </MainLayout>
-    </div>
+      </div>
+    </MobileSidebarContext.Provider>
   );
 }
 

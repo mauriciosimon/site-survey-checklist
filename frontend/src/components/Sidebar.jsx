@@ -71,10 +71,11 @@ function NavItem({ to, icon: Icon, label, badge }) {
   );
 }
 
-export default function Sidebar({ collapsed = false, onToggle }) {
+export default function Sidebar({ collapsed = false, onToggle, mobileOpen = false, onCloseMobile }) {
   const { workspaces, currentWorkspace, switchWorkspace, loading } = useWorkspace();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const location = useLocation();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Workspace Header with Dropdown */}
       <div className="sidebar-header" ref={dropdownRef}>
         <button
