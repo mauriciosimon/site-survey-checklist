@@ -195,7 +195,7 @@ export default function DashboardPage() {
 
       {/* KPI Cards Row */}
       <div className="kpi-grid">
-        <div className="kpi-card primary">
+        <Link to="/deals" className="kpi-card primary">
           <div className="kpi-icon">
             <DollarSign size={24} />
           </div>
@@ -204,9 +204,9 @@ export default function DashboardPage() {
             <span className="kpi-value">{formatCurrency(metrics.pipeline.total)}</span>
             <span className="kpi-detail">{metrics.deals.total} deals</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="kpi-card success">
+        <Link to="/deals" className="kpi-card success">
           <div className="kpi-icon">
             <Award size={24} />
           </div>
@@ -215,9 +215,9 @@ export default function DashboardPage() {
             <span className="kpi-value">{formatCurrency(metrics.pipeline.won)}</span>
             <span className="kpi-detail">{metrics.pipeline.wonCount} deals closed</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="kpi-card info">
+        <Link to="/deals" className="kpi-card info">
           <div className="kpi-icon">
             <TrendingUp size={24} />
           </div>
@@ -226,9 +226,9 @@ export default function DashboardPage() {
             <span className="kpi-value">{winRate}%</span>
             <span className="kpi-detail">{totalClosed} deals closed</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="kpi-card warning">
+        <Link to="/leads" className="kpi-card warning">
           <div className="kpi-icon">
             <Target size={24} />
           </div>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
             <span className="kpi-value">{metrics.leads.total}</span>
             <span className="kpi-detail">{metrics.leads.qualified} qualified</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Charts Row */}
