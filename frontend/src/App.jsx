@@ -20,10 +20,8 @@ import AccountsPage from './components/AccountsPage';
 import ContactsPage from './components/ContactsPage';
 import TasksPage from './components/TasksPage';
 import OpportunitiesPage from './components/OpportunitiesPage';
-import {
-  DashboardPage,
-  ProjectsPage
-} from './components/PlaceholderPage';
+import DashboardPage from './components/DashboardPage';
+import { ProjectsPage } from './components/PlaceholderPage';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
