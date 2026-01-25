@@ -86,4 +86,7 @@ class Checklist(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Monday.com integration
+    monday_item_id = Column(String(50), nullable=True)
+
     owner = relationship("User", back_populates="checklists")

@@ -17,6 +17,10 @@ from auth import (
 )
 from models import User
 import crud
+import monday_api
+
+# Frontend URL for generating survey links
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://site-checklist.vercel.app")
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -166,12 +170,32 @@ def create_checklist(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    return crud.create_checklist(
+    # Create checklist in database
+    db_checklist = crud.create_checklist(
         db,
         checklist,
         user_id=current_user.id,
         surveyor_name=current_user.full_name
     )
+
+    # Sync to Monday.com Site Surveys board
+    survey_url = f"{FRONTEND_URL}/view/{db_checklist.id}"
+    survey_date = str(db_checklist.survey_date) if db_checklist.survey_date else None
+
+    monday_result = monday_api.create_site_survey_item(
+        name=db_checklist.site_name,
+        survey_url=survey_url,
+        survey_date=survey_date,
+        status="Working on it"
+    )
+
+    # Store Monday.com item ID if sync was successful
+    if monday_result.get("success") and monday_result.get("item_id"):
+        db_checklist.monday_item_id = monday_result["item_id"]
+        db.commit()
+        db.refresh(db_checklist)
+
+    return db_checklist
 
 
 @app.put("/checklists/{checklist_id}", response_model=ChecklistResponse)
