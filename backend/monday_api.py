@@ -60,11 +60,14 @@ def create_site_survey_item(
     import json
     column_values_json = json.dumps(json.dumps(column_values))
 
+    # Escape quotes in name for GraphQL
+    escaped_name = name.replace('"', '\\"')
+
     query = f'''
     mutation {{
         create_item (
             board_id: {SITE_SURVEYS_BOARD_ID},
-            item_name: "{name.replace('"', '\\"')}",
+            item_name: "{escaped_name}",
             column_values: {column_values_json}
         ) {{
             id
@@ -151,12 +154,13 @@ def update_site_survey_item(
     mutations = []
 
     if name:
+        escaped_name = name.replace('"', '\\"')
         mutations.append(f'''
         change_simple_column_value(
             board_id: {SITE_SURVEYS_BOARD_ID},
             item_id: {item_id},
             column_id: "name",
-            value: "{name.replace('"', '\\"')}"
+            value: "{escaped_name}"
         ) {{
             id
         }}
