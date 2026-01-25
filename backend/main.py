@@ -28,7 +28,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Site Visit Checklist API",
     description="API for managing construction site visit checklists",
-    version="2.0.0"
+    version="2.1.0"  # Added Monday.com integration
 )
 
 # CORS middleware - allow Vercel deployments and localhost
