@@ -25,6 +25,19 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "https://site-checklist.vercel.app")
 # Create tables
 Base.metadata.create_all(bind=engine)
 
+# Migration: Add monday_item_id column if it doesn't exist
+from sqlalchemy import text
+with engine.connect() as conn:
+    try:
+        conn.execute(text("ALTER TABLE checklists ADD COLUMN monday_item_id VARCHAR(50)"))
+        conn.commit()
+        print("Migration complete: added monday_item_id column")
+    except Exception as e:
+        if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+            print("Column monday_item_id already exists")
+        else:
+            print(f"Migration note: {e}")
+
 app = FastAPI(
     title="Site Visit Checklist API",
     description="API for managing construction site visit checklists",
