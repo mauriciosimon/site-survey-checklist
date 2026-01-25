@@ -512,3 +512,21 @@ class OpportunityResponse(OpportunityBase):
 
     class Config:
         from_attributes = True
+
+
+# ============ Chat Schemas ============
+
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    workspace_id: int
+    conversation_history: Optional[List[ChatMessage]] = []
+
+
+class ChatResponse(BaseModel):
+    response: str
+    workspace_name: Optional[str] = None

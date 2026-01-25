@@ -266,4 +266,9 @@ export const opportunityApi = {
     api.delete(`/opportunities/${id}`),
 };
 
+export const chatApi = {
+  sendMessage: (data) =>
+    api.post('/chat', data),
+};
+
 export default api;

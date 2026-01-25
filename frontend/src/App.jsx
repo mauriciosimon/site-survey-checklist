@@ -22,6 +22,7 @@ import TasksPage from './components/TasksPage';
 import OpportunitiesPage from './components/OpportunitiesPage';
 import DashboardPage from './components/DashboardPage';
 import { ProjectsPage } from './components/PlaceholderPage';
+import ChatWidget from './components/ChatWidget';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -156,6 +157,7 @@ function MainLayout({ children }) {
       <main className="main-content">
         {children}
       </main>
+      <ChatWidget />
     </div>
   );
 }

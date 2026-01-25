@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
+import anthropic
 
 from database import engine, get_db, Base, SessionLocal
 from schemas import (
@@ -17,7 +18,8 @@ from schemas import (
     ContactCreate, ContactUpdate, ContactResponse,
     TaskCreate, TaskUpdate, TaskResponse,
     OpportunityCreate, OpportunityUpdate, OpportunityResponse,
-    WorkspaceCreate, WorkspaceUpdate, WorkspaceResponse, WorkspaceWithCounts
+    WorkspaceCreate, WorkspaceUpdate, WorkspaceResponse, WorkspaceWithCounts,
+    ChatRequest, ChatResponse
 )
 from auth import (
     get_current_user, get_current_user_required, get_admin_user,
@@ -1201,6 +1203,191 @@ def delete_opportunity(
     if not success:
         raise HTTPException(status_code=404, detail="Opportunity not found")
     return {"message": "Opportunity deleted successfully"}
+
+
+# ============ Chat Endpoint (West Park AI) ============
+
+def build_workspace_context(db: Session, workspace_id: int) -> str:
+    """Build context string with workspace data for the AI assistant."""
+    # Get workspace info
+    workspace = crud.get_workspace(db, workspace_id)
+    if not workspace:
+        return "No workspace data available."
+
+    context_parts = [f"Current Workspace: {workspace.name}"]
+
+    # Get deals
+    deals = crud.get_deals(db, workspace_id=workspace_id, limit=50)
+    if deals:
+        context_parts.append(f"\n## Deals ({len(deals)} total)")
+        for deal in deals[:20]:  # Limit to 20 for context size
+            deal_info = f"- {deal.name}"
+            if deal.stage:
+                deal_info += f" | Stage: {deal.stage}"
+            if deal.status:
+                deal_info += f" | Status: {deal.status}"
+            if deal.value:
+                deal_info += f" | Value: ${deal.value:,.2f}"
+            if deal.close_date:
+                deal_info += f" | Close Date: {deal.close_date}"
+            context_parts.append(deal_info)
+
+    # Get leads
+    leads = crud.get_leads(db, workspace_id=workspace_id, limit=50)
+    if leads:
+        context_parts.append(f"\n## Leads ({len(leads)} total)")
+        for lead in leads[:20]:
+            lead_info = f"- {lead.name}"
+            if lead.status:
+                lead_info += f" | Status: {lead.status}"
+            if lead.priority:
+                lead_info += f" | Priority: {lead.priority}"
+            if lead.next_interaction_date:
+                lead_info += f" | Next Interaction: {lead.next_interaction_date}"
+            context_parts.append(lead_info)
+
+    # Get tasks
+    tasks = crud.get_tasks(db, workspace_id=workspace_id, limit=50)
+    if tasks:
+        open_tasks = [t for t in tasks if t.status not in ['Done', 'Completed']]
+        context_parts.append(f"\n## Tasks ({len(open_tasks)} open / {len(tasks)} total)")
+        for task in open_tasks[:15]:
+            task_info = f"- {task.name}"
+            if task.status:
+                task_info += f" | Status: {task.status}"
+            if task.priority:
+                task_info += f" | Priority: {task.priority}"
+            if task.due_date:
+                task_info += f" | Due: {task.due_date}"
+            context_parts.append(task_info)
+
+    # Get opportunities (for BTG workspace)
+    opportunities = crud.get_opportunities(db, workspace_id=workspace_id, limit=50)
+    if opportunities:
+        context_parts.append(f"\n## Opportunities ({len(opportunities)} total)")
+        for opp in opportunities[:20]:
+            opp_info = f"- {opp.name}"
+            if opp.stage:
+                opp_info += f" | Stage: {opp.stage}"
+            if opp.grade:
+                opp_info += f" | Grade: {opp.grade}"
+            if opp.sale_price:
+                opp_info += f" | Value: ${opp.sale_price:,.2f}"
+            if opp.next_interaction:
+                opp_info += f" | Next: {opp.next_interaction}"
+            context_parts.append(opp_info)
+
+    # Get accounts
+    accounts = crud.get_accounts(db, workspace_id=workspace_id, limit=30)
+    if accounts:
+        context_parts.append(f"\n## Accounts ({len(accounts)} total)")
+        for acc in accounts[:10]:
+            acc_info = f"- {acc.name}"
+            if acc.status:
+                acc_info += f" | Status: {acc.status}"
+            context_parts.append(acc_info)
+
+    # Get contacts
+    contacts = crud.get_contacts(db, workspace_id=workspace_id, limit=30)
+    if contacts:
+        context_parts.append(f"\n## Contacts ({len(contacts)} total)")
+        for contact in contacts[:10]:
+            contact_info = f"- {contact.name}"
+            if contact.company:
+                contact_info += f" | Company: {contact.company}"
+            if contact.job_title:
+                contact_info += f" | Title: {contact.job_title}"
+            context_parts.append(contact_info)
+
+    return "\n".join(context_parts)
+
+
+WEST_PARK_AI_SYSTEM_PROMPT = """You are West Park AI, an intelligent assistant for West Park Contracting's CRM system. Your role is to help users understand their business data, identify priorities, and provide actionable insights.
+
+## Your Capabilities
+- Analyze deals, leads, opportunities, tasks, accounts, and contacts
+- Identify urgent items requiring attention (overdue tasks, stalled deals, etc.)
+- Provide summaries of pipeline status and key metrics
+- Suggest next actions based on the data
+- Answer questions about specific records or trends
+
+## Communication Style
+- Be concise and action-oriented
+- Use bullet points for lists
+- Highlight urgent items first
+- Provide specific names/numbers from the data when relevant
+- If you don't have enough data to answer, say so clearly
+
+## Current Workspace Data
+{workspace_context}
+
+Remember: Only reference data from the current workspace. Be helpful but brief."""
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_with_ai(
+    chat_request: ChatRequest,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Chat with West Park AI assistant."""
+    # Get API key from environment
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="AI service not configured. Please contact administrator."
+        )
+
+    # Get workspace info
+    workspace = crud.get_workspace(db, chat_request.workspace_id)
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    # Build context from workspace data
+    workspace_context = build_workspace_context(db, chat_request.workspace_id)
+
+    # Build system prompt with context
+    system_prompt = WEST_PARK_AI_SYSTEM_PROMPT.format(workspace_context=workspace_context)
+
+    # Build messages for Claude
+    messages = []
+
+    # Add conversation history
+    for msg in chat_request.conversation_history:
+        messages.append({
+            "role": msg.role,
+            "content": msg.content
+        })
+
+    # Add current user message
+    messages.append({
+        "role": "user",
+        "content": chat_request.message
+    })
+
+    try:
+        # Call Claude API
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1024,
+            system=system_prompt,
+            messages=messages
+        )
+
+        ai_response = response.content[0].text
+
+        return ChatResponse(
+            response=ai_response,
+            workspace_name=workspace.name
+        )
+
+    except anthropic.APIError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI service error: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
