@@ -62,6 +62,7 @@ function ChecklistForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
+  const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
 
   useEffect(() => {
     if (isEdit) {
@@ -116,7 +117,20 @@ function ChecklistForm() {
       if (isEdit) {
         await checklistApi.update(id, cleanData);
       } else {
-        await checklistApi.create(cleanData);
+        // Create the survey first
+        const response = await checklistApi.create(cleanData);
+        const newId = response.data.id;
+
+        // Upload any pending photos
+        if (pendingPhotos.length > 0) {
+          for (const photo of pendingPhotos) {
+            try {
+              await checklistApi.uploadPhoto(newId, photo);
+            } catch (photoErr) {
+              console.error('Failed to upload photo:', photoErr);
+            }
+          }
+        }
       }
       navigate('/');
     } catch (err) {
@@ -559,9 +573,54 @@ function ChecklistForm() {
                 )}
               </>
             ) : (
-              <p style={{ color: '#666', marginTop: '10px', fontStyle: 'italic' }}>
-                Save the survey first, then you can add photos by editing it.
-              </p>
+              <>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files[0]) {
+                        setPendingPhotos(prev => [...prev, e.target.files[0]]);
+                        e.target.value = ''; // Reset input to allow selecting same file
+                      }
+                    }}
+                  />
+                  <span style={{ color: '#666', fontSize: '14px' }}>
+                    {pendingPhotos.length > 0 ? `${pendingPhotos.length} photo(s) selected` : 'Select photos to upload'}
+                  </span>
+                </div>
+                {pendingPhotos.length > 0 && (
+                  <div className="photo-grid" style={{ marginTop: '10px' }}>
+                    {pendingPhotos.map((photo, idx) => (
+                      <div key={idx} style={{ position: 'relative' }}>
+                        <img
+                          src={URL.createObjectURL(photo)}
+                          alt={`Pending photo ${idx + 1}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '5px',
+                            background: '#e74c3c',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
