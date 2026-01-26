@@ -527,37 +527,43 @@ function ChecklistForm() {
             />
           </div>
 
-          {isEdit && (
-            <div className="photo-upload">
-              <label>Site Photos</label>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setPhotoFile(e.target.files[0])}
-                />
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handlePhotoUpload}
-                  disabled={!photoFile}
-                >
-                  Upload Photo
-                </button>
-              </div>
-              {formData.site_photos && formData.site_photos.length > 0 && (
-                <div className="photo-grid">
-                  {formData.site_photos.map((photo, idx) => (
-                    <img
-                      key={idx}
-                      src={`${API_BASE}${photo}`}
-                      alt={`Site photo ${idx + 1}`}
-                    />
-                  ))}
+          <div className="photo-upload">
+            <label>Site Photos</label>
+            {isEdit ? (
+              <>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPhotoFile(e.target.files[0])}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handlePhotoUpload}
+                    disabled={!photoFile}
+                  >
+                    Upload Photo
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
+                {formData.site_photos && formData.site_photos.length > 0 && (
+                  <div className="photo-grid">
+                    {formData.site_photos.map((photo, idx) => (
+                      <img
+                        key={idx}
+                        src={`${API_BASE}${photo}`}
+                        alt={`Site photo ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ color: '#666', marginTop: '10px', fontStyle: 'italic' }}>
+                Save the survey first, then you can add photos by editing it.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="form-actions">
