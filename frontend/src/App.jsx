@@ -69,7 +69,7 @@ function Header() {
           </button>
         )}
         <Link to="/" className="logo-section">
-          <img src="/logo.png" alt="West Park Contracting" className="logo" />
+          <span className="logo-text">Kill Monday</span>
         </Link>
         {user && (
           <div className="header-search">

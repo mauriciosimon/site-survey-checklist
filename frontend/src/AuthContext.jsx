@@ -3,11 +3,33 @@ import { authApi } from './api';
 
 const AuthContext = createContext(null);
 
+// Demo admin user for sharing
+const DEMO_ADMIN = {
+  id: 'demo-admin',
+  email: 'admin@killmonday.app',
+  full_name: 'Demo Admin',
+  role: 'admin'
+};
+const DEMO_TOKEN = 'demo-admin-token-killmonday';
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for demo mode via URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'admin') {
+      // Auto-login as demo admin
+      localStorage.setItem('token', DEMO_TOKEN);
+      localStorage.setItem('user', JSON.stringify(DEMO_ADMIN));
+      setUser(DEMO_ADMIN);
+      setLoading(false);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
     // Check for existing token on mount
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');

@@ -82,7 +82,7 @@ export default function ChatWidget() {
         <button
           className="chat-widget-bubble"
           onClick={() => setIsOpen(true)}
-          title="Chat with West Park AI"
+          title="Chat with Kill Monday AI"
         >
           <MessageCircle size={24} />
         </button>
@@ -96,7 +96,7 @@ export default function ChatWidget() {
             <div className="chat-widget-header-info">
               <Bot size={20} />
               <div>
-                <span className="chat-widget-title">West Park AI</span>
+                <span className="chat-widget-title">Kill Monday AI</span>
                 <span className="chat-widget-workspace">{currentWorkspace.name}</span>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function ChatWidget() {
             {messages.length === 0 && (
               <div className="chat-widget-welcome">
                 <Bot size={32} />
-                <p>Hi! I'm West Park AI, your CRM assistant.</p>
+                <p>Hi! I'm Kill Monday AI, your CRM assistant.</p>
                 <p className="chat-widget-welcome-hint">
                   Ask me about priorities, summaries, or anything about your {currentWorkspace.name} data.
                 </p>
