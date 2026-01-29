@@ -95,7 +95,22 @@ def run_migrations():
 
         # Ensure existing data is assigned to CRM - Satoris workspace (run every time)
         if 'workspaces' in tables:
-            # Check if workspaces exist
+            # Check if workspaces exist, if not seed them
+            result = conn.execute(text('SELECT COUNT(*) FROM workspaces'))
+            workspace_count = result.scalar()
+            
+            if workspace_count == 0:
+                print("Running migration: Seeding default workspaces (table was empty)...")
+                conn.execute(text('''
+                    INSERT INTO workspaces (name, monday_workspace_id, icon, color, is_active)
+                    VALUES
+                        ('CRM - Satoris', '4323419', '💼', '#0086c0', TRUE),
+                        ('Business Technology Group', '5562899', '💻', '#00c875', TRUE),
+                        ('MVP Template', '5556997', '📋', '#fdab3d', TRUE)
+                '''))
+                conn.commit()
+                print("Migration complete: default workspaces seeded")
+            
             result = conn.execute(text('SELECT COUNT(*) FROM workspaces WHERE id = 1'))
             workspace_exists = result.scalar() > 0
 
