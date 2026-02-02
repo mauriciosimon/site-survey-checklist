@@ -341,3 +341,98 @@ header h1 {
   display: flex;
   align-items: center;
 }
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+  
+  header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+  
+  header .logo-section {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  header .logo {
+    height: 50px;
+  }
+  
+  header h1 {
+    font-size: 1.1rem;
+  }
+  
+  header > div {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px !important;
+  }
+  
+  .user-menu {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .user-menu span {
+    margin-right: 0 !important;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .search-bar {
+    flex-direction: column;
+  }
+  
+  .checklist-table th,
+  .checklist-table td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  
+  .checklist-table .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .checklist-table .actions .btn {
+    width: 100%;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1rem;
+  }
+  
+  header .logo {
+    height: 40px;
+    padding: 5px 8px;
+  }
+  
+  .checklist-table {
+    font-size: 12px;
+  }
+  
+  /* Hide less important columns on very small screens */
+  .checklist-table th:nth-child(4),
+  .checklist-table td:nth-child(4),
+  .checklist-table th:nth-child(6),
+  .checklist-table td:nth-child(6) {
+    display: none;
+  }
+}
