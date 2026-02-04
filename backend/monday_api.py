@@ -13,7 +13,8 @@ SITE_SURVEYS_COLUMNS = {
     "status": "status",
     "date": "date4",
     "link": "link_mkzqat3",
-    "person": "person"
+    "person": "person",
+    "created_by": "text_mm08xxxv"  # Text field for surveyor name
 }
 
 
@@ -21,7 +22,8 @@ def create_site_survey_item(
     name: str,
     survey_url: str,
     survey_date: str = None,
-    status: str = "Working on it"
+    status: str = "Working on it",
+    created_by: str = None
 ) -> dict:
     """
     Create a new item in the Monday.com Site Surveys board.
@@ -31,6 +33,7 @@ def create_site_survey_item(
         survey_url: The URL to the survey in our app
         survey_date: Optional date in YYYY-MM-DD format
         status: Status label (Working on it, Done, Stuck)
+        created_by: Name of the user who created the survey
 
     Returns:
         dict with 'success' boolean and 'item_id' or 'error'
@@ -55,6 +58,10 @@ def create_site_survey_item(
         "url": survey_url,
         "text": "View Survey"
     }
+
+    # Created By column (surveyor name)
+    if created_by:
+        column_values[SITE_SURVEYS_COLUMNS["created_by"]] = created_by
 
     # Build GraphQL mutation
     import json

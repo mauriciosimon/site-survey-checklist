@@ -199,7 +199,8 @@ def create_checklist(
         name=db_checklist.site_name,
         survey_url=survey_url,
         survey_date=survey_date,
-        status="Working on it"
+        status="Working on it",
+        created_by=current_user.full_name
     )
 
     # Store Monday.com item ID if sync was successful
