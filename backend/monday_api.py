@@ -5,9 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 MONDAY_API_URL = "https://api.monday.com/v2"
-MONDAY_API_TOKEN = os.getenv("MONDAY_API_TOKEN")
 
-# Site Surveys board configuration (MVP Template workspace)
+# Westley's Monday account (original)
+MONDAY_API_TOKEN = os.getenv("MONDAY_API_TOKEN")
 SITE_SURVEYS_BOARD_ID = "5090310184"
 SITE_SURVEYS_COLUMNS = {
     "status": "status",
@@ -17,51 +17,54 @@ SITE_SURVEYS_COLUMNS = {
     "created_by": "text_mm08xxxv"  # Text field for surveyor name
 }
 
+# Westpark's Monday account (client)
+WESTPARK_MONDAY_TOKEN = os.getenv("WESTPARK_MONDAY_TOKEN")
+WESTPARK_BOARD_ID = "5091667006"
+WESTPARK_COLUMNS = {
+    "status": "color_mm0gb8b5",
+    "date": "date_mm0gb28c",
+    "link": "link_mm0gybba",
+    "person": "multiple_person_mm0gzxfk",
+    "created_by": "text_mm0gfqh"
+}
 
-def create_site_survey_item(
+
+def _create_item_on_board(
+    token: str,
+    board_id: str,
+    columns: dict,
     name: str,
     survey_url: str,
     survey_date: str = None,
     status: str = "Working on it",
-    created_by: str = None
+    created_by: str = None,
+    board_label: str = "Monday.com"
 ) -> dict:
-    """
-    Create a new item in the Monday.com Site Surveys board.
-
-    Args:
-        name: The survey name (will be the item name in Monday.com)
-        survey_url: The URL to the survey in our app
-        survey_date: Optional date in YYYY-MM-DD format
-        status: Status label (Working on it, Done, Stuck)
-        created_by: Name of the user who created the survey
-
-    Returns:
-        dict with 'success' boolean and 'item_id' or 'error'
-    """
-    if not MONDAY_API_TOKEN:
-        logger.warning("MONDAY_API_TOKEN not configured, skipping Monday.com sync")
-        return {"success": False, "error": "Monday.com API token not configured"}
+    """Helper to create an item on a specific board."""
+    if not token:
+        logger.warning(f"{board_label} token not configured, skipping")
+        return {"success": False, "error": f"{board_label} token not configured"}
 
     # Build column values
     column_values = {}
 
     # Status column
     status_index = {"Working on it": 0, "Done": 1, "Stuck": 2}.get(status, 0)
-    column_values[SITE_SURVEYS_COLUMNS["status"]] = {"index": status_index}
+    column_values[columns["status"]] = {"index": status_index}
 
     # Date column
     if survey_date:
-        column_values[SITE_SURVEYS_COLUMNS["date"]] = {"date": survey_date}
+        column_values[columns["date"]] = {"date": survey_date}
 
     # Link column
-    column_values[SITE_SURVEYS_COLUMNS["link"]] = {
+    column_values[columns["link"]] = {
         "url": survey_url,
         "text": "View Survey"
     }
 
     # Created By column (surveyor name)
     if created_by:
-        column_values[SITE_SURVEYS_COLUMNS["created_by"]] = created_by
+        column_values[columns["created_by"]] = created_by
 
     # Build GraphQL mutation
     import json
@@ -73,7 +76,7 @@ def create_site_survey_item(
     query = f'''
     mutation {{
         create_item (
-            board_id: {SITE_SURVEYS_BOARD_ID},
+            board_id: {board_id},
             item_name: "{escaped_name}",
             column_values: {column_values_json}
         ) {{
@@ -83,7 +86,7 @@ def create_site_survey_item(
     '''
 
     headers = {
-        "Authorization": MONDAY_API_TOKEN,
+        "Authorization": token,
         "Content-Type": "application/json"
     }
 
@@ -99,19 +102,85 @@ def create_site_survey_item(
         data = response.json()
 
         if "errors" in data:
-            logger.error(f"Monday.com API error: {data['errors']}")
+            logger.error(f"{board_label} API error: {data['errors']}")
             return {"success": False, "error": str(data["errors"])}
 
         item_id = data.get("data", {}).get("create_item", {}).get("id")
         if item_id:
-            logger.info(f"Created Monday.com item {item_id} for survey: {name}")
+            logger.info(f"Created {board_label} item {item_id} for survey: {name}")
             return {"success": True, "item_id": item_id}
         else:
             return {"success": False, "error": "No item ID returned"}
 
     except requests.RequestException as e:
-        logger.error(f"Monday.com API request failed: {e}")
+        logger.error(f"{board_label} API request failed: {e}")
         return {"success": False, "error": str(e)}
+
+
+def create_site_survey_item(
+    name: str,
+    survey_url: str,
+    survey_date: str = None,
+    status: str = "Working on it",
+    created_by: str = None
+) -> dict:
+    """
+    Create a new item in BOTH Monday.com Site Surveys boards:
+    1. Westley's board (original)
+    2. Westpark's board (client)
+
+    Args:
+        name: The survey name (will be the item name in Monday.com)
+        survey_url: The URL to the survey in our app
+        survey_date: Optional date in YYYY-MM-DD format
+        status: Status label (Working on it, Done, Stuck)
+        created_by: Name of the user who created the survey
+
+    Returns:
+        dict with 'success' boolean, 'item_id' (Westley's), 'westpark_item_id', or 'error'
+    """
+    results = {"success": True, "errors": []}
+
+    # Create in Westley's board
+    westley_result = _create_item_on_board(
+        token=MONDAY_API_TOKEN,
+        board_id=SITE_SURVEYS_BOARD_ID,
+        columns=SITE_SURVEYS_COLUMNS,
+        name=name,
+        survey_url=survey_url,
+        survey_date=survey_date,
+        status=status,
+        created_by=created_by,
+        board_label="Westley Monday"
+    )
+    if westley_result.get("success"):
+        results["item_id"] = westley_result.get("item_id")
+    else:
+        results["errors"].append(f"Westley: {westley_result.get('error')}")
+
+    # Create in Westpark's board
+    westpark_result = _create_item_on_board(
+        token=WESTPARK_MONDAY_TOKEN,
+        board_id=WESTPARK_BOARD_ID,
+        columns=WESTPARK_COLUMNS,
+        name=name,
+        survey_url=survey_url,
+        survey_date=survey_date,
+        status=status,
+        created_by=created_by,
+        board_label="Westpark Monday"
+    )
+    if westpark_result.get("success"):
+        results["westpark_item_id"] = westpark_result.get("item_id")
+    else:
+        results["errors"].append(f"Westpark: {westpark_result.get('error')}")
+
+    # Success if at least one board worked
+    if not results.get("item_id") and not results.get("westpark_item_id"):
+        results["success"] = False
+        results["error"] = "; ".join(results["errors"])
+
+    return results
 
 
 def update_site_survey_item(
