@@ -46,8 +46,9 @@ const initialFormData = {
   programme_available: false,
   // Technical Requirements
   acoustic_baffles_required: false,
+  acoustic_baffles_notes: '',
   fire_stopping_required: false,
-  mullion_details: '',
+  fire_stopping_notes: '',
   // Commercial
   pricing_details: '',
   supplier_notes: '',
@@ -524,32 +525,47 @@ function ChecklistForm() {
         <div className="form-section">
           <h3>Technical Requirements</h3>
           <div className="form-grid">
-            <div className="form-group checkbox-group">
-              <input
-                type="checkbox"
-                name="acoustic_baffles_required"
-                checked={formData.acoustic_baffles_required}
-                onChange={handleChange}
-              />
-              <label>Acoustic Baffles Required</label>
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  name="acoustic_baffles_required"
+                  checked={formData.acoustic_baffles_required}
+                  onChange={handleChange}
+                />
+                <label>Acoustic Baffles Required</label>
+              </div>
+              {formData.acoustic_baffles_required && (
+                <input
+                  type="text"
+                  name="acoustic_baffles_notes"
+                  value={formData.acoustic_baffles_notes}
+                  onChange={handleChange}
+                  placeholder="Add notes..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
-            <div className="form-group checkbox-group">
-              <input
-                type="checkbox"
-                name="fire_stopping_required"
-                checked={formData.fire_stopping_required}
-                onChange={handleChange}
-              />
-              <label>Fire Stopping Required</label>
-            </div>
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>Mullion Details</label>
-              <textarea
-                name="mullion_details"
-                value={formData.mullion_details}
-                onChange={handleChange}
-                rows={3}
-              />
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  name="fire_stopping_required"
+                  checked={formData.fire_stopping_required}
+                  onChange={handleChange}
+                />
+                <label>Fire Stopping Required</label>
+              </div>
+              {formData.fire_stopping_required && (
+                <input
+                  type="text"
+                  name="fire_stopping_notes"
+                  value={formData.fire_stopping_notes}
+                  onChange={handleChange}
+                  placeholder="Add notes..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
           </div>
         </div>

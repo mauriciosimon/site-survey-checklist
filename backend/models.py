@@ -76,8 +76,9 @@ class Checklist(Base):
 
     # Technical Requirements
     acoustic_baffles_required = Column(Boolean, default=False)
+    acoustic_baffles_notes = Column(Text)
     fire_stopping_required = Column(Boolean, default=False)
-    mullion_details = Column(Text)
+    fire_stopping_notes = Column(Text)
 
     # Commercial
     pricing_details = Column(Text)

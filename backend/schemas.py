@@ -87,8 +87,9 @@ class ChecklistBase(BaseModel):
 
     # Technical Requirements
     acoustic_baffles_required: Optional[bool] = False
+    acoustic_baffles_notes: Optional[str] = None
     fire_stopping_required: Optional[bool] = False
-    mullion_details: Optional[str] = None
+    fire_stopping_notes: Optional[str] = None
 
     # Commercial
     pricing_details: Optional[str] = None

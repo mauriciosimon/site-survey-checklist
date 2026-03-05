@@ -140,8 +140,9 @@ function ChecklistDetail() {
           <h3>Technical Requirements</h3>
           <div className="detail-grid">
             {renderField('Acoustic Baffles Required', checklist.acoustic_baffles_required)}
+            {checklist.acoustic_baffles_required && checklist.acoustic_baffles_notes && renderField('Acoustic Baffles Notes', checklist.acoustic_baffles_notes)}
             {renderField('Fire Stopping Required', checklist.fire_stopping_required)}
-            {renderField('Mullion Details', checklist.mullion_details)}
+            {checklist.fire_stopping_required && checklist.fire_stopping_notes && renderField('Fire Stopping Notes', checklist.fire_stopping_notes)}
           </div>
         </div>
 
