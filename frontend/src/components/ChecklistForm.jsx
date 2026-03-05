@@ -774,18 +774,50 @@ function ChecklistForm() {
                     <div className="photo-grid">
                       {formData.site_photos.map((media, idx) => {
                         const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                        return isVideo ? (
-                          <video
-                            key={idx}
-                            src={`${API_BASE}${media}`}
-                            controls
-                          />
-                        ) : (
-                          <img
-                            key={idx}
-                            src={`${API_BASE}${media}`}
-                            alt={`Site media ${idx + 1}`}
-                          />
+                        return (
+                          <div key={idx} style={{ position: 'relative' }}>
+                            {isVideo ? (
+                              <video
+                                src={`${API_BASE}${media}`}
+                                controls
+                              />
+                            ) : (
+                              <img
+                                src={`${API_BASE}${media}`}
+                                alt={`Site media ${idx + 1}`}
+                              />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  site_photos: prev.site_photos.filter((_, i) => i !== idx)
+                                }));
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: '5px',
+                                right: '5px',
+                                background: '#e74c3c',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '28px',
+                                height: '28px',
+                                cursor: 'pointer',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                              }}
+                              title="Delete this media"
+                            >
+                              ×
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
