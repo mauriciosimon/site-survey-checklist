@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel, Field, EmailStr, field_validator
+from typing import Optional, List, Any
 from datetime import date, datetime
 
 
@@ -114,6 +114,18 @@ class ChecklistResponse(ChecklistBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     monday_item_id: Optional[str] = None
+
+    # Coerce numeric values to strings for text fields (handles legacy data)
+    @field_validator(
+        'building_level', 'ceiling_height', 'skirting_size', 'floor_type',
+        'soffit_type', 'ceiling_void_depth', 'floor_void_depth',
+        'service_penetrations_scale', mode='before'
+    )
+    @classmethod
+    def coerce_to_string(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        return str(v)
 
     class Config:
         from_attributes = True
