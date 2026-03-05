@@ -94,8 +94,9 @@ function ChecklistList() {
               {checklists.map((checklist) => (
                 <tr key={checklist.id}>
                   <td>
-                    <Link to={`/view/${checklist.id}`}>
+                    <Link to={checklist.is_draft ? `/edit/${checklist.id}` : `/view/${checklist.id}`}>
                       <strong>{checklist.site_name}</strong>
+                      {checklist.is_draft && <span style={{ color: '#e67e22', marginLeft: '8px' }}>(Draft)</span>}
                     </Link>
                   </td>
                   <td>{checklist.surveyor_name || '-'}</td>
@@ -103,9 +104,15 @@ function ChecklistList() {
                   <td>{checklist.project_name || '-'}</td>
                   <td>{formatDate(checklist.survey_date)}</td>
                   <td>
-                    <span className={`status-badge ${checklist.project_secured ? 'status-secured' : 'status-pending'}`}>
-                      {checklist.project_secured ? 'Secured' : 'Pending'}
-                    </span>
+                    {checklist.is_draft ? (
+                      <span className="status-badge" style={{ backgroundColor: '#e67e22', color: 'white' }}>
+                        Draft
+                      </span>
+                    ) : (
+                      <span className={`status-badge ${checklist.project_secured ? 'status-secured' : 'status-pending'}`}>
+                        {checklist.project_secured ? 'Secured' : 'Pending'}
+                      </span>
+                    )}
                   </td>
                   <td className="actions">
                     <button

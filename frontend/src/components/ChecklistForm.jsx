@@ -138,7 +138,7 @@ function ChecklistForm() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
     if (!formData.site_name.trim()) {
       setError('Site Name is required');
@@ -150,7 +150,7 @@ function ChecklistForm() {
 
     try {
       // Clean up empty strings to nulls for optional fields
-      const cleanData = { ...formData };
+      const cleanData = { ...formData, is_draft: isDraft };
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === '') cleanData[key] = null;
       });
@@ -173,8 +173,10 @@ function ChecklistForm() {
             }
           }
         }
-        // Clear draft on successful creation
-        clearDraft();
+        // Clear draft on successful creation only if not saving as draft
+        if (!isDraft) {
+          clearDraft();
+        }
       }
       navigate('/');
     } catch (err) {
@@ -831,8 +833,18 @@ function ChecklistForm() {
         </div>
 
         <div className="form-actions">
+          {(!isEdit || formData.is_draft) && (
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={(e) => handleSubmit(e, true)}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Draft'}
+            </button>
+          )}
           <button type="submit" className="btn btn-success" disabled={saving}>
-            {saving ? 'Saving...' : isEdit ? 'Update Checklist' : 'Create Checklist'}
+            {saving ? 'Saving...' : (isEdit ? (formData.is_draft ? 'Submit Survey' : 'Update Checklist') : 'Submit Survey')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>
             Cancel

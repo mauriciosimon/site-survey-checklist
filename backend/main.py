@@ -36,6 +36,7 @@ columns_to_add = [
     ("frame_type_other", "TEXT"),
     ("acoustic_baffles_notes", "TEXT"),
     ("fire_stopping_notes", "TEXT"),
+    ("is_draft", "BOOLEAN DEFAULT TRUE"),
 ]
 for col_name, col_type in columns_to_add:
     try:

@@ -95,4 +95,7 @@ class Checklist(Base):
     # Monday.com integration
     monday_item_id = Column(String(50), nullable=True)
 
+    # Draft status
+    is_draft = Column(Boolean, default=True)
+
     owner = relationship("User", back_populates="checklists")

@@ -99,6 +99,9 @@ class ChecklistBase(BaseModel):
     site_photos: Optional[List[str]] = []
     additional_notes: Optional[str] = None
 
+    # Draft status
+    is_draft: Optional[bool] = True
+
 
 class ChecklistCreate(ChecklistBase):
     pass
@@ -114,6 +117,7 @@ class ChecklistResponse(ChecklistBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     monday_item_id: Optional[str] = None
+    is_draft: Optional[bool] = True
 
     # Coerce numeric values to strings for text fields (handles legacy data)
     @field_validator(
