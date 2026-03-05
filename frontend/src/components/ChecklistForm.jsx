@@ -71,6 +71,7 @@ function ChecklistForm() {
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
   const [draftSaved, setDraftSaved] = useState(false);
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
+  const [lastSaveTime, setLastSaveTime] = useState(null);
 
   // Auto-save draft to BACKEND (Gmail-style, debounced)
   useEffect(() => {
@@ -102,7 +103,7 @@ function ChecklistForm() {
         }
 
         setDraftSaved(true);
-        setTimeout(() => setDraftSaved(false), 2000);
+        setLastSaveTime(new Date());
       } catch (err) {
         console.error('[AUTO-SAVE] Failed:', err);
       }
@@ -208,8 +209,8 @@ function ChecklistForm() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>{isEdit ? (formData.is_draft ? 'Edit Draft' : 'Edit Checklist') : 'New Site Visit Checklist'}</h2>
         {draftSaved && (
-          <span style={{ color: '#27ae60', fontSize: '14px' }}>
-            ✓ Draft auto-saved
+          <span style={{ color: '#27ae60', fontSize: '14px', fontWeight: '500' }}>
+            ✓ Draft saved{lastSaveTime && ` at ${lastSaveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
           </span>
         )}
       </div>
