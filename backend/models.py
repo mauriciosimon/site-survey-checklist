@@ -61,8 +61,11 @@ class Checklist(Base):
     # Finishes & Details
     mullion_perimeter_details = Column(Text)
     wall_deflection_needed = Column(Boolean, default=False)
+    wall_deflection_notes = Column(Text)
     door_finish = Column(String(50))  # Veneer, PG, Laminate, Paint Grade, Other
-    frame_type = Column(String(20))  # Timber, Metal
+    door_finish_other = Column(Text)
+    frame_type = Column(String(50))  # Timber, Metal, Other
+    frame_type_other = Column(Text)
     glazing_details = Column(Text)
     head_track_detail = Column(Text)
 

@@ -72,8 +72,11 @@ class ChecklistBase(BaseModel):
     # Finishes & Details
     mullion_perimeter_details: Optional[str] = None
     wall_deflection_needed: Optional[bool] = False
+    wall_deflection_notes: Optional[str] = None
     door_finish: Optional[str] = None
+    door_finish_other: Optional[str] = None
     frame_type: Optional[str] = None
+    frame_type_other: Optional[str] = None
     glazing_details: Optional[str] = None
     head_track_detail: Optional[str] = None
 

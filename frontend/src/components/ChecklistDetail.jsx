@@ -119,8 +119,9 @@ function ChecklistDetail() {
           <div className="detail-grid">
             {renderField('Mullion/Perimeter Details', checklist.mullion_perimeter_details)}
             {renderField('Wall Deflection Needed', checklist.wall_deflection_needed)}
-            {renderField('Door Finish', checklist.door_finish)}
-            {renderField('Frame Type', checklist.frame_type)}
+            {checklist.wall_deflection_needed && checklist.wall_deflection_notes && renderField('Wall Deflection Notes', checklist.wall_deflection_notes)}
+            {renderField('Door Finish', checklist.door_finish === 'Other' && checklist.door_finish_other ? checklist.door_finish_other : checklist.door_finish)}
+            {renderField('Frame Type', checklist.frame_type === 'Other' && checklist.frame_type_other ? checklist.frame_type_other : checklist.frame_type)}
             {renderField('Glazing Details', checklist.glazing_details)}
             {renderField('Head Track/Detail', checklist.head_track_detail)}
           </div>

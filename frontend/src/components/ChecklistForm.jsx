@@ -33,8 +33,11 @@ const initialFormData = {
   // Finishes & Details
   mullion_perimeter_details: '',
   wall_deflection_needed: false,
+  wall_deflection_notes: '',
   door_finish: '',
+  door_finish_other: '',
   frame_type: '',
+  frame_type_other: '',
   glazing_details: '',
   head_track_detail: '',
   // Project Status
@@ -403,14 +406,26 @@ function ChecklistForm() {
                 onChange={handleChange}
               />
             </div>
-            <div className="form-group checkbox-group">
-              <input
-                type="checkbox"
-                name="wall_deflection_needed"
-                checked={formData.wall_deflection_needed}
-                onChange={handleChange}
-              />
-              <label>Wall Deflection Needed</label>
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  name="wall_deflection_needed"
+                  checked={formData.wall_deflection_needed}
+                  onChange={handleChange}
+                />
+                <label>Wall Deflection Needed</label>
+              </div>
+              {formData.wall_deflection_needed && (
+                <input
+                  type="text"
+                  name="wall_deflection_notes"
+                  value={formData.wall_deflection_notes}
+                  onChange={handleChange}
+                  placeholder="Add notes..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
             <div className="form-group">
               <label>Door Finish</label>
@@ -422,6 +437,16 @@ function ChecklistForm() {
                 <option value="Paint Grade">Paint Grade</option>
                 <option value="Other">Other</option>
               </select>
+              {formData.door_finish === 'Other' && (
+                <input
+                  type="text"
+                  name="door_finish_other"
+                  value={formData.door_finish_other}
+                  onChange={handleChange}
+                  placeholder="Specify door finish..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
             <div className="form-group">
               <label>Frame Type</label>
@@ -429,7 +454,18 @@ function ChecklistForm() {
                 <option value="">Select...</option>
                 <option value="Timber">Timber</option>
                 <option value="Metal">Metal</option>
+                <option value="Other">Other</option>
               </select>
+              {formData.frame_type === 'Other' && (
+                <input
+                  type="text"
+                  name="frame_type_other"
+                  value={formData.frame_type_other}
+                  onChange={handleChange}
+                  placeholder="Specify frame type..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
             <div className="form-group">
               <label>Glazing Details</label>
