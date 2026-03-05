@@ -143,13 +143,17 @@ function ChecklistForm() {
   };
 
   const handlePhotoUpload = async () => {
-    if (!photoFile || !id) return;
+    if (!photoFile || !id || photoFile.length === 0) return;
     try {
-      const response = await checklistApi.uploadPhoto(id, photoFile);
-      setFormData((prev) => ({ ...prev, site_photos: response.data.site_photos }));
+      let updatedPhotos = formData.site_photos || [];
+      for (const file of photoFile) {
+        const response = await checklistApi.uploadPhoto(id, file);
+        updatedPhotos = response.data.site_photos;
+      }
+      setFormData((prev) => ({ ...prev, site_photos: updatedPhotos }));
       setPhotoFile(null);
     } catch (err) {
-      setError('Failed to upload photo');
+      setError('Failed to upload media');
     }
   };
 
@@ -607,33 +611,48 @@ function ChecklistForm() {
           </div>
 
           <div className="photo-upload">
-            <label>Site Photos</label>
+            <label>Site Media (Photos & Videos)</label>
             {isEdit ? (
               <>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <input
                     type="file"
-                    accept="image/*"
-                    onChange={(e) => setPhotoFile(e.target.files[0])}
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setPhotoFile(Array.from(e.target.files));
+                      }
+                    }}
                   />
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={handlePhotoUpload}
-                    disabled={!photoFile}
+                    disabled={!photoFile || photoFile.length === 0}
                   >
-                    Upload Photo
+                    Upload Media
                   </button>
                 </div>
                 {formData.site_photos && formData.site_photos.length > 0 && (
                   <div className="photo-grid">
-                    {formData.site_photos.map((photo, idx) => (
-                      <img
-                        key={idx}
-                        src={`${API_BASE}${photo}`}
-                        alt={`Site photo ${idx + 1}`}
-                      />
-                    ))}
+                    {formData.site_photos.map((media, idx) => {
+                      const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                      return isVideo ? (
+                        <video
+                          key={idx}
+                          src={`${API_BASE}${media}`}
+                          controls
+                          style={{ maxWidth: '200px', maxHeight: '150px' }}
+                        />
+                      ) : (
+                        <img
+                          key={idx}
+                          src={`${API_BASE}${media}`}
+                          alt={`Site media ${idx + 1}`}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </>
@@ -642,46 +661,59 @@ function ChecklistForm() {
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
+                    multiple
                     onChange={(e) => {
-                      if (e.target.files[0]) {
-                        setPendingPhotos(prev => [...prev, e.target.files[0]]);
+                      if (e.target.files && e.target.files.length > 0) {
+                        setPendingPhotos(prev => [...prev, ...Array.from(e.target.files)]);
                         e.target.value = ''; // Reset input to allow selecting same file
                       }
                     }}
                   />
                   <span style={{ color: '#666', fontSize: '14px' }}>
-                    {pendingPhotos.length > 0 ? `${pendingPhotos.length} photo(s) selected` : 'Select photos to upload'}
+                    {pendingPhotos.length > 0 ? `${pendingPhotos.length} file(s) selected` : 'Select photos/videos to upload'}
                   </span>
                 </div>
                 {pendingPhotos.length > 0 && (
                   <div className="photo-grid" style={{ marginTop: '10px' }}>
-                    {pendingPhotos.map((photo, idx) => (
-                      <div key={idx} style={{ position: 'relative' }}>
-                        <img
-                          src={URL.createObjectURL(photo)}
-                          alt={`Pending photo ${idx + 1}`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
-                          style={{
-                            position: 'absolute',
-                            top: '5px',
-                            right: '5px',
-                            background: '#e74c3c',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '24px',
-                            height: '24px',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
+                    {pendingPhotos.map((media, idx) => {
+                      const isVideo = media.type.startsWith('video/');
+                      return (
+                        <div key={idx} style={{ position: 'relative' }}>
+                          {isVideo ? (
+                            <video
+                              src={URL.createObjectURL(media)}
+                              controls
+                              style={{ maxWidth: '200px', maxHeight: '150px' }}
+                            />
+                          ) : (
+                            <img
+                              src={URL.createObjectURL(media)}
+                              alt={`Pending media ${idx + 1}`}
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
+                            style={{
+                              position: 'absolute',
+                              top: '5px',
+                              right: '5px',
+                              background: '#e74c3c',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
                     ))}
                   </div>
                 )}

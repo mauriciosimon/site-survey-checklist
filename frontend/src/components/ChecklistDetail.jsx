@@ -159,15 +159,25 @@ function ChecklistDetail() {
           {renderField('Additional Notes', checklist.additional_notes)}
           {checklist.site_photos && checklist.site_photos.length > 0 && (
             <div style={{ marginTop: '15px' }}>
-              <strong>Site Photos:</strong>
+              <strong>Site Media:</strong>
               <div className="photo-grid">
-                {checklist.site_photos.map((photo, idx) => (
-                  <img
-                    key={idx}
-                    src={`${API_BASE}${photo}`}
-                    alt={`Site photo ${idx + 1}`}
-                  />
-                ))}
+                {checklist.site_photos.map((media, idx) => {
+                  const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                  return isVideo ? (
+                    <video
+                      key={idx}
+                      src={`${API_BASE}${media}`}
+                      controls
+                      style={{ maxWidth: '200px', maxHeight: '150px' }}
+                    />
+                  ) : (
+                    <img
+                      key={idx}
+                      src={`${API_BASE}${media}`}
+                      alt={`Site media ${idx + 1}`}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
