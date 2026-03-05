@@ -49,9 +49,11 @@ class Checklist(Base):
     floor_void_depth = Column(String(100))  # mm
 
     # Access & Logistics
-    service_penetrations_scale = Column(Integer)  # 1-10
+    service_penetrations_scale = Column(String(100))
     goods_lift_available = Column(Boolean, default=False)
+    goods_lift_notes = Column(Text)
     good_staircase_access = Column(Boolean, default=False)
+    staircase_access_notes = Column(Text)
     loading_bay_restrictions = Column(Text)
     street_restrictions = Column(Text)
     noise_restrictions = Column(Text)

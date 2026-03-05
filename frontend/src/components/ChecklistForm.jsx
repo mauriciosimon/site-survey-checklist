@@ -24,7 +24,9 @@ const initialFormData = {
   // Access & Logistics
   service_penetrations_scale: '',
   goods_lift_available: false,
+  goods_lift_notes: '',
   good_staircase_access: false,
+  staircase_access_notes: '',
   loading_bay_restrictions: '',
   street_restrictions: '',
   noise_restrictions: '',
@@ -107,8 +109,7 @@ function ChecklistForm() {
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === '') cleanData[key] = null;
       });
-      // Convert numeric strings (only for fields that are still numbers)
-      if (cleanData.service_penetrations_scale) cleanData.service_penetrations_scale = parseInt(cleanData.service_penetrations_scale);
+      // All fields are now text - no numeric conversion needed
 
       if (isEdit) {
         await checklistApi.update(id, cleanData);
@@ -313,33 +314,55 @@ function ChecklistForm() {
           <h3>Access & Logistics</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Service Penetrations Scale (1-10)</label>
+              <label>Service Penetrations Scale</label>
               <input
-                type="number"
+                type="text"
                 name="service_penetrations_scale"
                 value={formData.service_penetrations_scale}
                 onChange={handleChange}
-                min="1"
-                max="10"
               />
             </div>
-            <div className="form-group checkbox-group">
-              <input
-                type="checkbox"
-                name="goods_lift_available"
-                checked={formData.goods_lift_available}
-                onChange={handleChange}
-              />
-              <label>Goods Lift Available</label>
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  name="goods_lift_available"
+                  checked={formData.goods_lift_available}
+                  onChange={handleChange}
+                />
+                <label>Goods Lift Available</label>
+              </div>
+              {formData.goods_lift_available && (
+                <input
+                  type="text"
+                  name="goods_lift_notes"
+                  value={formData.goods_lift_notes}
+                  onChange={handleChange}
+                  placeholder="Add notes..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
-            <div className="form-group checkbox-group">
-              <input
-                type="checkbox"
-                name="good_staircase_access"
-                checked={formData.good_staircase_access}
-                onChange={handleChange}
-              />
-              <label>Good Staircase Access</label>
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  name="good_staircase_access"
+                  checked={formData.good_staircase_access}
+                  onChange={handleChange}
+                />
+                <label>Good Staircase Access</label>
+              </div>
+              {formData.good_staircase_access && (
+                <input
+                  type="text"
+                  name="staircase_access_notes"
+                  value={formData.staircase_access_notes}
+                  onChange={handleChange}
+                  placeholder="Add notes..."
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
             <div className="form-group">
               <label>Loading Bay Restrictions</label>

@@ -103,9 +103,11 @@ function ChecklistDetail() {
         <div className="detail-section">
           <h3>Access & Logistics</h3>
           <div className="detail-grid">
-            {renderField('Service Penetrations Scale', checklist.service_penetrations_scale ? `${checklist.service_penetrations_scale}/10` : null)}
+            {renderField('Service Penetrations Scale', checklist.service_penetrations_scale)}
             {renderField('Goods Lift Available', checklist.goods_lift_available)}
+            {checklist.goods_lift_available && checklist.goods_lift_notes && renderField('Goods Lift Notes', checklist.goods_lift_notes)}
             {renderField('Good Staircase Access', checklist.good_staircase_access)}
+            {checklist.good_staircase_access && checklist.staircase_access_notes && renderField('Staircase Access Notes', checklist.staircase_access_notes)}
             {renderField('Loading Bay Restrictions', checklist.loading_bay_restrictions)}
             {renderField('Street Restrictions', checklist.street_restrictions)}
             {renderField('Noise Restrictions', checklist.noise_restrictions)}

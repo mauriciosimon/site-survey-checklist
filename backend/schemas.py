@@ -60,9 +60,11 @@ class ChecklistBase(BaseModel):
     floor_void_depth: Optional[str] = None
 
     # Access & Logistics
-    service_penetrations_scale: Optional[int] = Field(None, ge=1, le=10)
+    service_penetrations_scale: Optional[str] = None
     goods_lift_available: Optional[bool] = False
+    goods_lift_notes: Optional[str] = None
     good_staircase_access: Optional[bool] = False
+    staircase_access_notes: Optional[str] = None
     loading_bay_restrictions: Optional[str] = None
     street_restrictions: Optional[str] = None
     noise_restrictions: Optional[str] = None
