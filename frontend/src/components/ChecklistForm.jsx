@@ -57,6 +57,8 @@ const initialFormData = {
   site_photos: [],
 };
 
+const DRAFT_STORAGE_KEY = 'site_survey_draft';
+
 function ChecklistForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -69,6 +71,45 @@ function ChecklistForm() {
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // Load draft from localStorage on mount (only for new surveys)
+  useEffect(() => {
+    if (!isEdit) {
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setFormData(prev => ({ ...prev, ...draft }));
+          setDraftSaved(true);
+        } catch (e) {
+          console.error('Failed to load draft:', e);
+        }
+      }
+    }
+  }, [isEdit]);
+
+  // Auto-save draft to localStorage (debounced, only for new surveys)
+  useEffect(() => {
+    if (isEdit) return; // Don't save drafts when editing existing surveys
+    
+    const timeoutId = setTimeout(() => {
+      // Don't save if form is empty (only site_name check)
+      if (formData.site_name || formData.client_name || formData.site_address) {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
+        setDraftSaved(true);
+        // Hide "Draft saved" after 2 seconds
+        setTimeout(() => setDraftSaved(false), 2000);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, isEdit]);
+
+  // Clear draft on successful submission
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -84,8 +125,8 @@ function ChecklistForm() {
         .catch(() => setError('Failed to load checklist'))
         .finally(() => setLoading(false));
     } else if (user) {
-      // Pre-fill surveyor name for new checklists
-      setFormData(prev => ({ ...prev, surveyor_name: user.full_name }));
+      // Pre-fill surveyor name for new checklists (if no draft loaded)
+      setFormData(prev => prev.surveyor_name ? prev : { ...prev, surveyor_name: user.full_name });
     }
   }, [id, isEdit, user]);
 
@@ -132,6 +173,8 @@ function ChecklistForm() {
             }
           }
         }
+        // Clear draft on successful creation
+        clearDraft();
       }
       navigate('/');
     } catch (err) {
@@ -159,9 +202,43 @@ function ChecklistForm() {
 
   if (loading) return <div className="loading">Loading...</div>;
 
+  const handleClearDraft = () => {
+    if (window.confirm('Clear all form data and start fresh?')) {
+      clearDraft();
+      setFormData({ ...initialFormData, surveyor_name: user?.full_name || '' });
+      setPendingPhotos([]);
+    }
+  };
+
   return (
     <div className="card">
-      <h2>{isEdit ? 'Edit Checklist' : 'New Site Visit Checklist'}</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>{isEdit ? 'Edit Checklist' : 'New Site Visit Checklist'}</h2>
+        {!isEdit && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {draftSaved && (
+              <span style={{ color: '#27ae60', fontSize: '14px' }}>
+                ✓ Draft saved
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleClearDraft}
+              style={{
+                background: 'transparent',
+                border: '1px solid #e74c3c',
+                color: '#e74c3c',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Clear Draft
+            </button>
+          </div>
+        )}
+      </div>
 
       {error && <div className="error" style={{ marginTop: '15px' }}>{error}</div>}
 
@@ -587,7 +664,7 @@ function ChecklistForm() {
               />
             </div>
             <div className="form-group">
-              <label>Supplier Notes</label>
+              <label>Notes</label>
               <textarea
                 name="supplier_notes"
                 value={formData.supplier_notes}

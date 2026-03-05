@@ -150,7 +150,7 @@ function ChecklistDetail() {
           <h3>Commercial</h3>
           <div className="detail-grid">
             {renderField('Pricing Details', checklist.pricing_details)}
-            {renderField('Supplier Notes', checklist.supplier_notes)}
+            {renderField('Notes', checklist.supplier_notes)}
           </div>
         </div>
 
