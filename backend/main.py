@@ -25,18 +25,29 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "https://site-checklist.vercel.app")
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-# Migration: Add monday_item_id column if it doesn't exist
+# Migration: Add new columns if they don't exist
 from sqlalchemy import text
 with engine.connect() as conn:
-    try:
-        conn.execute(text("ALTER TABLE checklists ADD COLUMN monday_item_id VARCHAR(50)"))
-        conn.commit()
-        print("Migration complete: added monday_item_id column")
-    except Exception as e:
-        if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
-            print("Column monday_item_id already exists")
-        else:
-            print(f"Migration note: {e}")
+    columns_to_add = [
+        ("monday_item_id", "VARCHAR(50)"),
+        ("goods_lift_notes", "TEXT"),
+        ("staircase_access_notes", "TEXT"),
+        ("wall_deflection_notes", "TEXT"),
+        ("door_finish_other", "TEXT"),
+        ("frame_type_other", "TEXT"),
+        ("acoustic_baffles_notes", "TEXT"),
+        ("fire_stopping_notes", "TEXT"),
+    ]
+    for col_name, col_type in columns_to_add:
+        try:
+            conn.execute(text(f"ALTER TABLE checklists ADD COLUMN {col_name} {col_type}"))
+            conn.commit()
+            print(f"Migration: added {col_name} column")
+        except Exception as e:
+            if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+                pass  # Column already exists, silently continue
+            else:
+                print(f"Migration note for {col_name}: {e}")
 
 app = FastAPI(
     title="Site Visit Checklist API",
