@@ -677,45 +677,119 @@ function ChecklistForm() {
             <label>Site Media (Photos & Videos)</label>
             {isEdit ? (
               <>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <div style={{ marginTop: '10px' }}>
+                  {pendingPhotos.length > 0 && (
+                    <div style={{ 
+                      background: '#d4edda', 
+                      border: '1px solid #27ae60',
+                      borderRadius: '4px',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      color: '#155724',
+                      fontWeight: '500'
+                    }}>
+                      ✓ {pendingPhotos.length} new file(s) selected (will upload on submit)
+                    </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*,video/*"
                     multiple
                     onChange={(e) => {
+                      console.log('[EDIT MODE FILE INPUT] onChange fired, files:', e.target.files?.length || 0);
                       if (e.target.files && e.target.files.length > 0) {
-                        setPhotoFile(Array.from(e.target.files));
+                        const files = Array.from(e.target.files);
+                        console.log('[EDIT MODE FILE INPUT] Adding files:', files.map(f => f.name));
+                        setPendingPhotos(prev => {
+                          const updated = [...prev, ...files];
+                          console.log('[EDIT MODE FILE INPUT] Updated pendingPhotos count:', updated.length);
+                          return updated;
+                        });
+                        e.target.value = ''; // Reset input to allow selecting same file
                       }
                     }}
+                    style={{ display: 'block', marginBottom: '8px' }}
                   />
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={handlePhotoUpload}
-                    disabled={!photoFile || photoFile.length === 0}
-                  >
-                    Upload Media
-                  </button>
+                  {pendingPhotos.length === 0 && !formData.site_photos?.length && (
+                    <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>
+                      Tap "Choose Files" above to select photos/videos
+                    </span>
+                  )}
                 </div>
+                {pendingPhotos.length > 0 && (
+                  <>
+                    <div style={{ marginTop: '15px', marginBottom: '10px' }}>
+                      <strong>New files to upload:</strong>
+                      <ul style={{ marginTop: '5px', paddingLeft: '20px', fontSize: '14px', color: '#555' }}>
+                        {pendingPhotos.map((media, idx) => (
+                          <li key={idx} style={{ marginBottom: '4px' }}>
+                            {media.name} ({(media.size / 1024).toFixed(1)} KB)
+                            <button
+                              type="button"
+                              onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
+                              style={{
+                                marginLeft: '10px',
+                                background: '#e74c3c',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '2px 8px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="photo-grid" style={{ marginTop: '10px' }}>
+                      {pendingPhotos.map((media, idx) => {
+                        const isVideo = media.type.startsWith('video/');
+                        return (
+                          <div key={idx}>
+                            {isVideo ? (
+                              <video
+                                src={URL.createObjectURL(media)}
+                                controls
+                              />
+                            ) : (
+                              <img
+                                src={URL.createObjectURL(media)}
+                                alt={`Pending media ${idx + 1}`}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
                 {formData.site_photos && formData.site_photos.length > 0 && (
-                  <div className="photo-grid">
-                    {formData.site_photos.map((media, idx) => {
-                      const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                      return isVideo ? (
-                        <video
-                          key={idx}
-                          src={`${API_BASE}${media}`}
-                          controls
-                        />
-                      ) : (
-                        <img
-                          key={idx}
-                          src={`${API_BASE}${media}`}
-                          alt={`Site media ${idx + 1}`}
-                        />
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+                      <strong>Already uploaded:</strong>
+                    </div>
+                    <div className="photo-grid">
+                      {formData.site_photos.map((media, idx) => {
+                        const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                        return isVideo ? (
+                          <video
+                            key={idx}
+                            src={`${API_BASE}${media}`}
+                            controls
+                          />
+                        ) : (
+                          <img
+                            key={idx}
+                            src={`${API_BASE}${media}`}
+                            alt={`Site media ${idx + 1}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             ) : (
