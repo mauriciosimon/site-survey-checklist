@@ -736,23 +736,43 @@ function ChecklistForm() {
             ) : (
               <>
                 <div style={{ marginTop: '10px' }}>
+                  {pendingPhotos.length > 0 && (
+                    <div style={{ 
+                      background: '#d4edda', 
+                      border: '1px solid #27ae60',
+                      borderRadius: '4px',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      color: '#155724',
+                      fontWeight: '500'
+                    }}>
+                      ✓ {pendingPhotos.length} file(s) selected
+                    </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*,video/*"
                     multiple
                     onChange={(e) => {
+                      console.log('[FILE INPUT] onChange fired, files:', e.target.files?.length || 0);
                       if (e.target.files && e.target.files.length > 0) {
-                        setPendingPhotos(prev => [...prev, ...Array.from(e.target.files)]);
+                        const files = Array.from(e.target.files);
+                        console.log('[FILE INPUT] Adding files:', files.map(f => f.name));
+                        setPendingPhotos(prev => {
+                          const updated = [...prev, ...files];
+                          console.log('[FILE INPUT] Updated pendingPhotos count:', updated.length);
+                          return updated;
+                        });
                         e.target.value = ''; // Reset input to allow selecting same file
                       }
                     }}
                     style={{ display: 'block', marginBottom: '8px' }}
                   />
-                  <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>
-                    {pendingPhotos.length > 0 
-                      ? `${pendingPhotos.length} file(s) selected` 
-                      : 'Select photos/videos to upload'}
-                  </span>
+                  {pendingPhotos.length === 0 && (
+                    <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>
+                      Tap "Choose Files" above to select photos/videos
+                    </span>
+                  )}
                 </div>
                 {pendingPhotos.length > 0 && (
                   <>
