@@ -706,7 +706,6 @@ function ChecklistForm() {
                           key={idx}
                           src={`${API_BASE}${media}`}
                           controls
-                          style={{ maxWidth: '200px', maxHeight: '150px' }}
                         />
                       ) : (
                         <img
@@ -792,12 +791,11 @@ function ChecklistForm() {
                       {pendingPhotos.map((media, idx) => {
                         const isVideo = media.type.startsWith('video/');
                         return (
-                          <div key={idx} style={{ position: 'relative' }}>
+                          <div key={idx}>
                             {isVideo ? (
                               <video
                                 src={URL.createObjectURL(media)}
                                 controls
-                                style={{ maxWidth: '200px', maxHeight: '150px' }}
                               />
                             ) : (
                               <img
