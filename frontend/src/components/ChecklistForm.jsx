@@ -72,15 +72,20 @@ function ChecklistForm() {
   const [draftSaved, setDraftSaved] = useState(false);
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
   const [lastSaveTime, setLastSaveTime] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Auto-save draft to BACKEND (Gmail-style, debounced)
   useEffect(() => {
     // Skip if editing an existing non-draft survey
     if (isEdit && !formData.is_draft) return;
     
+    // Mark as having unsaved changes when formData changes
+    setHasUnsavedChanges(true);
+    
     const timeoutId = setTimeout(async () => {
       // Don't save if form is essentially empty
       if (!formData.site_name && !formData.client_name && !formData.site_address) {
+        setHasUnsavedChanges(false);
         return;
       }
 
@@ -104,8 +109,10 @@ function ChecklistForm() {
 
         setDraftSaved(true);
         setLastSaveTime(new Date());
+        setHasUnsavedChanges(false);
       } catch (err) {
         console.error('[AUTO-SAVE] Failed:', err);
+        setHasUnsavedChanges(false);
       }
     }, 3000); // 3 second debounce to avoid hammering API
 
@@ -208,11 +215,15 @@ function ChecklistForm() {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>{isEdit ? (formData.is_draft ? 'Edit Draft' : 'Edit Checklist') : 'New Site Visit Checklist'}</h2>
-        {draftSaved && (
-          <span style={{ color: '#27ae60', fontSize: '14px', fontWeight: '500' }}>
-            ✓ Draft saved{lastSaveTime && ` at ${lastSaveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+        {hasUnsavedChanges ? (
+          <span style={{ color: '#f39c12', fontSize: '14px', fontWeight: '500' }}>
+            Saving...
           </span>
-        )}
+        ) : draftSaved && lastSaveTime ? (
+          <span style={{ color: '#27ae60', fontSize: '14px', fontWeight: '500' }}>
+            Draft saved at {lastSaveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        ) : null}
       </div>
 
       {error && <div className="error" style={{ marginTop: '15px' }}>{error}</div>}
