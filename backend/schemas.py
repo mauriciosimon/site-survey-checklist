@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from datetime import date, datetime
-from decimal import Decimal
 
 
 # ============ User Schemas ============
@@ -50,15 +49,15 @@ class ChecklistBase(BaseModel):
     client_contact: Optional[str] = None
     project_name: Optional[str] = None
 
-    # Building Specs
-    building_level: Optional[int] = None
-    ceiling_height: Optional[Decimal] = Field(None, ge=0, le=999.99)
+    # Building Specs (all text fields for flexibility)
+    building_level: Optional[str] = None
+    ceiling_height: Optional[str] = None
     skirting_size: Optional[str] = None
     floor_type: Optional[str] = None
     soffit_type: Optional[str] = None
     existing_ceiling_trims: Optional[str] = None
-    ceiling_void_depth: Optional[int] = None
-    floor_void_depth: Optional[int] = None
+    ceiling_void_depth: Optional[str] = None
+    floor_void_depth: Optional[str] = None
 
     # Access & Logistics
     service_penetrations_scale: Optional[int] = Field(None, ge=1, le=10)

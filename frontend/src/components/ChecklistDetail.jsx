@@ -94,7 +94,7 @@ function ChecklistDetail() {
             {renderField('Skirting Size', checklist.skirting_size)}
             {renderField('Floor Type', checklist.floor_type)}
             {renderField('Soffit Type', checklist.soffit_type)}
-            {renderField('Existing Ceiling/Trims', checklist.existing_ceiling_trims)}
+            {renderField('Ceiling Type & Trims', checklist.existing_ceiling_trims)}
             {renderField('Ceiling Void Depth', checklist.ceiling_void_depth ? `${checklist.ceiling_void_depth}mm` : null)}
             {renderField('Floor Void Depth', checklist.floor_void_depth ? `${checklist.floor_void_depth}mm` : null)}
           </div>

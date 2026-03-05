@@ -107,11 +107,7 @@ function ChecklistForm() {
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === '') cleanData[key] = null;
       });
-      // Convert numeric strings
-      if (cleanData.building_level) cleanData.building_level = parseInt(cleanData.building_level);
-      if (cleanData.ceiling_height) cleanData.ceiling_height = parseFloat(cleanData.ceiling_height);
-      if (cleanData.ceiling_void_depth) cleanData.ceiling_void_depth = parseInt(cleanData.ceiling_void_depth);
-      if (cleanData.floor_void_depth) cleanData.floor_void_depth = parseInt(cleanData.floor_void_depth);
+      // Convert numeric strings (only for fields that are still numbers)
       if (cleanData.service_penetrations_scale) cleanData.service_penetrations_scale = parseInt(cleanData.service_penetrations_scale);
 
       if (isEdit) {
@@ -240,7 +236,7 @@ function ChecklistForm() {
             <div className="form-group">
               <label>Building Level</label>
               <input
-                type="number"
+                type="text"
                 name="building_level"
                 value={formData.building_level}
                 onChange={handleChange}
@@ -249,45 +245,41 @@ function ChecklistForm() {
             <div className="form-group">
               <label>Ceiling Height (meters)</label>
               <input
-                type="number"
+                type="text"
                 name="ceiling_height"
                 value={formData.ceiling_height}
                 onChange={handleChange}
-                step="0.01"
-                min="0"
               />
             </div>
             <div className="form-group">
               <label>Skirting Size</label>
-              <select name="skirting_size" value={formData.skirting_size} onChange={handleChange}>
-                <option value="">Select...</option>
-                <option value="100mm">100mm</option>
-                <option value="150mm">150mm</option>
-                <option value="200mm">200mm</option>
-                <option value="Other">Other</option>
-              </select>
+              <input
+                type="text"
+                name="skirting_size"
+                value={formData.skirting_size}
+                onChange={handleChange}
+              />
             </div>
             <div className="form-group">
               <label>Floor Type</label>
-              <select name="floor_type" value={formData.floor_type} onChange={handleChange}>
-                <option value="">Select...</option>
-                <option value="Raised Floor">Raised Floor</option>
-                <option value="Concrete">Concrete</option>
-                <option value="Screed">Screed</option>
-                <option value="Other">Other</option>
-              </select>
+              <input
+                type="text"
+                name="floor_type"
+                value={formData.floor_type}
+                onChange={handleChange}
+              />
             </div>
             <div className="form-group">
               <label>Soffit Type</label>
-              <select name="soffit_type" value={formData.soffit_type} onChange={handleChange}>
-                <option value="">Select...</option>
-                <option value="Rib Deck">Rib Deck</option>
-                <option value="Concrete">Concrete</option>
-                <option value="Other">Other</option>
-              </select>
+              <input
+                type="text"
+                name="soffit_type"
+                value={formData.soffit_type}
+                onChange={handleChange}
+              />
             </div>
             <div className="form-group">
-              <label>Existing Ceiling/Trims</label>
+              <label>Ceiling Type & Trims</label>
               <input
                 type="text"
                 name="existing_ceiling_trims"
@@ -298,21 +290,19 @@ function ChecklistForm() {
             <div className="form-group">
               <label>Ceiling Void Depth (mm)</label>
               <input
-                type="number"
+                type="text"
                 name="ceiling_void_depth"
                 value={formData.ceiling_void_depth}
                 onChange={handleChange}
-                min="0"
               />
             </div>
             <div className="form-group">
               <label>Floor Void Depth (mm)</label>
               <input
-                type="number"
+                type="text"
                 name="floor_void_depth"
                 value={formData.floor_void_depth}
                 onChange={handleChange}
-                min="0"
               />
             </div>
           </div>

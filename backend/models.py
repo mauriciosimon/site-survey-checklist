@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, Date, Numeric, DateTime, JSON, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, Boolean, Date, DateTime, JSON, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -38,15 +38,15 @@ class Checklist(Base):
     client_contact = Column(String(50))
     project_name = Column(String(255))
 
-    # Building Specs
-    building_level = Column(Integer)
-    ceiling_height = Column(Numeric(5, 2))  # meters
-    skirting_size = Column(String(20))  # 100mm, 150mm, 200mm, Other
-    floor_type = Column(String(50))  # Raised Floor, Concrete, Screed, Other
-    soffit_type = Column(String(50))  # Rib Deck, Concrete, Other
+    # Building Specs (all text fields for flexibility)
+    building_level = Column(String(100))
+    ceiling_height = Column(String(100))  # meters
+    skirting_size = Column(String(100))
+    floor_type = Column(String(100))
+    soffit_type = Column(String(100))
     existing_ceiling_trims = Column(Text)
-    ceiling_void_depth = Column(Integer)  # mm
-    floor_void_depth = Column(Integer)  # mm
+    ceiling_void_depth = Column(String(100))  # mm
+    floor_void_depth = Column(String(100))  # mm
 
     # Access & Logistics
     service_penetrations_scale = Column(Integer)  # 1-10
