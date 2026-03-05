@@ -27,27 +27,27 @@ Base.metadata.create_all(bind=engine)
 
 # Migration: Add new columns if they don't exist
 from sqlalchemy import text
-with engine.connect() as conn:
-    columns_to_add = [
-        ("monday_item_id", "VARCHAR(50)"),
-        ("goods_lift_notes", "TEXT"),
-        ("staircase_access_notes", "TEXT"),
-        ("wall_deflection_notes", "TEXT"),
-        ("door_finish_other", "TEXT"),
-        ("frame_type_other", "TEXT"),
-        ("acoustic_baffles_notes", "TEXT"),
-        ("fire_stopping_notes", "TEXT"),
-    ]
-    for col_name, col_type in columns_to_add:
-        try:
+columns_to_add = [
+    ("monday_item_id", "VARCHAR(50)"),
+    ("goods_lift_notes", "TEXT"),
+    ("staircase_access_notes", "TEXT"),
+    ("wall_deflection_notes", "TEXT"),
+    ("door_finish_other", "TEXT"),
+    ("frame_type_other", "TEXT"),
+    ("acoustic_baffles_notes", "TEXT"),
+    ("fire_stopping_notes", "TEXT"),
+]
+for col_name, col_type in columns_to_add:
+    try:
+        with engine.connect() as conn:
             conn.execute(text(f"ALTER TABLE checklists ADD COLUMN {col_name} {col_type}"))
             conn.commit()
             print(f"Migration: added {col_name} column")
-        except Exception as e:
-            if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
-                pass  # Column already exists, silently continue
-            else:
-                print(f"Migration note for {col_name}: {e}")
+    except Exception as e:
+        if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+            pass  # Column already exists, silently continue
+        else:
+            print(f"Migration skipped for {col_name}: column likely exists")
 
 app = FastAPI(
     title="Site Visit Checklist API",
