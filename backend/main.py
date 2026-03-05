@@ -50,6 +50,31 @@ for col_name, col_type in columns_to_add:
         else:
             print(f"Migration skipped for {col_name}: column likely exists")
 
+# Migration: Convert numeric building spec columns to text (VARCHAR)
+# This fixes the "numeric field overflow" error when users enter large values
+numeric_to_text_columns = [
+    "ceiling_height",
+    "skirting_size",
+    "ceiling_void_depth",
+    "floor_void_depth",
+    "building_level",
+    "service_penetrations_scale",
+]
+for col_name in numeric_to_text_columns:
+    try:
+        with engine.connect() as conn:
+            # Try with USING clause to convert existing numeric data
+            conn.execute(text(f"ALTER TABLE checklists ALTER COLUMN {col_name} TYPE VARCHAR(100) USING {col_name}::TEXT"))
+            conn.commit()
+            print(f"Migration: converted {col_name} from NUMERIC to VARCHAR(100)")
+    except Exception as e:
+        error_str = str(e).lower()
+        if "does not exist" in error_str or "already" in error_str:
+            # Column doesn't exist or already correct type
+            pass
+        else:
+            print(f"Migration note for {col_name}: {str(e)[:100]}")
+
 app = FastAPI(
     title="Site Visit Checklist API",
     description="API for managing construction site visit checklists",
