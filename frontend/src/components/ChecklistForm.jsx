@@ -791,7 +791,6 @@ function ChecklistForm() {
                         </div>
                       );
                     })}
-                    ))}
                   </div>
                 )}
               </>
