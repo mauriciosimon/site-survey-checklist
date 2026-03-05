@@ -57,8 +57,6 @@ const initialFormData = {
   site_photos: [],
 };
 
-const DRAFT_STORAGE_KEY = 'site_survey_draft';
-
 function ChecklistForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -72,44 +70,46 @@ function ChecklistForm() {
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
   const [draftSaved, setDraftSaved] = useState(false);
+  const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
 
-  // Load draft from localStorage on mount (only for new surveys)
+  // Auto-save draft to BACKEND (Gmail-style, debounced)
   useEffect(() => {
-    if (!isEdit) {
-      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (savedDraft) {
-        try {
-          const draft = JSON.parse(savedDraft);
-          setFormData(prev => ({ ...prev, ...draft }));
-          setDraftSaved(true);
-        } catch (e) {
-          console.error('Failed to load draft:', e);
-        }
-      }
-    }
-  }, [isEdit]);
-
-  // Auto-save draft to localStorage (debounced, only for new surveys)
-  useEffect(() => {
-    if (isEdit) return; // Don't save drafts when editing existing surveys
+    // Skip if editing an existing non-draft survey
+    if (isEdit && !formData.is_draft) return;
     
-    const timeoutId = setTimeout(() => {
-      // Don't save if form is empty (only site_name check)
-      if (formData.site_name || formData.client_name || formData.site_address) {
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
-        setDraftSaved(true);
-        // Hide "Draft saved" after 2 seconds
-        setTimeout(() => setDraftSaved(false), 2000);
+    const timeoutId = setTimeout(async () => {
+      // Don't save if form is essentially empty
+      if (!formData.site_name && !formData.client_name && !formData.site_address) {
+        return;
       }
-    }, 1000); // 1 second debounce
+
+      try {
+        // Prepare data for backend
+        const cleanData = { ...formData, is_draft: true };
+        Object.keys(cleanData).forEach((key) => {
+          if (cleanData[key] === '') cleanData[key] = null;
+        });
+
+        if (draftId || id) {
+          // Update existing draft
+          await checklistApi.update(draftId || id, cleanData);
+          console.log('[AUTO-SAVE] Draft updated:', draftId || id);
+        } else {
+          // Create new draft
+          const response = await checklistApi.create(cleanData);
+          setDraftId(response.data.id);
+          console.log('[AUTO-SAVE] Draft created:', response.data.id);
+        }
+
+        setDraftSaved(true);
+        setTimeout(() => setDraftSaved(false), 2000);
+      } catch (err) {
+        console.error('[AUTO-SAVE] Failed:', err);
+      }
+    }, 3000); // 3 second debounce to avoid hammering API
 
     return () => clearTimeout(timeoutId);
-  }, [formData, isEdit]);
-
-  // Clear draft on successful submission
-  const clearDraft = () => {
-    localStorage.removeItem(DRAFT_STORAGE_KEY);
-  };
+  }, [formData, isEdit, draftId, id]);
 
   useEffect(() => {
     if (isEdit) {
@@ -154,30 +154,29 @@ function ChecklistForm() {
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === '') cleanData[key] = null;
       });
-      // All fields are now text - no numeric conversion needed
 
-      if (isEdit) {
-        await checklistApi.update(id, cleanData);
+      let finalId = id || draftId;
+
+      if (finalId) {
+        // Update existing survey (whether it was a draft or not)
+        await checklistApi.update(finalId, cleanData);
       } else {
-        // Create the survey first
+        // Create new survey
         const response = await checklistApi.create(cleanData);
-        const newId = response.data.id;
+        finalId = response.data.id;
+      }
 
-        // Upload any pending photos
-        if (pendingPhotos.length > 0) {
-          for (const photo of pendingPhotos) {
-            try {
-              await checklistApi.uploadPhoto(newId, photo);
-            } catch (photoErr) {
-              console.error('Failed to upload photo:', photoErr);
-            }
+      // Upload any pending photos
+      if (pendingPhotos.length > 0) {
+        for (const photo of pendingPhotos) {
+          try {
+            await checklistApi.uploadPhoto(finalId, photo);
+          } catch (photoErr) {
+            console.error('Failed to upload photo:', photoErr);
           }
         }
-        // Clear draft on successful creation only if not saving as draft
-        if (!isDraft) {
-          clearDraft();
-        }
       }
+
       navigate('/');
     } catch (err) {
       setError('Failed to save checklist. Check your input and try again.');
@@ -204,41 +203,14 @@ function ChecklistForm() {
 
   if (loading) return <div className="loading">Loading...</div>;
 
-  const handleClearDraft = () => {
-    if (window.confirm('Clear all form data and start fresh?')) {
-      clearDraft();
-      setFormData({ ...initialFormData, surveyor_name: user?.full_name || '' });
-      setPendingPhotos([]);
-    }
-  };
-
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>{isEdit ? 'Edit Checklist' : 'New Site Visit Checklist'}</h2>
-        {!isEdit && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {draftSaved && (
-              <span style={{ color: '#27ae60', fontSize: '14px' }}>
-                ✓ Draft saved
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleClearDraft}
-              style={{
-                background: 'transparent',
-                border: '1px solid #e74c3c',
-                color: '#e74c3c',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              Clear Draft
-            </button>
-          </div>
+        <h2>{isEdit ? (formData.is_draft ? 'Edit Draft' : 'Edit Checklist') : 'New Site Visit Checklist'}</h2>
+        {draftSaved && (
+          <span style={{ color: '#27ae60', fontSize: '14px' }}>
+            ✓ Draft auto-saved
+          </span>
         )}
       </div>
 
@@ -833,22 +805,17 @@ function ChecklistForm() {
         </div>
 
         <div className="form-actions">
-          {(!isEdit || formData.is_draft) && (
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={(e) => handleSubmit(e, true)}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Draft'}
-            </button>
-          )}
           <button type="submit" className="btn btn-success" disabled={saving}>
-            {saving ? 'Saving...' : (isEdit ? (formData.is_draft ? 'Submit Survey' : 'Update Checklist') : 'Submit Survey')}
+            {saving ? 'Submitting...' : (isEdit || draftId ? 'Submit Survey' : 'Submit Survey')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>
             Cancel
           </button>
+          {(isEdit || draftId) && (
+            <p style={{ fontSize: '14px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
+              Draft auto-saves as you type. Click "Submit Survey" when ready to finalize.
+            </p>
+          )}
         </div>
       </form>
     </div>
