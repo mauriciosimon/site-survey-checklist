@@ -735,7 +735,7 @@ function ChecklistForm() {
               </>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
+                <div style={{ marginTop: '10px' }}>
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -746,52 +746,64 @@ function ChecklistForm() {
                         e.target.value = ''; // Reset input to allow selecting same file
                       }
                     }}
+                    style={{ display: 'block', marginBottom: '8px' }}
                   />
-                  <span style={{ color: '#666', fontSize: '14px' }}>
-                    {pendingPhotos.length > 0 ? `${pendingPhotos.length} file(s) selected` : 'Select photos/videos to upload'}
+                  <span style={{ color: '#666', fontSize: '14px', display: 'block' }}>
+                    {pendingPhotos.length > 0 
+                      ? `${pendingPhotos.length} file(s) selected` 
+                      : 'Select photos/videos to upload'}
                   </span>
                 </div>
                 {pendingPhotos.length > 0 && (
-                  <div className="photo-grid" style={{ marginTop: '10px' }}>
-                    {pendingPhotos.map((media, idx) => {
-                      const isVideo = media.type.startsWith('video/');
-                      return (
-                        <div key={idx} style={{ position: 'relative' }}>
-                          {isVideo ? (
-                            <video
-                              src={URL.createObjectURL(media)}
-                              controls
-                              style={{ maxWidth: '200px', maxHeight: '150px' }}
-                            />
-                          ) : (
-                            <img
-                              src={URL.createObjectURL(media)}
-                              alt={`Pending media ${idx + 1}`}
-                            />
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
-                            style={{
-                              position: 'absolute',
-                              top: '5px',
-                              right: '5px',
-                              background: '#e74c3c',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '24px',
-                              height: '24px',
-                              cursor: 'pointer',
-                              fontSize: '14px'
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div style={{ marginTop: '15px', marginBottom: '10px' }}>
+                      <strong>Selected files:</strong>
+                      <ul style={{ marginTop: '5px', paddingLeft: '20px', fontSize: '14px', color: '#555' }}>
+                        {pendingPhotos.map((media, idx) => (
+                          <li key={idx} style={{ marginBottom: '4px' }}>
+                            {media.name} ({(media.size / 1024).toFixed(1)} KB)
+                            <button
+                              type="button"
+                              onClick={() => setPendingPhotos(prev => prev.filter((_, i) => i !== idx))}
+                              style={{
+                                marginLeft: '10px',
+                                background: '#e74c3c',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '2px 8px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="photo-grid" style={{ marginTop: '10px' }}>
+                      {pendingPhotos.map((media, idx) => {
+                        const isVideo = media.type.startsWith('video/');
+                        return (
+                          <div key={idx} style={{ position: 'relative' }}>
+                            {isVideo ? (
+                              <video
+                                src={URL.createObjectURL(media)}
+                                controls
+                                style={{ maxWidth: '200px', maxHeight: '150px' }}
+                              />
+                            ) : (
+                              <img
+                                src={URL.createObjectURL(media)}
+                                alt={`Pending media ${idx + 1}`}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             )}
