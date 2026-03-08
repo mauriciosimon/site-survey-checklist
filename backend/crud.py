@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import or_, func
 from models import Checklist, User
 from schemas import ChecklistCreate, ChecklistUpdate, UserCreate
@@ -129,6 +130,7 @@ def add_photo_to_checklist(db: Session, checklist_id: int, photo_path: str):
         photos = db_checklist.site_photos or []
         photos.append(photo_path)
         db_checklist.site_photos = photos
+        flag_modified(db_checklist, "site_photos")  # Tell SQLAlchemy the JSON field changed
         db.commit()
         db.refresh(db_checklist)
     return db_checklist
