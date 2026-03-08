@@ -124,11 +124,16 @@ def delete_checklist(db: Session, checklist_id: int, user_id: Optional[int] = No
     return False
 
 
-def add_photo_to_checklist(db: Session, checklist_id: int, photo_path: str):
+def add_photo_to_checklist(db: Session, checklist_id: int, photo_path: str, original_filename: str = None):
     db_checklist = db.query(Checklist).filter(Checklist.id == checklist_id).first()
     if db_checklist:
         photos = db_checklist.site_photos or []
-        photos.append(photo_path)
+        # Store as object with path and original filename
+        photo_obj = {
+            "path": photo_path,
+            "originalFilename": original_filename or photo_path.split('/')[-1]
+        }
+        photos.append(photo_obj)
         db_checklist.site_photos = photos
         flag_modified(db_checklist, "site_photos")  # Tell SQLAlchemy the JSON field changed
         db.commit()

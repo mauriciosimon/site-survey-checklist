@@ -293,7 +293,8 @@ async def upload_photo(
         raise HTTPException(status_code=404, detail="Checklist not found")
 
     # Generate unique filename
-    ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    original_filename = file.filename or "untitled.jpg"
+    ext = os.path.splitext(original_filename)[1] if original_filename else ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
@@ -302,9 +303,9 @@ async def upload_photo(
     with open(filepath, "wb") as f:
         f.write(content)
 
-    # Add to checklist
+    # Add to checklist with both path and original filename
     photo_url = f"/uploads/{filename}"
-    return crud.add_photo_to_checklist(db, checklist_id, photo_url)
+    return crud.add_photo_to_checklist(db, checklist_id, photo_url, original_filename)
 
 
 if __name__ == "__main__":

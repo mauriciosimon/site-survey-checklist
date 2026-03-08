@@ -821,20 +821,22 @@ function ChecklistForm() {
                     </div>
                     <div className="photo-grid">
                       {formData.site_photos.map((media, idx) => {
-                        const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                        const filename = media.split('/').pop(); // Extract filename from path
+                        // Handle both old format (string) and new format (object)
+                        const photoPath = typeof media === 'string' ? media : media.path;
+                        const originalFilename = typeof media === 'string' ? media.split('/').pop() : media.originalFilename;
+                        const isVideo = photoPath.match(/\.(mp4|mov|avi|webm|mkv)$/i);
                         return (
                           <div key={idx} style={{ position: 'relative' }}>
                             {isVideo ? (
                               <video
-                                src={`${API_BASE}${media}`}
+                                src={`${API_BASE}${photoPath}`}
                                 controls
                                 style={{ marginBottom: '5px' }}
                               />
                             ) : (
                               <img
-                                src={`${API_BASE}${media}`}
-                                alt={filename}
+                                src={`${API_BASE}${photoPath}`}
+                                alt={originalFilename}
                                 style={{ marginBottom: '5px' }}
                               />
                             )}
@@ -846,7 +848,7 @@ function ChecklistForm() {
                               padding: '0 4px',
                               marginBottom: '20px'
                             }}>
-                              {filename}
+                              {originalFilename}
                             </div>
                             <button
                               type="button"
