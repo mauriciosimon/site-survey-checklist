@@ -138,6 +138,29 @@ function ChecklistForm() {
     return () => clearTimeout(timeoutId);
   }, [formData, isEdit, draftId, id, pendingPhotos]);
 
+  // Separate effect: Upload pending photos immediately when they're added (if draft exists)
+  useEffect(() => {
+    const uploadPhotosImmediately = async () => {
+      const currentId = draftId || id;
+      if (pendingPhotos.length > 0 && currentId) {
+        console.log('[IMMEDIATE UPLOAD] Uploading', pendingPhotos.length, 'photos to draft', currentId);
+        for (const photo of pendingPhotos) {
+          try {
+            const response = await checklistApi.uploadPhoto(currentId, photo);
+            setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+            console.log('[IMMEDIATE UPLOAD] Photo uploaded:', photo.name);
+          } catch (photoErr) {
+            console.error('[IMMEDIATE UPLOAD] Failed to upload photo:', photoErr);
+          }
+        }
+        setPendingPhotos([]);
+        console.log('[IMMEDIATE UPLOAD] All photos uploaded, pendingPhotos cleared');
+      }
+    };
+
+    uploadPhotosImmediately();
+  }, [pendingPhotos, draftId, id]);
+
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
