@@ -1,3 +1,4 @@
+# Westpark Surveys API - Photo uploads via Vercel Blob
 import os
 import uuid
 import logging
