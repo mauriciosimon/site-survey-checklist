@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 # Load environment variables from .env file (if exists)
 # Railway should inject env vars directly, but this ensures compatibility
 load_dotenv()
+
+# Cache BLOB token at module load time (Railway env var disappears at runtime)
+BLOB_TOKEN_CACHED = os.getenv("BLOB_READ_WRITE_TOKEN")
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -123,10 +126,12 @@ def root():
 
 @app.get("/debug/blob-token")
 def debug_blob_token():
-    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    runtime_token = os.getenv("BLOB_READ_WRITE_TOKEN")
     return {
-        "configured": bool(blob_token),
-        "prefix": blob_token[:20] if blob_token else None
+        "configured_cached": bool(BLOB_TOKEN_CACHED),
+        "configured_runtime": bool(runtime_token),
+        "prefix_cached": BLOB_TOKEN_CACHED[:20] if BLOB_TOKEN_CACHED else None,
+        "prefix_runtime": runtime_token[:20] if runtime_token else None
     }
 
 
@@ -341,11 +346,11 @@ async def upload_photo(
     if not checklist:
         raise HTTPException(status_code=404, detail="Checklist not found")
 
-    # Get Vercel Blob token from environment
-    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
-    logger.info(f"[UPLOAD] BLOB_READ_WRITE_TOKEN: {'SET' if blob_token else 'NOT SET'}")
+    # Get Vercel Blob token from cached value (Railway env var not available at runtime)
+    blob_token = BLOB_TOKEN_CACHED
+    logger.info(f"[UPLOAD] Using cached BLOB token: {'SET' if blob_token else 'NOT SET'}")
     if not blob_token:
-        logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not set - check Railway environment variables")
+        logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not cached - check Railway environment variables")
         raise HTTPException(status_code=500, detail="Blob storage not configured")
     
     # Generate unique filename
