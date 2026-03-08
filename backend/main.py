@@ -5,6 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from typing import List, Optional
 
 # Configure logging
@@ -331,6 +332,27 @@ async def upload_photo(
     # Add to checklist with both path and original filename
     photo_url = f"/uploads/{filename}"
     return crud.add_photo_to_checklist(db, checklist_id, photo_url, original_filename)
+
+
+@app.delete("/checklists/{checklist_id}/photos")
+def clear_all_photos(
+    checklist_id: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Clear all photos from a checklist"""
+    is_admin = current_user.role == "admin"
+    checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
+    if not checklist:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    
+    # Clear photos
+    checklist.site_photos = []
+    flag_modified(checklist, "site_photos")  # Tell SQLAlchemy the JSON field changed
+    db.commit()
+    db.refresh(checklist)
+    
+    return {"message": f"Cleared all photos from checklist {checklist_id}", "checklist_id": checklist_id}
 
 
 if __name__ == "__main__":
