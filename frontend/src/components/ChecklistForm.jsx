@@ -140,10 +140,14 @@ function ChecklistForm() {
 
   // Separate effect: Upload pending photos immediately when they're added (if draft exists)
   useEffect(() => {
+    console.log('[IMMEDIATE UPLOAD EFFECT] Triggered - pendingPhotos:', pendingPhotos.length, 'draftId:', draftId, 'id:', id);
+    
     const uploadPhotosImmediately = async () => {
       const currentId = draftId || id;
+      console.log('[IMMEDIATE UPLOAD] Checking conditions - pendingPhotos.length:', pendingPhotos.length, 'currentId:', currentId);
+      
       if (pendingPhotos.length > 0 && currentId) {
-        console.log('[IMMEDIATE UPLOAD] Uploading', pendingPhotos.length, 'photos to draft', currentId);
+        console.log('[IMMEDIATE UPLOAD] Conditions met! Uploading', pendingPhotos.length, 'photos to draft', currentId);
         for (const photo of pendingPhotos) {
           try {
             const response = await checklistApi.uploadPhoto(currentId, photo);
@@ -155,6 +159,8 @@ function ChecklistForm() {
         }
         setPendingPhotos([]);
         console.log('[IMMEDIATE UPLOAD] All photos uploaded, pendingPhotos cleared');
+      } else {
+        console.log('[IMMEDIATE UPLOAD] Conditions NOT met - skipping upload');
       }
     };
 
