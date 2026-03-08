@@ -2,16 +2,8 @@
 import os
 import uuid
 import logging
-from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, status
 from fastapi.middleware.cors import CORSMiddleware
-
-# Load environment variables from .env file (if exists)
-# Railway should inject env vars directly, but this ensures compatibility
-load_dotenv()
-
-# Global variable to cache BLOB token (set during startup event)
-BLOB_TOKEN_CACHED = None
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -111,18 +103,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    global BLOB_TOKEN_CACHED
-    
-    # Cache the BLOB token at startup (Railway injects env vars after module load)
-    BLOB_TOKEN_CACHED = os.getenv("BLOB_READ_WRITE_TOKEN")
-    
-    # Log environment variable status at startup
-    logger.info(f"[STARTUP] BLOB_READ_WRITE_TOKEN configured: {bool(BLOB_TOKEN_CACHED)}")
-    if BLOB_TOKEN_CACHED:
-        logger.info(f"[STARTUP] Token cached successfully. Prefix: {BLOB_TOKEN_CACHED[:20]}...")
-    else:
-        logger.warning("[STARTUP] BLOB_READ_WRITE_TOKEN not found - photo uploads will fail!")
-        logger.warning("[STARTUP] Available env vars: " + ", ".join([k for k in os.environ.keys() if 'BLOB' in k.upper() or 'VERCEL' in k.upper()]))
+    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    logger.info(f"[STARTUP] BLOB_READ_WRITE_TOKEN configured: {bool(blob_token)}")
+    if blob_token:
+        logger.info(f"[STARTUP] Token prefix: {blob_token[:20]}...")
 
 @app.get("/")
 def root():
@@ -130,12 +114,10 @@ def root():
 
 @app.get("/debug/blob-token")
 def debug_blob_token():
-    runtime_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
     return {
-        "configured_cached": bool(BLOB_TOKEN_CACHED),
-        "configured_runtime": bool(runtime_token),
-        "prefix_cached": BLOB_TOKEN_CACHED[:20] if BLOB_TOKEN_CACHED else None,
-        "prefix_runtime": runtime_token[:20] if runtime_token else None
+        "configured": bool(blob_token),
+        "prefix": blob_token[:20] if blob_token else None
     }
 
 
@@ -345,19 +327,17 @@ async def upload_photo(
 ):
     import requests
     
-    logger.info(f"[UPLOAD] ===== PHOTO UPLOAD STARTED for checklist {checklist_id} =====")
-    logger.info(f"[UPLOAD] Global BLOB_TOKEN_CACHED value: {BLOB_TOKEN_CACHED[:20] if BLOB_TOKEN_CACHED else 'None'}...")
-    
     is_admin = current_user.role == "admin"
     checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
     if not checklist:
         raise HTTPException(status_code=404, detail="Checklist not found")
 
-    # Get Vercel Blob token from cached value (Railway env var not available at runtime)
-    blob_token = BLOB_TOKEN_CACHED
-    logger.info(f"[UPLOAD] Using cached BLOB token: {'SET' if blob_token else 'NOT SET'}")
+    # Get Vercel Blob token from environment
+    # TEMPORARY: Hardcoded for testing (Railway env var not working at runtime)
+    blob_token = "vercel_blob_rw_sVwnQznFPrCYs2uq_OHVOAjS4N9DidHZPyt4nJfIntS12k7"
+    logger.info(f"[UPLOAD] Using Vercel Blob token (hardcoded for testing)")
     if not blob_token:
-        logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not cached - check Railway environment variables")
+        logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not set")
         raise HTTPException(status_code=500, detail="Blob storage not configured")
     
     # Generate unique filename
