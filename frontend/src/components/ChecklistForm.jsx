@@ -355,74 +355,74 @@ function ChecklistForm() {
           <div className="form-grid">
             <div className="form-group">
               <label>Building Level</label>
-              <input
-                type="text"
+              <textarea
                 name="building_level"
                 value={formData.building_level}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Ceiling Height (meters)</label>
-              <input
-                type="text"
+              <textarea
                 name="ceiling_height"
                 value={formData.ceiling_height}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Skirting Size</label>
-              <input
-                type="text"
+              <textarea
                 name="skirting_size"
                 value={formData.skirting_size}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Floor Type</label>
-              <input
-                type="text"
+              <textarea
                 name="floor_type"
                 value={formData.floor_type}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Soffit Type</label>
-              <input
-                type="text"
+              <textarea
                 name="soffit_type"
                 value={formData.soffit_type}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Ceiling Type & Trims</label>
-              <input
-                type="text"
+              <textarea
                 name="existing_ceiling_trims"
                 value={formData.existing_ceiling_trims}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Ceiling Void Depth (mm)</label>
-              <input
-                type="text"
+              <textarea
                 name="ceiling_void_depth"
                 value={formData.ceiling_void_depth}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
               <label>Floor Void Depth (mm)</label>
-              <input
-                type="text"
+              <textarea
                 name="floor_void_depth"
                 value={formData.floor_void_depth}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
           </div>
@@ -434,11 +434,11 @@ function ChecklistForm() {
           <div className="form-grid">
             <div className="form-group">
               <label>Service Penetrations Scale</label>
-              <input
-                type="text"
+              <textarea
                 name="service_penetrations_scale"
                 value={formData.service_penetrations_scale}
                 onChange={handleChange}
+                rows="2"
               />
             </div>
             <div className="form-group">
@@ -452,12 +452,12 @@ function ChecklistForm() {
                 <label>Goods Lift Available</label>
               </div>
               {formData.goods_lift_available && (
-                <input
-                  type="text"
+                <textarea
                   name="goods_lift_notes"
                   value={formData.goods_lift_notes}
                   onChange={handleChange}
                   placeholder="Add notes..."
+                  rows="2"
                   style={{ marginTop: '8px' }}
                 />
               )}
@@ -473,12 +473,12 @@ function ChecklistForm() {
                 <label>Good Staircase Access</label>
               </div>
               {formData.good_staircase_access && (
-                <input
-                  type="text"
+                <textarea
                   name="staircase_access_notes"
                   value={formData.staircase_access_notes}
                   onChange={handleChange}
                   placeholder="Add notes..."
+                  rows="2"
                   style={{ marginTop: '8px' }}
                 />
               )}
