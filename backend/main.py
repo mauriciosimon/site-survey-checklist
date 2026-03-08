@@ -1,10 +1,15 @@
 import os
 import uuid
+import logging
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from database import engine, get_db, Base
 from schemas import (
@@ -196,15 +201,15 @@ def list_checklists(
     db: Session = Depends(get_db)
 ):
     try:
+        logger.info(f"GET /checklists called - skip={skip}, limit={limit}, search={search}")
         user_id = current_user.id if current_user else None
         is_admin = current_user.role == "admin" if current_user else False
+        logger.info(f"User context - user_id={user_id}, is_admin={is_admin}")
         checklists = crud.get_checklists(db, skip=skip, limit=limit, search=search, user_id=user_id, is_admin=is_admin)
-        print(f"[DEBUG] Fetched {len(checklists)} checklists")
+        logger.info(f"Fetched {len(checklists)} checklists successfully")
         return checklists
     except Exception as e:
-        print(f"[ERROR] Failed to list checklists: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Failed to list checklists: {type(e).__name__}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list checklists: {str(e)}")
 
 
