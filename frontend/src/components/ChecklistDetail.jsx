@@ -168,17 +168,19 @@ function ChecklistDetail() {
                     ? media.split('/').pop() 
                     : media.originalFilename;
                   const isVideo = photoPath.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                  // Handle both relative paths (/uploads/...) and full URLs (https://...)
+                  const photoUrl = photoPath.startsWith('http') ? photoPath : `${API_BASE}${photoPath}`;
                   return (
                     <div key={idx} style={{ textAlign: 'center' }}>
                       {isVideo ? (
                         <video
-                          src={`${API_BASE}${photoPath}`}
+                          src={photoUrl}
                           controls
                           style={{ maxWidth: '200px', maxHeight: '150px' }}
                         />
                       ) : (
                         <img
-                          src={`${API_BASE}${photoPath}`}
+                          src={photoUrl}
                           alt={`Site media ${idx + 1}`}
                         />
                       )}

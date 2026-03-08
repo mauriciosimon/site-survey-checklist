@@ -98,10 +98,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create uploads directory
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+# Uploads now use Vercel Blob - no local storage needed
 
 
 @app.get("/")
@@ -313,25 +310,55 @@ async def upload_photo(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
+    import requests
+    
     is_admin = current_user.role == "admin"
     checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
     if not checklist:
         raise HTTPException(status_code=404, detail="Checklist not found")
 
+    # Get Vercel Blob token from environment
+    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    if not blob_token:
+        logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not set")
+        raise HTTPException(status_code=500, detail="Blob storage not configured")
+    
     # Generate unique filename
     original_filename = file.filename or "untitled.jpg"
     ext = os.path.splitext(original_filename)[1] if original_filename else ".jpg"
-    filename = f"{uuid.uuid4()}{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-
-    # Save file
-    content = await file.read()
-    with open(filepath, "wb") as f:
-        f.write(content)
-
-    # Add to checklist with both path and original filename
-    photo_url = f"/uploads/{filename}"
-    return crud.add_photo_to_checklist(db, checklist_id, photo_url, original_filename)
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    pathname = f"westpark-surveys/checklist-{checklist_id}/{unique_filename}"
+    
+    logger.info(f"[UPLOAD] Uploading to Vercel Blob: {pathname}")
+    
+    try:
+        # Read file content
+        content = await file.read()
+        logger.info(f"[UPLOAD] Read {len(content)} bytes from uploaded file")
+        
+        # PUT request to Vercel Blob API
+        blob_url = f"https://blob.vercel-storage.com/{pathname}"
+        response = requests.put(
+            blob_url,
+            params={"token": blob_token},
+            data=content,
+            headers={"Content-Type": file.content_type or "application/octet-stream"}
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"[UPLOAD] Blob upload failed: {response.status_code} {response.text}")
+            raise HTTPException(status_code=500, detail="Failed to upload to blob storage")
+        
+        blob_data = response.json()
+        public_url = blob_data.get("url")
+        logger.info(f"[UPLOAD] ✅ Blob uploaded: {public_url}")
+        
+    except Exception as e:
+        logger.error(f"[UPLOAD] Blob upload exception: {e}")
+        raise HTTPException(status_code=500, detail=f"Blob upload failed: {str(e)}")
+    
+    # Add to checklist with public URL
+    return crud.add_photo_to_checklist(db, checklist_id, public_url, original_filename)
 
 
 @app.delete("/checklists/{checklist_id}/photos")
