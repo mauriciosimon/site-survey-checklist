@@ -333,8 +333,9 @@ async def upload_photo(
         raise HTTPException(status_code=404, detail="Checklist not found")
 
     # Get Vercel Blob token from environment
-    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
-    logger.info(f"[UPLOAD] BLOB_READ_WRITE_TOKEN value: {blob_token[:20] if blob_token else 'None'}...")
+    # TEMPORARY: Hardcoded for testing (Railway env var not working at runtime)
+    blob_token = "vercel_blob_rw_sVwnQznFPrCYs2uq_OHVOAjS4N9DidHZPyt4nJfIntS12k7"
+    logger.info(f"[UPLOAD] Using Vercel Blob token (hardcoded for testing)")
     if not blob_token:
         logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not set")
         raise HTTPException(status_code=500, detail="Blob storage not configured")
