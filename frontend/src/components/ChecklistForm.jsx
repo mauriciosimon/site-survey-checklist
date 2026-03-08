@@ -148,17 +148,28 @@ function ChecklistForm() {
       
       if (pendingPhotos.length > 0 && currentId) {
         console.log('[IMMEDIATE UPLOAD] Conditions met! Uploading', pendingPhotos.length, 'photos to draft', currentId);
+        const successfulUploads = [];
+        const failedPhotos = [];
+        
         for (const photo of pendingPhotos) {
           try {
             const response = await checklistApi.uploadPhoto(currentId, photo);
             setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+            successfulUploads.push(photo.name);
             console.log('[IMMEDIATE UPLOAD] Photo uploaded:', photo.name);
           } catch (photoErr) {
-            console.error('[IMMEDIATE UPLOAD] Failed to upload photo:', photoErr);
+            failedPhotos.push(photo);
+            console.error('[IMMEDIATE UPLOAD] Failed to upload photo:', photo.name, photoErr);
           }
         }
-        setPendingPhotos([]);
-        console.log('[IMMEDIATE UPLOAD] All photos uploaded, pendingPhotos cleared');
+        
+        if (failedPhotos.length === 0) {
+          setPendingPhotos([]);
+          console.log('[IMMEDIATE UPLOAD] All photos uploaded successfully, pendingPhotos cleared');
+        } else {
+          setPendingPhotos(failedPhotos);
+          console.log('[IMMEDIATE UPLOAD] Some uploads failed. Keeping', failedPhotos.length, 'photos in pendingPhotos');
+        }
       } else {
         console.log('[IMMEDIATE UPLOAD] Conditions NOT met - skipping upload');
       }
