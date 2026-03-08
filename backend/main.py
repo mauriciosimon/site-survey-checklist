@@ -101,6 +101,12 @@ app.add_middleware(
 
 # Uploads now use Vercel Blob - no local storage needed
 
+@app.on_event("startup")
+async def startup_event():
+    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    logger.info(f"[STARTUP] BLOB_READ_WRITE_TOKEN configured: {bool(blob_token)}")
+    if blob_token:
+        logger.info(f"[STARTUP] Token prefix: {blob_token[:20]}...")
 
 @app.get("/")
 def root():
