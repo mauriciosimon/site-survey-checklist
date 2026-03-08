@@ -207,7 +207,19 @@ def list_checklists(
         logger.info(f"User context - user_id={user_id}, is_admin={is_admin}")
         checklists = crud.get_checklists(db, skip=skip, limit=limit, search=search, user_id=user_id, is_admin=is_admin)
         logger.info(f"Fetched {len(checklists)} checklists successfully")
-        return checklists
+        logger.info("About to return checklists - triggering Pydantic serialization...")
+        # Try to serialize each checklist to catch validation errors
+        result = []
+        for i, checklist in enumerate(checklists):
+            try:
+                validated = ChecklistResponse.model_validate(checklist)
+                result.append(validated)
+                logger.info(f"Checklist {i+1}/{len(checklists)} validated OK (id={checklist.id})")
+            except Exception as ve:
+                logger.error(f"Validation failed for checklist {i+1} (id={checklist.id}): {type(ve).__name__}: {str(ve)}", exc_info=True)
+                raise
+        logger.info(f"All {len(result)} checklists validated successfully")
+        return result
     except Exception as e:
         logger.error(f"Failed to list checklists: {type(e).__name__}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list checklists: {str(e)}")
