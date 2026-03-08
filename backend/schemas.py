@@ -1,6 +1,14 @@
 from pydantic import BaseModel, Field, EmailStr, field_validator
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Union
 from datetime import date, datetime
+
+
+# ============ Photo Schema ============
+
+class PhotoObject(BaseModel):
+    """Schema for photo objects with path and original filename"""
+    path: str
+    originalFilename: Optional[str] = None
 
 
 # ============ User Schemas ============
@@ -96,7 +104,7 @@ class ChecklistBase(BaseModel):
     supplier_notes: Optional[str] = None
 
     # Documentation
-    site_photos: Optional[List[str]] = []
+    site_photos: Optional[List[Union[str, PhotoObject]]] = []
     additional_notes: Optional[str] = None
 
     # Draft status
