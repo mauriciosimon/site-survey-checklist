@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { checklistApi, API_BASE } from '../api';
 import { useAuth } from '../AuthContext';
@@ -69,6 +69,7 @@ function ChecklistForm() {
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
+  const uploadInProgress = useRef(false); // Prevent concurrent uploads
   const [draftSaved, setDraftSaved] = useState(false);
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
   const [lastSaveTime, setLastSaveTime] = useState(null);
@@ -144,9 +145,16 @@ function ChecklistForm() {
     
     const uploadPhotosImmediately = async () => {
       const currentId = draftId || id;
-      console.log('[IMMEDIATE UPLOAD] Checking conditions - pendingPhotos.length:', pendingPhotos.length, 'currentId:', currentId);
+      console.log('[IMMEDIATE UPLOAD] Checking conditions - pendingPhotos.length:', pendingPhotos.length, 'currentId:', currentId, 'uploadInProgress:', uploadInProgress.current);
+      
+      // Skip if upload already in progress
+      if (uploadInProgress.current) {
+        console.log('[IMMEDIATE UPLOAD] Upload already in progress, skipping');
+        return;
+      }
       
       if (pendingPhotos.length > 0 && currentId) {
+        uploadInProgress.current = true;
         console.log('[IMMEDIATE UPLOAD] Conditions met! Uploading', pendingPhotos.length, 'photos to draft', currentId);
         const successfulUploads = [];
         const failedPhotos = [];
@@ -170,6 +178,8 @@ function ChecklistForm() {
           setPendingPhotos(failedPhotos);
           console.log('[IMMEDIATE UPLOAD] Some uploads failed. Keeping', failedPhotos.length, 'photos in pendingPhotos');
         }
+        
+        uploadInProgress.current = false;
       } else {
         console.log('[IMMEDIATE UPLOAD] Conditions NOT met - skipping upload');
       }
