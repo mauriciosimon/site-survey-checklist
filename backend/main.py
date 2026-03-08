@@ -345,6 +345,9 @@ async def upload_photo(
 ):
     import requests
     
+    logger.info(f"[UPLOAD] ===== PHOTO UPLOAD STARTED for checklist {checklist_id} =====")
+    logger.info(f"[UPLOAD] Global BLOB_TOKEN_CACHED value: {BLOB_TOKEN_CACHED[:20] if BLOB_TOKEN_CACHED else 'None'}...")
+    
     is_admin = current_user.role == "admin"
     checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
     if not checklist:
