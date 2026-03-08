@@ -10,8 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 # Railway should inject env vars directly, but this ensures compatibility
 load_dotenv()
 
-# Cache BLOB token at module load time (Railway env var disappears at runtime)
-BLOB_TOKEN_CACHED = os.getenv("BLOB_READ_WRITE_TOKEN")
+# Global variable to cache BLOB token (set during startup event)
+BLOB_TOKEN_CACHED = None
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -111,11 +111,15 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    global BLOB_TOKEN_CACHED
+    
+    # Cache the BLOB token at startup (Railway injects env vars after module load)
+    BLOB_TOKEN_CACHED = os.getenv("BLOB_READ_WRITE_TOKEN")
+    
     # Log environment variable status at startup
-    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
-    logger.info(f"[STARTUP] BLOB_READ_WRITE_TOKEN configured: {bool(blob_token)}")
-    if blob_token:
-        logger.info(f"[STARTUP] Token prefix: {blob_token[:20]}...")
+    logger.info(f"[STARTUP] BLOB_READ_WRITE_TOKEN configured: {bool(BLOB_TOKEN_CACHED)}")
+    if BLOB_TOKEN_CACHED:
+        logger.info(f"[STARTUP] Token cached successfully. Prefix: {BLOB_TOKEN_CACHED[:20]}...")
     else:
         logger.warning("[STARTUP] BLOB_READ_WRITE_TOKEN not found - photo uploads will fail!")
         logger.warning("[STARTUP] Available env vars: " + ", ".join([k for k in os.environ.keys() if 'BLOB' in k.upper() or 'VERCEL' in k.upper()]))
