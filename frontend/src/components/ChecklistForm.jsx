@@ -96,15 +96,34 @@ function ChecklistForm() {
           if (cleanData[key] === '') cleanData[key] = null;
         });
 
-        if (draftId || id) {
+        let currentId = draftId || id;
+
+        if (currentId) {
           // Update existing draft
-          await checklistApi.update(draftId || id, cleanData);
-          console.log('[AUTO-SAVE] Draft updated:', draftId || id);
+          await checklistApi.update(currentId, cleanData);
+          console.log('[AUTO-SAVE] Draft updated:', currentId);
         } else {
           // Create new draft
           const response = await checklistApi.create(cleanData);
-          setDraftId(response.data.id);
-          console.log('[AUTO-SAVE] Draft created:', response.data.id);
+          currentId = response.data.id;
+          setDraftId(currentId);
+          console.log('[AUTO-SAVE] Draft created:', currentId);
+        }
+
+        // Upload any pending photos after saving draft
+        if (pendingPhotos.length > 0 && currentId) {
+          console.log('[AUTO-SAVE] Uploading', pendingPhotos.length, 'pending photos');
+          for (const photo of pendingPhotos) {
+            try {
+              const response = await checklistApi.uploadPhoto(currentId, photo);
+              // Update form data with new photos
+              setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+            } catch (photoErr) {
+              console.error('[AUTO-SAVE] Failed to upload photo:', photoErr);
+            }
+          }
+          // Clear pending photos after upload
+          setPendingPhotos([]);
         }
 
         setDraftSaved(true);
@@ -117,7 +136,7 @@ function ChecklistForm() {
     }, 3000); // 3 second debounce to avoid hammering API
 
     return () => clearTimeout(timeoutId);
-  }, [formData, isEdit, draftId, id]);
+  }, [formData, isEdit, draftId, id, pendingPhotos]);
 
   useEffect(() => {
     if (isEdit) {
