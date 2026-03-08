@@ -320,6 +320,7 @@ async def upload_photo(
 
     # Get Vercel Blob token from environment
     blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    logger.info(f"[UPLOAD] BLOB_READ_WRITE_TOKEN value: {blob_token[:20] if blob_token else 'None'}...")
     if not blob_token:
         logger.error("[UPLOAD] BLOB_READ_WRITE_TOKEN not set")
         raise HTTPException(status_code=500, detail="Blob storage not configured")
