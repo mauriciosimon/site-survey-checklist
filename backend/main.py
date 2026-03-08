@@ -340,9 +340,11 @@ async def upload_photo(
         blob_url = f"https://blob.vercel-storage.com/{pathname}"
         response = requests.put(
             blob_url,
-            params={"token": blob_token},
             data=content,
-            headers={"Content-Type": file.content_type or "application/octet-stream"}
+            headers={
+                "Content-Type": file.content_type or "application/octet-stream",
+                "Authorization": f"Bearer {blob_token}"
+            }
         )
         
         if response.status_code != 200:
