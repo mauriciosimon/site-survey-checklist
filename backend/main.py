@@ -21,7 +21,7 @@ from auth import (
     get_current_user, get_current_user_required, get_admin_user,
     authenticate_user, create_access_token
 )
-from models import User
+from models import User, Checklist
 import crud
 import monday_api
 
@@ -340,7 +340,7 @@ def clear_all_photos(
     current_user: User = Depends(get_current_user_required),
     db: Session = Depends(get_db)
 ):
-    """Clear all photos from a checklist"""
+    """Clear all photos from a checklist (requires authentication)"""
     is_admin = current_user.role == "admin"
     checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
     if not checklist:
@@ -353,6 +353,39 @@ def clear_all_photos(
     db.refresh(checklist)
     
     return {"message": f"Cleared all photos from checklist {checklist_id}", "checklist_id": checklist_id}
+
+
+@app.post("/admin/clear-photos/{checklist_id}")
+def admin_clear_photos(
+    checklist_id: int,
+    admin_key: str,
+    db: Session = Depends(get_db)
+):
+    """Admin endpoint to clear photos without authentication (temporary)"""
+    # Simple admin key check (use env var in production)
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "temp-admin-key-123")
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    # Get checklist
+    checklist = db.query(Checklist).filter(Checklist.id == checklist_id).first()
+    if not checklist:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    
+    # Count photos before clearing
+    photo_count = len(checklist.site_photos) if checklist.site_photos else 0
+    
+    # Clear photos
+    checklist.site_photos = []
+    flag_modified(checklist, "site_photos")
+    db.commit()
+    db.refresh(checklist)
+    
+    return {
+        "message": f"Cleared {photo_count} photos from checklist {checklist_id}",
+        "checklist_id": checklist_id,
+        "photos_cleared": photo_count
+    }
 
 
 if __name__ == "__main__":
