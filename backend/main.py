@@ -195,9 +195,17 @@ def list_checklists(
     current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    user_id = current_user.id if current_user else None
-    is_admin = current_user.role == "admin" if current_user else False
-    return crud.get_checklists(db, skip=skip, limit=limit, search=search, user_id=user_id, is_admin=is_admin)
+    try:
+        user_id = current_user.id if current_user else None
+        is_admin = current_user.role == "admin" if current_user else False
+        checklists = crud.get_checklists(db, skip=skip, limit=limit, search=search, user_id=user_id, is_admin=is_admin)
+        print(f"[DEBUG] Fetched {len(checklists)} checklists")
+        return checklists
+    except Exception as e:
+        print(f"[ERROR] Failed to list checklists: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to list checklists: {str(e)}")
 
 
 @app.get("/checklists/{checklist_id}", response_model=ChecklistResponse)
