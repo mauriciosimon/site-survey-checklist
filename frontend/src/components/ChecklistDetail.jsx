@@ -162,20 +162,30 @@ function ChecklistDetail() {
               <strong>Site Media:</strong>
               <div className="photo-grid">
                 {checklist.site_photos.map((media, idx) => {
-                  const isVideo = media.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                  return isVideo ? (
-                    <video
-                      key={idx}
-                      src={`${API_BASE}${media}`}
-                      controls
-                      style={{ maxWidth: '200px', maxHeight: '150px' }}
-                    />
-                  ) : (
-                    <img
-                      key={idx}
-                      src={`${API_BASE}${media}`}
-                      alt={`Site media ${idx + 1}`}
-                    />
+                  // Handle both old format (string) and new format (object)
+                  const photoPath = typeof media === 'string' ? media : media.path;
+                  const originalFilename = typeof media === 'string' 
+                    ? media.split('/').pop() 
+                    : media.originalFilename;
+                  const isVideo = photoPath.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                  return (
+                    <div key={idx} style={{ textAlign: 'center' }}>
+                      {isVideo ? (
+                        <video
+                          src={`${API_BASE}${photoPath}`}
+                          controls
+                          style={{ maxWidth: '200px', maxHeight: '150px' }}
+                        />
+                      ) : (
+                        <img
+                          src={`${API_BASE}${photoPath}`}
+                          alt={`Site media ${idx + 1}`}
+                        />
+                      )}
+                      <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', wordBreak: 'break-word' }}>
+                        {originalFilename}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
