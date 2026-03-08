@@ -112,6 +112,14 @@ async def startup_event():
 def root():
     return {"message": "Site Visit Checklist API", "docs": "/docs", "version": "2.0.0"}
 
+@app.get("/debug/blob-token")
+def debug_blob_token():
+    blob_token = os.getenv("BLOB_READ_WRITE_TOKEN")
+    return {
+        "configured": bool(blob_token),
+        "prefix": blob_token[:20] if blob_token else None
+    }
+
 
 # ============ Auth Endpoints ============
 
