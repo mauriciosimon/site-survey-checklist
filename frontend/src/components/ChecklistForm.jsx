@@ -90,7 +90,8 @@ function ChecklistForm() {
       try {
         // Prepare data for backend (EXCLUDE site_photos - managed via upload endpoint)
         const { site_photos, ...dataWithoutPhotos } = formData;
-        const cleanData = { ...dataWithoutPhotos, is_draft: true };
+        // Preserve current draft status (don't change it during autosave)
+        const cleanData = { ...dataWithoutPhotos };
         Object.keys(cleanData).forEach((key) => {
           if (cleanData[key] === '') cleanData[key] = null;
         });
