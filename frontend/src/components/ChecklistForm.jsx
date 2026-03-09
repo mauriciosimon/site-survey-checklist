@@ -75,11 +75,8 @@ function ChecklistForm() {
   const [lastSaveTime, setLastSaveTime] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Auto-save draft to BACKEND (Gmail-style, debounced)
+  // Auto-save to BACKEND (Gmail-style, debounced)
   useEffect(() => {
-    // Skip if editing an existing non-draft survey
-    if (isEdit && !formData.is_draft) return;
-    
     // Mark as having unsaved changes when formData changes
     setHasUnsavedChanges(true);
     
