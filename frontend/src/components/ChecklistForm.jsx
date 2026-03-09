@@ -875,11 +875,28 @@ function ChecklistForm() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  site_photos: prev.site_photos.filter((_, i) => i !== idx)
-                                }));
+                              onClick={async () => {
+                                try {
+                                  const currentId = id || draftId;
+                                  if (currentId) {
+                                    // Call backend API to delete photo
+                                    const response = await checklistApi.deletePhoto(currentId, idx);
+                                    // Update local state with backend response
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      site_photos: response.data.site_photos
+                                    }));
+                                  } else {
+                                    // No checklist ID yet (shouldn't happen in edit mode)
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      site_photos: prev.site_photos.filter((_, i) => i !== idx)
+                                    }));
+                                  }
+                                } catch (err) {
+                                  console.error('Failed to delete photo:', err);
+                                  alert('Failed to delete photo. Please try again.');
+                                }
                               }}
                               style={{
                                 position: 'absolute',

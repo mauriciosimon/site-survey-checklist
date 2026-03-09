@@ -380,6 +380,37 @@ async def upload_photo(
     return crud.add_photo_to_checklist(db, checklist_id, public_url, original_filename)
 
 
+@app.delete("/checklists/{checklist_id}/photos/{photo_index}")
+def delete_photo_by_index(
+    checklist_id: int,
+    photo_index: int,
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
+):
+    """Delete a specific photo by index from a checklist"""
+    is_admin = current_user.role == "admin"
+    checklist = crud.get_checklist(db, checklist_id, user_id=current_user.id, is_admin=is_admin)
+    if not checklist:
+        raise HTTPException(status_code=404, detail="Checklist not found")
+    
+    photos = checklist.site_photos or []
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=404, detail="Photo index out of range")
+    
+    # Remove photo at index
+    deleted_photo = photos.pop(photo_index)
+    checklist.site_photos = photos
+    flag_modified(checklist, "site_photos")
+    db.commit()
+    db.refresh(checklist)
+    
+    return {
+        "message": f"Deleted photo at index {photo_index}",
+        "deleted_photo": deleted_photo,
+        "site_photos": checklist.site_photos
+    }
+
+
 @app.delete("/checklists/{checklist_id}/photos")
 def clear_all_photos(
     checklist_id: int,

@@ -66,6 +66,9 @@ export const checklistApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  deletePhoto: (id, photoIndex) =>
+    api.delete(`/checklists/${id}/photos/${photoIndex}`),
 };
 
 export default api;
