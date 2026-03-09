@@ -281,8 +281,14 @@ function ChecklistForm() {
 
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <h2>{isEdit ? (formData.is_draft ? 'Edit Draft' : 'Edit Checklist') : 'New Site Visit Checklist'}</h2>
+        <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>
+          Back
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
         {hasUnsavedChanges ? (
           <span style={{ color: '#f39c12', fontSize: '14px', fontWeight: '500' }}>
             Saving...
@@ -1029,7 +1035,7 @@ function ChecklistForm() {
             {saving ? 'Submitting...' : (isEdit || draftId ? 'Submit Survey' : 'Submit Survey')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>
-            Cancel
+            Back
           </button>
           {(isEdit || draftId) && (
             <p style={{ fontSize: '14px', color: '#666', marginTop: '10px', marginBottom: 0 }}>
