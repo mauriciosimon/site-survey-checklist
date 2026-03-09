@@ -88,8 +88,9 @@ function ChecklistForm() {
       }
 
       try {
-        // Prepare data for backend
-        const cleanData = { ...formData, is_draft: true };
+        // Prepare data for backend (EXCLUDE site_photos - managed via upload endpoint)
+        const { site_photos, ...dataWithoutPhotos } = formData;
+        const cleanData = { ...dataWithoutPhotos, is_draft: true };
         Object.keys(cleanData).forEach((key) => {
           if (cleanData[key] === '') cleanData[key] = null;
         });
@@ -223,8 +224,9 @@ function ChecklistForm() {
     setError(null);
 
     try {
-      // Clean up empty strings to nulls for optional fields
-      const cleanData = { ...formData, is_draft: isDraft };
+      // Clean up empty strings to nulls for optional fields (EXCLUDE site_photos)
+      const { site_photos, ...dataWithoutPhotos } = formData;
+      const cleanData = { ...dataWithoutPhotos, is_draft: isDraft };
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] === '') cleanData[key] = null;
       });
