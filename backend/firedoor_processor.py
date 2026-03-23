@@ -559,17 +559,38 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                     logger.warning("Rate Card sheet not found - cannot auto-seed")
             
             if rate_items:
-                # Backfill template prices for any items missing prices
+                # Backfill template prices and descriptions for any items missing them
                 backfill_count = 0
+                desc_backfill_count = 0
+                
+                # First, create a map of B-codes to their descriptions from template
+                bcode_descriptions = {}
+                if "Rate Card" in wb.sheetnames:
+                    rate_card_sheet = wb["Rate Card"]
+                    for row_num in range(22, 34):  # B01-B12
+                        code = rate_card_sheet.cell(row=row_num, column=1).value
+                        rate_card_desc = rate_card_sheet.cell(row=row_num, column=2).value
+                        if code and str(code).startswith('B'):
+                            bcode_descriptions[str(code)] = rate_card_desc
+                
                 for item in rate_items:
+                    # Backfill unit_price if missing
                     if not item.unit_price or item.unit_price == "£0.00" or item.unit_price.strip() == "":
-                        # Get template price for this item's rate card codes
                         codes = [c.strip() for c in item.rate_card_code.split('/')]
                         template_price = template_prices.get(codes[0], None) if codes else None
                         
                         if template_price:
                             item.unit_price = template_price
                             backfill_count += 1
+                    
+                    # Backfill rate_card_description if missing
+                    if not item.rate_card_description or item.rate_card_description.strip() == "":
+                        codes = [c.strip() for c in item.rate_card_code.split('/')]
+                        bcode_desc = bcode_descriptions.get(codes[0], None) if codes else None
+                        
+                        if bcode_desc:
+                            item.rate_card_description = bcode_desc
+                            desc_backfill_count += 1
                 
                 # Also add any missing B-codes from template
                 existing_rate_codes = set()
@@ -599,10 +620,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                             db.add(new_item)
                             missing_count += 1
                 
-                if backfill_count > 0 or missing_count > 0:
+                if backfill_count > 0 or desc_backfill_count > 0 or missing_count > 0:
                     db.commit()
                     if backfill_count > 0:
                         logger.info(f"Backfilled {backfill_count} missing prices from template")
+                    if desc_backfill_count > 0:
+                        logger.info(f"Backfilled {desc_backfill_count} missing rate card descriptions from template")
                     if missing_count > 0:
                         logger.info(f"Added {missing_count} missing B-codes from template")
                     
