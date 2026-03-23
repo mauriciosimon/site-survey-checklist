@@ -1,0 +1,3579 @@
+--- Page 1 ---
+ 
+Fire Door Survey Report  
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+ 
+ 
+ 
+ 
+ 
+     
+Building Name 
+Alpha Sights - Thames Court 
+Property Address 
+Thames Court, 3rd Floor, 1 Queenhithe, London, EC4V 3DX, 
+Report Date 
+Friday, 6 March 2026 
+Name 
+Keith Thomas 
+Accreditation scheme no. BM TRADA 1470 
+ 
+ 
+ 
+
+
+--- Page 2 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 2 
+Executive summary & scope  
+Article 17 of the Fire Safety Order makes it a legal requirement to ensure that fire resisting doors and escape doors are correctly installed and adequately maintained in order for them to be fit for 
+purpose. The authorities have the power to enforce the Fire Safety Order and do prosecute or even close buildings down where breaches are discovered. Building owners need ‘competent persons’ 
+as referenced in the Fire Safety Order to help them comply with fire door regulations.  
+EAS Interiors were contracted to carry out a detailed fire door survey at AlphaSights Thames court – Levels 2 & 3 Tennant doors. This inspection was carried out on all fire doors to determine the 
+effectiveness of the doors in their current condition. Each door was inspected for overall condition, fitting, fire and smoke seal condition, door furniture condition and the frame condition with seals. 
+This report details the outcome of the survey for each door and any recommendations to ensure action is taken to resolve any issues that may breach the safe working of the door as a fire/smoke 
+barrier or escape route.  
+Door sets inspected on all floors 
+39 door sets in total. 
+ 
+6 compliant door sets. 
+ 
+31 non-compliant door sets – Remediation needed to bring these to compliance.  
+2 Door set require replacement  
+No O&Ms for the door sets were provided for this survey. 
+The fire strategy drawings were not provided by the client. 
+This survey was non-intrusive, and the architraves were not removed due to destructive nature of works required. Therefore, the fire stopping between the frame and wall was not inspected.  
+ 
+ 
+ 
+ 
+
+
+--- Page 3 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 3 
+EAS Interiors have conducted the following Fire Door Maintenance survey under the BM TRADA 3rd party certification scheme. Scope of the 
+BM TRADA Q-MARK fire door scheme:  
+The purpose of the BM TRADA Q-Mark fire door maintenance scheme is to provide independent 3rd party certification for the activity of taking a fire-resistant door 
+set that needs adjustment and/or has minor to moderate damage, and to repair or maintain it in such a way to restore the fire resistance performance to what it was 
+before the damage occurred or the door set became non-compliant.  
+The scheme does not provide certification for either the upgrade or door sets to improve their fire resistance, or the survey of door sets to determine their period of 
+fire resistance. If the period of resistance needs to be determined, this should be undertaken by an appropriate expert prior to any maintenance work being carried 
+out by the individual certified under the scheme.  
+Prior to any maintenance activity being undertaken, the responsible person must identify which door sets are required to be fire resistant and what the period of fire 
+resistance is for each door set. This will normally be established through a fire risk assessment, with the fire-resistant properties of the door sets being confirmed 
+through a review of fire test evidence to BS 476 Pt 22 or BS EN 1634. Where it is available, documentation confirming the period of fire resistance of each door set is 
+to be proved by the client. Where such documentation is not available, any inspection or maintenance activities carried out will only be against the schemes general 
+rule of thumb, and the level of confidence in such an inspection will be considerably lower.  
+All fire-resistant door sets which will require maintenance must be confirmed by the client in writing in advance, indicating the declared fire resistance for each door 
+set, with the location of each door set being clearly identified on floor plans.  
+The maintainer does not take any responsibility for confirming whether the risk assessment is acceptable, for determining the period of fire resistance that is 
+required for any door sets or determining the period of fire resistance that any door set is likely to achieve.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- Page 4 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 4 
+Fire Door Certification  
+Fire doors are specially engineered and designed to contain fire for a period and work as part of a layered fire protection system within a building. Fire doors require test evidence 
+or an assessment to prove they will meet their intended fire rating, to stop the spread of fire and smoke.  
+When fire doors are supported by assessment/test sheets and certification such as this, it is possible to carry out suitable remedial actions to restore a door set to a manufacturer 
+specified specification, providing a heightened confidence of the fire doors performance.  
+Provided that the maintainer carries out replacement of hardware and the adjustment of door sets in accordance with assessment sheets, ensuring that the door meets the 
+manufacturers assessed specification, the door will perform as required.  
+In the absence of these labels or plugs to indicate a fire door’s intended fire resistance, it is difficult for a surveyor or maintainer to determine whether it meets the required 
+fire resistance for the wall in which it is situated. Typical assumptions can be made under the Q-Mark scheme to rule out a fire door from achieving a given fire resistance 
+but cannot be used to determine the actual fire resistance of the door set.  
+In these circumstances, the responsible person will be required to take responsibility for the intended fire resistance of the door set requiring remediation.  
+ 
+ 
+ 
+
+
+--- Page 5 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 5 
+Please see table below for BM Trada approved repair techniques – These relate to the faults found on each individual door set and the relevant remediation 
+action required to bring the current door set to compliance.  
+ 
+ 
+ 
+ 
+
+
+--- Page 6 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 6 
+Fire Door Signs Regulations.  
+It is the responsible person onsite responsibility to ensure all Fire Doors must have “Fire Door Keep Shut” signs on both sides of the door. If a set of double doors, 
+both doors should have signs on both sides. Some fire doors will have automatic door closers fitted (connected to the fire alarm system) so the signs will say 
+“Automatic Fire Door Keep Clear” or similar. Door sets without closers need to be locked and can have a single “Fire Door Keep Locked” sign on the outside of 
+the door. 
+ 
+ 
+ 
+ 
+
+
+--- Page 7 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 7 
+Gaps were measured using the HILKA 8-piece thickness gauge.  
+ 
+
+
+--- Page 8 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 8 
+Floorplan: Alpha Sights - Thames Court - Level 2 
+ 
+
+
+--- Page 9 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 9 
+Floorplan: Alpha Sights - Thames Court - Level 3 
+ 
+
+
+--- Page 10 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 10 
+Status: Alpha Sights - Thames Court 
+ 
+
+
+--- Page 11 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 11 
+Fire Door summary 
+* Head - Threshold - Leading - Hinge 
+Door Details 
+Inspection Details 
+Gaps (mm) * 
+ 
+Seals & Intumescents 
+Components 
+ 
+ 
+ 
+ 
+Floor 
+Door ID/Location Ref 
+Fire 
+Rating 
+Serial Inspection 
+Date 
+Door 
+Leaf 
+Vision 
+Panel 
+Side 
+Panel 
+Over 
+Panel 
+Frame 
+Assembly 
+Surrounding 
+Construction 
+Door to 
+Frame 
+Gaps 
+Frame to 
+Wall 
+Action Frame/leaf 
+Intumescents 
+Frame/leaf Smoke 
+Seals 
+Threshold 
+Seals 
+Hinges Lockset Closer Signage Other Action Level & 
+Timeframe 
+Test Evidence 
+Grading 
+Last 
+Inspection 
+Maintenance 
+Level 
+2 
+A01 - Core 1 tenant DB 
+riser 
+FD30 
+ 
+05/03/2026 
+! 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/18/8/4 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+! 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A02- Core 1 tenant door 
+FD60 
+ 
+04/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+✓ 
+N/A 
+High 
+Level 3 
+2 Failures 
+Action Required 
+(2) 
+Level 
+2 
+A03-AHU 1 inner door 
+NOMINAL  
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/1/6/3 
+! 
+! 
+! 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+5 Failures 
+Action Required 
+(5) 
+Level 
+2 
+A04-AHU 1 outer door 
+NOMINAL  
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/3/6/6 
+N/A 
+✓ 
+! 
+N/A 
+N/A 
+✓ 
+! 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+5 Failures 
+Action Required 
+(5) 
+Level 
+2 
+A05-AHU 2 outer door 
+FD30 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/6/6/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+! 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+2 Failures 
+Action Required 
+(2) 
+Level 
+2 
+A06-AHU 2 inner door 
+FD60 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+2/3/6/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+2 Failures 
+Action Required 
+(2) 
+Level 
+2 
+A07-AHU 2 DB riser 
+NOMINAL  
+05/03/2026 
+! 
+N/A 
+N/A 
+N/A 
+✓ 
+! 
+✓ 
+3/6/4/4 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+! 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A08-AHU 2 riser 
+FD30 
+ 
+05/03/2026 
+! 
+N/A 
+N/A 
+N/A 
+✓ 
+! 
+! 
+3/3/8/2 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+! 
+N/A 
+High 
+Level 4 
+4 Failures 
+Action Required 
+(4) 
+Level 
+2 
+A09-Core 3 tenant door 
+FD60 
+ 
+05/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/0/3/2 
+N/A 
+! 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+✓ 
+✓ 
+N/A 
+High 
+Level 3 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A10-Core 3 red hub room 
+MDF 
+FD30 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/8/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+✓ 
+N/A 
+Moderate 
+Level 4 
+Pass 
+No Outstanding 
+Actions 
+Level 
+2 
+A11-Core 5 tenant door to 
+WC's 
+FD30 
+ 
+05/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/4/4/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+N/A 
+✓ 
+! 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A12-Core 5 tenant door to 
+stairs 
+FD30 
+ 
+05/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+! 
+✓ 
+! 
+N/A 
+High 
+Level 4 
+4 Failures 
+Action Required 
+(4) 
+Level 
+2 
+A13-Core 4 tenant DB riser FD30 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+3/18/4/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+! 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A14-Core 4 tenant door 
+FD60 
+ 
+05/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/3/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+N/A 
+✓ 
+✓ 
+N/A 
+High 
+Level 3 
+1 Failures 
+Action Required 
+(1) 
+Level 
+2 
+A15-Core 2 orange hub 
+room IDF 
+FD30 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/6/5/4 
+N/A 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+✓ 
+N/A 
+High 
+Level 4 
+2 Failures 
+Action Required 
+(2) 
+Level 
+2 
+A16-Core 2 tenant door 
+FD60 
+ 
+05/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+! 
+✓ 
+✓ 
+N/A 
+High 
+Level 3 
+3 Failures 
+Action Required 
+(3) 
+Level 
+2 
+A17-Core 2 metron panel 
+cupboard 
+FD30 
+ 
+05/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/10/4/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+! 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A01-Core 1 CHW pump 
+cupboard 
+NOMINAL  
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+! 
+✓ 
+✓ 
+3/2/4/4 
+! 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+4 Failures 
+Action Required 
+(4) 
+Level 
+3 
+A02-Core 1 riser in store 
+LHS 
+FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+✓ 
+! 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 3 
+2 Failures 
+Action Required 
+(2) 
+Level 
+3 
+A03-Core 1 riser in store 
+RHS 
+NOMINAL  
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+! 
+✓ 
+! 
+4/15/3/3 
+! 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+3 
+A04-Core 1 tenant door 
+NOMINAL  
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/3/4/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+Level 3 
+Pass 
+No Outstanding 
+Actions 
+Level 
+3 
+A05-Core 1 door to north 
+area 
+FD60 
+ 
+04/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+! 
+N/A 
+! 
+6/8/6/4 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+N/A 
+✓ 
+! 
+N/A 
+High 
+Level 3 
+5 Failures 
+Action Required 
+(5) 
+Level 
+3 
+A06-Core 1 door to east 
+area 
+FD60 
+ 
+04/03/2026 
+! 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+! 
+5/10/6/5 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+N/A 
+✓ 
+! 
+N/A 
+High 
+Level 4 
+4 Failures 
+Action Required 
+(4) 
+Level 
+3 
+A07-Room 03-Y riser  
+FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/4/4/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+N/A 
+Level 4 
+Pass 
+No Outstanding 
+Actions 
+Level 
+3 
+A08-Core 3 tenant CHW 
+pump riser 
+FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/6/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+✓ 
+N/A 
+Moderate 
+Level 4 
+1 Failures 
+Action Required 
+(1) 
+
+
+--- Page 12 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 12 
+Fire Door summary 
+* Head - Threshold - Leading - Hinge 
+Door Details 
+Inspection Details 
+Gaps (mm) * 
+ 
+Seals & Intumescents 
+Components 
+ 
+ 
+ 
+ 
+Floor 
+Door ID/Location Ref 
+Fire 
+Rating 
+Serial Inspection 
+Date 
+Door 
+Leaf 
+Vision 
+Panel 
+Side 
+Panel 
+Over 
+Panel 
+Frame 
+Assembly 
+Surrounding 
+Construction 
+Door to 
+Frame 
+Gaps 
+Frame to 
+Wall 
+Action Frame/leaf 
+Intumescents 
+Frame/leaf Smoke 
+Seals 
+Threshold 
+Seals 
+Hinges Lockset Closer Signage Other Action Level & 
+Timeframe 
+Test Evidence 
+Grading 
+Last 
+Inspection 
+Maintenance 
+Level 
+3 
+A09-Core 3 tenant DB riser FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/6/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+N/A 
+Level 4 
+Pass 
+No Outstanding 
+Actions 
+Level 
+3 
+A10-Core 3 tenant door 
+FD30 
+ 
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/4/4/4 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+Level 2 
+Pass 
+No Outstanding 
+Actions 
+Level 
+3 
+A11-Comms room south 
+east DB riser 
+FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+! 
+✓ 
+! 
+4/13/5/2 
+! 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+! 
+N/A 
+High 
+Level 4 
+4 Failures 
+Action Required 
+(4) 
+Level 
+3 
+A12-Core 5 tenant door to 
+WC's 
+FD60 
+ 
+04/03/2026 
+! 
+N/A 
+N/A 
+✓ 
+! 
+✓ 
+! 
+8/10/2/1 
+N/A 
+✓ 
+! 
+N/A 
+N/A 
+✓ 
+N/A 
+! 
+! 
+N/A 
+Replace 
+Level 4 
+7 Failures 
+Action Required 
+(7) 
+Level 
+3 
+A13-Core 5 tenant door to 
+stairs 
+FD30 
+ 
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+4/3/4/4 
+N/A 
+! 
+✓ 
+N/A 
+N/A 
+✓ 
+N/A 
+✓ 
+✓ 
+N/A 
+Moderate 
+Level 2 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A14-Core 4 tenant DB riser FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+! 
+✓ 
+✓ 
+3/6/0/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+Replace 
+Level 4 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A15-Core 4 tenant door 
+FD60 
+ 
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+4/3/5/2 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+✓ 
+N/A 
+High 
+Level 3 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A16-Core 2 comms room 1 
+door 
+FD30 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+3/12/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+✓ 
+N/A 
+High 
+Level 4 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A17-AHU 3 inner door 
+FD60 
+ 
+04/03/2026 
+! 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+3/3/5/3 
+! 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+3 Failures 
+Action Required 
+(3) 
+Level 
+3 
+A18-AHU 3 outer door 
+FD60 
+ 
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+✓ 
+N/A 
+Moderate 
+Level 4 
+1 Failures 
+Action Required 
+(1) 
+Level 
+3 
+A19-Core 2 tenant door 
+FD60 
+ 
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+✓ 
+N/A 
+N/A 
+Level 3 
+Pass 
+No Outstanding 
+Actions 
+Level 
+3 
+A20-Core 2 MCCP riser 
+(SOHO) 
+FD60 
+ 
+04/03/2026 
+! 
+N/A 
+N/A 
+N/A 
+! 
+✓ 
+! 
+4/5/6/4 
+! 
+✓ 
+✓ 
+N/A 
+N/A 
+! 
+✓ 
+N/A 
+✓ 
+N/A 
+High 
+Level 4 
+5 Failures 
+Action Required 
+(5) 
+Level 
+3 
+A21-Dividing door from 
+north to west 
+NOMINAL  
+04/03/2026 
+✓ 
+N/A 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+3/3/3/3 
+N/A 
+✓ 
+! 
+N/A 
+N/A 
+✓ 
+✓ 
+! 
+! 
+N/A 
+High 
+Level 2 
+3 Failures 
+Action Required 
+(3) 
+Level 
+3 
+A22-Female WC's north 
+area  
+FD30 
+ 
+04/03/2026 
+✓ 
+✓ 
+N/A 
+N/A 
+✓ 
+✓ 
+✓ 
+5/6/3/2 
+N/A 
+✓ 
+! 
+N/A 
+N/A 
+! 
+N/A 
+✓ 
+! 
+N/A 
+High 
+Level 3 
+3 Failures 
+Action Required 
+(3) 
+ 
+
+
+--- Page 13 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 13 
+ 
+Product ID/Location Ref: A01 - Core 1 tenant DB riser | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+1.Lipping Damaged,  
+2.Hole in door from over recessed hardware 
+Actions:  
+1.ART 01 - Lipping damaged requires hardwood re-lip minimum 
+density 640kg/m3 glued in place with a thermosetting urea 
+formaldehyde-based adhesive. 
+2.ART 02 - Repair hole in door using hardwood timber insert 
+Failed 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 8mm,  
+Threshold 18mm 
+Actions:  
+ART 04 - 
+Lift and adjust door leaf/hinges to close gaps. If gaps still 
+not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+Failed 
+
+
+--- Page 14 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 14 
+ 
+Component: Signage 
+Reason for failure: 
+Incorrect fire door sign fitted  
+Actions:  
+ART 19 - Change Fire Door Keep shut signs to Fire Door Keep 
+Locked Signs – Qty x 2 
+Failed 
+Inspection work summary:  
+4 issues to action  ARTs 01, 02, 04 & 19  
+Inspection summary photos:  
+ 
+
+
+--- Page 15 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 15 
+ 
+Product ID/Location Ref: A02- Core 1 tenant door | Level 2 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from the removal of hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea 
+formaldehyde-based adhesive 
+Failed 
+Component: Door Closer 
+Reason for failure: 
+Door leaf fails to close due to incorrect set up of closer. 
+Actions:  
+ART 05 - Adjust door closer to ensure correct operation 
+Failed 
+Inspection work summary:  
+2 issues to action  ART 02 & 05 
+
+
+--- Page 16 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 16 
+Inspection summary photos:  
+ 
+
+
+--- Page 17 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 17 
+ 
+Product ID/Location Ref: A03-AHU 1 inner door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 6mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps 
+still not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+Failed 
+Component: Frame to wall 
+Reason for failure: 
+No fire stopping between frame and FFL 
+Actions:  
+ART 16 - Fit appropriate fire stopping between frame and 
+substrate 
+Failed 
+
+
+--- Page 18 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 18 
+ 
+Component: Correct action 
+Reason for failure: 
+Door leaf’s are snagging on the frame at the bottom of the door 
+preventing the doors from closing correctly  
+Actions:  
+ART 04 - Ease & adjust door frame to ensure door closes freely 
+without obstruction 
+Failed 
+Component: Frame/Leaf Intumescents 
+Reason for failure: 
+Damaged beyond repair needs replacement, Intumescent seals 
+are Missing 
+Actions:  
+ART 11 - Replace damaged intumescent seals like for like as 
+per manufacturer’s specifications 
+10mm x 4 white double rubber fin to be installed 
+Failed 
+ 
+Component: Frame/Leaf Ambient Temperature Smoke Seals 
+Reason for failure: 
+Smoke seals are damaged beyond repair & in need of 
+replacement 
+Actions:  
+ART 11 - Fit Appropriate Combination Smoke & Intumescent 
+Seals 
+10mm x 4mm double fin - White 
+Failed 
+Component: Threshold Smoke Seals 
+Reason for failure: 
+Damaged beyond repair needs replacement 
+Actions:  
+ART 11 - Fit Appropriate Combination Smoke & Intumescent 
+Seals 
+10mm x 4mm double fin - White 
+
+
+--- Page 19 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 19 
+Inspection work summary:  
+4 issues to action  - ARTs 04, 11 & 16 
+Inspection summary photos:  
+ 
+
+
+--- Page 20 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 20 
+ 
+Product ID/Location Ref: A04-AHU 1 outer door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 6mm,  
+Hinge edge 6mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps still 
+not within 2mm-4mm allowance frame may need to be packed out 
+or leaf re lipped. 
+Failed 
+Component: Frame/Leaf Intumescents 
+Reason for failure: 
+Damaged beyond repair needs replacement 
+Actions:  
+ART 11 - Replace damaged intumescent seals like for like 
+as per manufacturer’s specifications 
+10mm x 4mm white central double fin 
+Failed 
+
+
+--- Page 21 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 21 
+ 
+Component: Frame/Leaf Ambient Temperature Smoke Seals 
+Reason for failure: 
+Smoke seals are damaged beyond repair & in need of replacement 
+Actions:  
+ART 11 - Fit Appropriate Combination Smoke & Intumescent Seals 
+Failed 
+Component: Threshold Smoke Seals 
+Reason for failure: 
+DDS is missing from active leaf  
+Actions:  
+ART 22 - Fit appropriate drop seal to ensure threshold 
+gaps correct to specification - as per manufacturers 
+specification 
+Failed 
+ 
+Component: Lockset 
+Reason for failure: 
+Bottom flush bolts not engaging with keep 
+Actions:  
+ART - align flush bolt floor keep to ensure correct operation 
+Failed 
+Inspection work summary:  
+4 issues to action  ARTs 04, 10, 11 & 22 
+ 
+ 
+ 
+ 
+
+
+--- Page 22 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 22 
+Inspection summary photos:  
+ 
+
+
+--- Page 23 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 23 
+ 
+Product ID/Location Ref: A05-AHU 2 outer door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 6mm 
+Actions:  
+ART 04 - Ease & adjust door frame to ensure there is a constant 
+3mm gap between frame & door leaf 
+Lift and adjust door leaf/hinges to close gaps. If gaps still not 
+within 2mm-4mm allowance frame may need to be packed out 
+or leaf re lipped. 
+Failed 
+Component: Lockset 
+Reason for failure: 
+No slide bolt fitted at the top of passive door leaf ,  
+No keep fitted for bottom slide bolt on bottom passive leaf 
+Actions:  
+ART 10  - install new lock at top of passive door leaf 
+Fit keep for bottom slide bolt on passive door leaf 
+Failed 
+
+
+--- Page 24 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 24 
+Inspection work summary:  
+2 issues to action  ARTs 04 & 10  
+Inspection summary photos:  
+ 
+
+
+--- Page 25 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 25 
+ 
+Product ID/Location Ref: A06-AHU 2 inner door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 6mm 
+Actions:  
+ART 04 - Ease & adjust door frame to ensure there is a constant 
+3mm gap between frame & door leaf 
+Lift and adjust door leaf/hinges to close gaps. If gaps still not within 
+2mm-4mm allowance frame may need to be packed out or leaf re 
+lipped. 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is securely fixed 
+RH Leaf top hinge Qty x 3 
+Failed 
+Inspection work summary:  
+2 issues to action - ART 04 & 13 
+
+
+--- Page 26 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 26 
+ 
+Product ID/Location Ref: A07-AHU 2 DB riser | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Void(s) in Door Leaf from over recessed hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea formaldehyde-
+based adhesive 
+Failed 
+Component: Wall, Floor & Ceiling Construction 
+Reason for failure: 
+RAF floor does not run completely under frame 
+compromising doorset for integrity  
+Actions:  
+Flooring needs to be continued passed the door frame to 
+ensure doorset fire integrity is maintained 
+ART 16 
+Failed 
+
+
+--- Page 27 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 27 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door signs do not meet fire regulation standards in need of 
+replacement  
+Actions:  
+ART 19 - Fit appropriate fire door signs 
+Fire Door Keep Locked Signs to be installed x 2 
+Failed 
+Inspection work summary:  
+3 issues to action  ARTs 02, 16 & 19 
+Inspection summary photos:  
+ 
+
+
+--- Page 28 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 28 
+ 
+Product ID/Location Ref: A08-AHU 2 riser | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from over recessed hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea 
+formaldehyde-based adhesive 
+Failed 
+Component: Wall, Floor & Ceiling Construction 
+Reason for failure: 
+Not suitable or appropriately fire rated 
+Actions:  
+ART 16 - Substrate construction to be repaired to the 
+appropriate fire resistant required 
+Fire stopping issue to be done by others 
+Failed 
+
+
+--- Page 29 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 29 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Meeting stiles 8mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps 
+still not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+Fire door gap allowances generally require a 2mm–4mm 
+clearance between the leaf and frame at the top and sides‚ with 
+3mm considered ideal. The bottom threshold gap should be 
+8mm–10mm‚ or a maximum of 3mm if smoke seals are required. 
+These gaps ensure proper performance and prevent smoke 
+leakage. Always check the specific manufacturer’s‚ fire door 
+certification data‚ as this overrides general standards. 
+Failed 
+Component: Signage 
+Reason for failure: 
+Fire door signs do not meet fire door regulation standards in 
+need of replacement  
+Actions:  
+ART 19 - Replace Incorrect door signs for Fire Door Keep 
+Locked signs Qty x 2 
+Failed 
+Inspection work summary:  
+4 issues to action ART 02, 04, 16 & 19 
+Inspection summary photos:  
+ 
+
+
+--- Page 30 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 30 
+ 
+Product ID/Location Ref: A09-Core 3 tenant door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from the removal of hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea formaldehyde-
+based adhesive 
+Failed 
+Component: Correct action 
+Reason for failure: 
+Door Snagging on Floor, Preventing door from self closing  
+Actions:  
+ART 04 - Ease & adjust hinges - if door is still snagging on 
+floor door may need to be trimmed to ensure door is 
+operating correctly 
+Failed 
+
+
+--- Page 31 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 31 
+ 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is securely fixed 
+Qty  x 1 
+Failed 
+Inspection work summary:  
+3 issues to action  ARTs 02, 04 & 13 
+Inspection summary photos:  
+ 
+
+
+--- Page 32 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 32 
+ 
+Product ID/Location Ref: A10-Core 3 red hub room MDF | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+ 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 33 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 33 
+ 
+Product ID/Location Ref: A11-Core 5 tenant door to WC's | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Threshold Smoke Seals 
+Reason for failure: 
+Drop Seal is not Operating Correctly 
+Actions:  
+ART 22 - Attend drop seal to ensure correct operation 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is 
+securely fixed 
+Qty x 1 
+Failed 
+
+
+--- Page 34 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 34 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door sign missing from pull side of door  
+Actions:  
+ART 19 – Install Fire Door Keep Shut Signage 
+to pull side of door Qty x 1 
+Failed 
+Inspection work summary:  
+3 issues to action  ARTs 13, 19 & 22 
+Inspection summary photos:  
+ 
+
+
+--- Page 35 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 35 
+ 
+Product ID/Location Ref: A12-Core 5 tenant door to stairs | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from the removal of hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea 
+formaldehyde-based adhesive 
+Failed 
+Component: Correct action 
+Reason for failure: 
+Push release latch is not engaging with keep preventing door 
+from self-closing  
+Actions:  
+ART 10 - Attend latch to ensure door closes freely without 
+obstruction 
+Failed 
+
+
+--- Page 36 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 36 
+ 
+Component: Lockset 
+Reason for failure: 
+Handle not operating correctly‚ latch not engaging. 
+Actions:  
+ART 10 - Attend Latch to ensure correct operation 
+Failed 
+Component: Signage 
+Reason for failure: 
+Fire door sign missing from push side of door  
+Actions:  
+ART 19 - Install- Fire Door Keep Shut Signage 
+to push side of door 
+Qty x 1 
+Failed 
+Inspection work summary:  
+2 issues to action  ARTs 10 & 19  
+Inspection summary photos:  
+ 
+
+
+--- Page 37 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 37 
+ 
+Product ID/Location Ref: A13-Core 4 tenant DB riser | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Threshold 18mm 
+Actions:  
+ART 04 - Add appropriately sized threshold lipping to leaf requires 
+hardwood lipping minimum density 640kg/m3 glued in place with a 
+thermosetting urea formaldehyde-based adhesive. 
+It's essential to consult the specific manufacturer's instructions for 
+your fire door. They will provide the exact details on how much you 
+can trim and what lipping can be added while maintaining the fire 
+door's integrity and certification. 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is 
+securely fixed 
+Qty x 4 
+Failed 
+
+
+--- Page 38 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 38 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door sign is missing and needs adding 
+Actions:  
+ART 19 - Install Fire Door Keep Locked Signage 
+Qty x 2 
+Failed 
+Inspection work summary:  
+3 issues to action  ARTs 04, 13 & 19  
+Inspection summary photos:  
+ 
+
+
+--- Page 39 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 39 
+ 
+Product ID/Location Ref: A14-Core 4 tenant door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from the removal of hardware 
+Actions:  
+ART 02 - Void requires hardwood infills 
+(minimum density 640kg/m3) glued in place 
+with a thermosetting urea formaldehyde-
+based adhesive 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 02 
+Inspection summary photos:  
+
+
+--- Page 40 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 40 
+ 
+Product ID/Location Ref: A15-Core 2 orange hub room IDF | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Leading edge 5mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps 
+still not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+Failed 
+Component: Correct action 
+Reason for failure: 
+Magnetic lock holding door & frame out of alignment when door 
+is fully closed 
+Actions:  
+ART 10 - Adjust mag lock to ensure door closes flush with frame 
+Failed 
+Inspection work summary:  
+2 issues to action ARTs 04 & 10   
+Inspection summary photos:  
+ 
+
+
+--- Page 41 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 41 
+ 
+Product ID/Location Ref: A16-Core 2 tenant door | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Hole in door from the removal of hardware 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea formaldehyde-
+based adhesive 
+Failed 
+Component: Correct action 
+Reason for failure: 
+Push release latch is not engaging with keep preventing 
+the door from self closing 
+Actions:  
+ART 10 - Attend push release latch to ensure correct 
+operation 
+Failed 
+
+
+--- Page 42 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 42 
+ 
+Component: Lockset 
+Reason for failure: 
+Push release latch is not engaging with keep preventing the door 
+from self-closing 
+Actions:  
+ART 10 - Attend push release latch to ensure correct operation 
+Failed 
+Inspection work summary:  
+2 issues to action  ARTs 02 & 10 
+Inspection summary photos:  
+ 
+
+
+--- Page 43 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 43 
+ 
+Product ID/Location Ref: A17-Core 2 metron panel cupboard | Level 2 
+Thursday, 5 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Lockset 
+Reason for failure: 
+Lock cylinder appears to be damaged  
+Actions:  
+ART 10 - Master key not entering lock - if no key is found to operate 
+lock or lock is defective a Locksmith will need to attend to change 
+euro cylinder lock 
+Failed 
+Inspection work summary:  
+1 Issue to action  ART 10 
+Inspection summary photos:  
+ 
+
+
+--- Page 44 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 44 
+ 
+Product ID/Location Ref: A01-Core 1 CHW pump cupboard | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame Assembly 
+Reason for failure: 
+Over recessed hinge rebate on passive bear leaf bottom mid 
+hinge  in need of repair  
+Actions:  
+ART 21 - requires hardwood infills (minimum density 640kg/m3) 
+glued in place with a thermosetting urea formaldehyde-based 
+adhesive. 
+Failed 
+Component: Frame to wall 
+Reason for failure: 
+No Fire stopping present between door frame & supporting 
+construction  
+Actions:  
+ART 16 - Fit appropriate fire stopping between frame and 
+substrate 
+Failed 
+
+
+--- Page 45 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 45 
+ 
+Component: Correct action 
+Reason for failure: 
+Door Snagging on Floor, Preventing doors from opening fully - 
+Applies to both door leaf’s, 
+Actions:  
+ART  04 - Trim door to ensure door closes freely without any 
+obstruction if manufacturer’s instructions allow 
+Applies to both door leaf’s 
+Failed 
+Component: Threshold Smoke Seals 
+Reason for failure: 
+Damaged beyond repair needs replacement,  
+Applies to both door leaf’s 
+Actions:  
+ART 22 - Replace Drop Seal 
+Qty x 2 
+As per manufacturer specifications 
+Failed 
+Inspection work summary:  
+4 issues to action  ARTs 04, 16, 21 & 21 
+Inspection summary photos:  
+ 
+
+
+--- Page 46 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 46 
+ 
+Product ID/Location Ref: A02-Core 1 riser in store LHS | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame/Leaf Intumescents 
+Reason for failure: 
+No intumescent seals are fitted at meeting stiles 
+Actions:  
+ART 11 - New Intumescent seals to be fitted to door leaf (cut in) 
+- Manufactures O&Ms required to attain correct installation 
+method 
+Please note doors are rebated at meeting stiles 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is securely 
+fixed 
+Qty x 1 
+Failed 
+Inspection work summary:  
+2 issues to action  ARTs 11 & 13 
+Inspection summary photos:  
+ 
+
+
+--- Page 47 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 47 
+ 
+Product ID/Location Ref: A03-Core 1 riser in store RHS | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame Assembly 
+Reason for failure: 
+Door jamb missing from frame leading edge in need of replacement  
+Actions:  
+Replace missing door jamb 
+Dims: 42mm x 12mm 
+ART 21 
+Failed 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Threshold 15mm 
+Actions:  
+ART 04 - Add appropriately sized threshold lipping to leaf 
+requires hardwood lipping minimum density 640kg/m3 
+glued in place with a thermosetting urea formaldehyde-
+based adhesive. 
+Failed 
+ 
+Component: Frame to wall 
+Reason for failure: 
+No Fire stopping present between door frame 
+& supporting construction  
+Actions:  
+ART 16 - Fit appropriate fire stopping between 
+frame and substrate 
+Failed 
+
+
+--- Page 48 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 48 
+Inspection work summary:  
+3 issues to action  ARTs 04, 16 & 21 
+Inspection summary photos:  
+ 
+
+
+--- Page 49 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 49 
+ 
+Product ID/Location Ref: A04-Core 1 tenant door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+Inspection Items 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 50 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 50 
+ 
+Product ID/Location Ref: A05-Core 1 door to north area | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Damage to Door leaf 
+Actions:  
+ART 02 - Void requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea formaldehyde-
+based adhesive 
+Failed 
+Component: Frame Assembly 
+Reason for failure: 
+Frame damaged by over rebated door hinges in need of 
+repair  
+Actions:  
+ART 21 - Repair Door Frame 
+requires hardwood infills (minimum density 640kg/m3) 
+glued in place with a thermosetting urea formaldehyde-
+based adhesive. 
+Failed 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Head 6mm, Meeting stiles 6mm 
+Actions: ART 04 - Ease & adjust door frame to ensure there is a 
+constant 3mm gap between frame & door leaf 
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps still 
+not within 2mm-4mm allowance frame may need to be packed out 
+or leaf re lipped. 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Hinges are Worn in need of replacement  
+Actions:  
+ART 08 Replace damaged/worn hinges 
+Qty x 6 
+Hinge dims: 104mm x 75 
+Failed 
+
+
+--- Page 51 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 51 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door sign missing from passive door leaf  
+Actions:  
+ART 19 - Install Fire Door Keep Locked Signage 
+To both sides of passive leaf 
+Failed 
+Inspection work summary:  
+5 issues to action  ARTs 02, 04, 08, 19 & 21 
+Inspection summary photos:  
+ 
+
+
+--- Page 52 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 52 
+ 
+Product ID/Location Ref: A06-Core 1 door to east area | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Lipping Damaged 
+Actions:  
+ART 01 - Lipping damaged requires hardwood re-lip minimum 
+density 640kg/m3 glued in place with a thermosetting urea 
+formaldehyde-based adhesive. 
+Failed 
+Component: Frame Assembly 
+Reason for failure: 
+Door frame is Damaged & in need of Repair , Over rebated 
+hinges  
+Actions:  
+ART 21 - Repair Door Frame 
+requires hardwood infills (minimum density 640kg/m3) glued in 
+place with a thermosetting urea formaldehyde-based adhesive. 
+Failed 
+
+
+--- Page 53 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 53 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Head 5mm, Meeting stiles 
+6mm, Hinge edge 5mm 
+Actions:  
+ART 04 - Ease & adjust door frame to ensure there is a constant 
+3mm gap between frame & door leaf 
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps 
+still not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+Failed 
+Component: Signage 
+Reason for failure: 
+Fire door sign missing from passive door leaf  
+Actions:  
+ART 19 - Install Fire Door Keep Locked Signage 
+to both sides of passive leaf 
+Failed 
+Inspection work summary:  
+4 issues to action  ARTs 01, 04, 19 & 21 
+Inspection summary photos:  
+ 
+
+
+--- Page 54 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 54 
+ 
+Product ID/Location Ref: A07-Room 03-Y riser  | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+Inspection Items 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 55 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 55 
+ 
+Product ID/Location Ref: A08-Core 3 tenant CHW pump riser | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is securely fixed 
+Qty x 1 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 13 
+Inspection summary photos:  
+ 
+
+
+--- Page 56 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 56 
+ 
+Product ID/Location Ref: A09-Core 3 tenant DB riser | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+Inspection Items 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 57 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 57 
+ 
+Product ID/Location Ref: A10-Core 3 tenant door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+Inspection Items 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 58 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 58 
+ 
+Product ID/Location Ref: A11-Comms room south east DB riser | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame Assembly 
+Reason for failure: 
+Door frame is Damaged & in need of Repair , Screw holes 
+around door jamb need to be repaired  
+Actions:  
+ART 21 - requires hardwood infills (minimum density 640kg/m3) 
+glued in place with a thermosetting urea formaldehyde-based 
+adhesive. 
+Failed 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 5mm,  
+Threshold 13mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps 
+still not within 2mm-4mm allowance frame may need to be 
+packed out or leaf re lipped. 
+ART 04 - Install appropriate threshold plate to reduce gaps to 
+ensure gaps are within specified tolerance as per manufacturer 
+specifications 
+Failed 
+
+
+--- Page 59 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 59 
+ 
+Component: Frame to wall 
+Reason for failure: 
+No Fire stopping present between door frame & supporting 
+construction  
+Actions:  
+ART 16 - Fit appropriate fire stopping between frame and 
+substrate 
+Failed 
+Component: Signage 
+Reason for failure: 
+Fire door sign is missing and needs adding 
+Actions:  
+ART 19 - Install Fire Door Keep Locked Signage 
+Qty x 2 
+Failed 
+Inspection work summary:  
+4 issues to action ARTs 04, 16 19 & 21 
+Inspection summary photos:  
+ 
+
+
+--- Page 60 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 60 
+ 
+Product ID/Location Ref: A12-Core 5 tenant door to WC's | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Damaged beyond repair needs replacement 
+Actions:  
+ART 01 - Lipping damaged requires hardwood re-lip minimum 
+density 640kg/m3 glued in place with a thermosetting urea 
+formaldehyde-based adhesive. 
+Failed 
+Component: Frame Assembly 
+Reason for failure: 
+Incorrect frame construction - Plywood cladding to push 
+side of door being used as door jambs compromising 
+doorsets fire integrity  
+Actions:  
+ART 18 - Replace Full Doorset 
+Failed 
+ 
+Component: Door to frame 
+Reason for failure: 
+Head 8mm 
+Actions:  
+Door gaps cannot be achieved through adjustment 
+ART 18 Recommend doorset is replaced 
+Failed 
+Component: Frame/Leaf 
+Intumescents 
+Reason for failure: 
+No intumescent seals have been 
+installed at the hinge or leading 
+edges  
+Actions:  
+ART 11 - New Intumescent seals to 
+be fitted to door leaf (cut in) - 
+Manufactures O&Ms required to attain correct installation 
+method 
+
+
+--- Page 61 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 61 
+Failed 
+ 
+Component: Frame/Leaf Ambient Temperature Smoke Seals 
+Reason for failure: 
+No smoke seals are fitted to door leaf or frame , At the hinge or 
+leading edged 
+Failed 
+Component: Door Closer 
+Reason for failure: 
+Damaged beyond repair needs replacement, Leaking oil 
+Actions:  
+ART 05 - Install new automatic door closer as per 
+manufacturers specifications 
+Failed 
+
+
+--- Page 62 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 62 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door sign missing from pull side of door  
+Actions:  
+ART 19 - Install- Fire Door Keep Shut Signage 
+Qty x 2 
+Failed 
+Inspection work summary:  
+Replace doorset for fully certified FD60   
+SO: 2650mm h x 950mm w x 70mm d  
+Inspection summary photos:  
+ 
+
+
+--- Page 63 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 63 
+ 
+Product ID/Location Ref: A13-Core 5 tenant door to stairs | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Correct action 
+Reason for failure: 
+Magnetic lock holding door & frame out of alignment when door is 
+fully closed 
+Actions:  
+ART 10 - Adjust mag lock to ensure door closes flush with frame 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 10  
+Inspection summary photos:  
+ 
+
+
+--- Page 64 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 64 
+ 
+Product ID/Location Ref: A14-Core 4 tenant DB riser | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame Assembly 
+Reason for failure: 
+Door Frame is Damaged beyond repair in need of replacement 
+Section has been cut away at back of frame  
+Actions:  
+ART 18 - Replace Full Doorset 
+Failed 
+Inspection work summary:  
+Replace full Doorset for fully certified FD30  
+Approx SO: 2650mm h x 1810 x 135mm d 
+Inspection summary photos:  
+ 
+
+
+--- Page 65 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 65 
+ 
+Product ID/Location Ref: A15-Core 4 tenant door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Leading edge gap up to 5mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps still 
+not within 2mm-4mm allowance frame may need to be packed out 
+or leaf re lipped. 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 04 
+Inspection summary photos:  
+ 
+
+
+--- Page 66 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 66 
+ 
+Product ID/Location Ref: A16-Core 2 comms room 1 door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Threshold 12mm 
+Actions:  
+ART 04 - Add appropriately sized threshold lipping to leaf requires 
+hardwood lipping minimum density 640kg/m3 glued in place with a 
+thermosetting urea formaldehyde-based adhesive. 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 04  
+Inspection summary photos:  
+ 
+
+
+--- Page 67 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 67 
+ 
+Product ID/Location Ref: A17-AHU 3 inner door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Damage to Door leaf 
+Actions:  
+ART 02 - Repair hole in door using hardwood timber insert 
+Failed 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification,  
+Meeting stiles 5mm 
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If 
+gaps still not within 2mm-4mm allowance frame may need 
+to be packed out or leaf re lipped. 
+Failed 
+ 
+Component: Frame to wall 
+Reason for failure: 
+No Fire stopping present between door frame & supporting 
+construction  
+Actions:  
+ART 16 - Fit appropriate fire stopping between frame and substrate 
+Failed 
+
+
+--- Page 68 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 68 
+Inspection work summary:  
+3 issues to action - ARTs 02, 04 & 16 
+Inspection summary photos:  
+ 
+
+
+--- Page 69 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 69 
+ 
+Product ID/Location Ref: A18-AHU 3 outer door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure 
+hinge is securely fixed 
+Qty x 3 
+Failed 
+Inspection work summary:  
+1 issue to action  ART 13  
+Inspection summary photos:  
+ 
+
+
+--- Page 70 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 70 
+ 
+Product ID/Location Ref: A19-Core 2 tenant door | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Passed 
+Inspection Items 
+Inspection work summary:  
+Compliant  
+Inspection summary photos:  
+ 
+
+
+--- Page 71 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 71 
+ 
+Product ID/Location Ref: A20-Core 2 MCCP riser (SOHO) | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Door Leaf 
+Reason for failure: 
+Lipping Damaged 
+Actions:  
+ART 01 - Lipping damaged requires hardwood re-lip minimum 
+density 640kg/m3 glued in place with a thermosetting urea 
+formaldehyde-based adhesive. 
+Failed 
+Component: Frame Assembly 
+Reason for failure: 
+Door frame is Damaged & in need of Repair  
+Actions:  
+ART 21 - requires hardwood infills (minimum density 
+640kg/m3) glued in place with a thermosetting urea 
+formaldehyde-based adhesive. 
+Failed 
+
+
+--- Page 72 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 72 
+ 
+Component: Door to frame 
+Reason for failure: 
+Door gaps Incorrect to Specification, Meeting stiles 6mm  
+Actions:  
+ART 04 - Lift and adjust door leaf/hinges to close gaps. If gaps still 
+not within 2mm-4mm allowance frame may need to be packed out or 
+leaf re lipped. 
+Failed 
+Component: Frame to wall 
+Reason for failure: 
+No Fire stopping present between door frame & 
+supporting construction  
+Actions:  
+ART 16 - Fit appropriate fire stopping between frame and 
+substrate 
+Failed 
+ 
+Component: Hinges 
+Reason for failure: 
+Hinge fixings Loose/missing 
+Actions:  
+ART 13 - Replace hinge screws to ensure hinge is securely fixed 
+Failed 
+
+
+--- Page 73 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 73 
+Inspection work summary:  
+4 issues to action  ARTs 01, 04, 13 & 21  
+Inspection summary photos:  
+ 
+
+
+--- Page 74 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 74 
+ 
+Product ID/Location Ref: A21-Dividing door from north to west | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame/Leaf Intumescents 
+Reason for failure: 
+No Intumescent seals are have been installed to door leaf or frame   
+Actions:  
+ART 11 - New Intumescent seals to be fitted to door leaf (cut in) - 
+Manufactures O&Ms required to attain correct installation method 
+Failed 
+Component: Door Closer 
+Reason for failure: 
+No door closer has been installed  
+Actions:  
+ART 05 - Install new automatic door closer as per 
+manufacturers specifications 
+Failed 
+ 
+Component: Signage 
+Reason for failure: 
+Fire door sign is missing and needs adding 
+Actions:  
+ART 19 - Install Fire Door Keep Locked Signage 
+Failed 
+
+
+--- Page 75 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 75 
+Inspection work summary:  
+3 issues to action  ARTs 05, 11 & 13    
+Please Note: Repairs only applicable to fire rated doorsets  
+Please check the buildings fire compartmentation drawings to check the intended fire rating for this doorset if it is found no fire rating is required please disregard all repairs  
+Inspection summary photos:  
+ 
+
+
+--- Page 76 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 76 
+ 
+Product ID/Location Ref: A22-Female WC's north area  | Level 3 
+Wednesday, 4 March 2026 
+ 
+Last Inspection Detail 
+Status: Failed 
+Inspection Items 
+ 
+Component: Frame/Leaf Intumescents 
+Reason for failure: 
+Intumescent seals are Missing 
+Actions:  
+ART 11 - Replace missing section of intumescent seal as per 
+manufacturer’s specifications 
+15mm x 4mm white intumescents to be installed to perimeter of 
+frame 
+Failed 
+Component: Hinges 
+Reason for failure: 
+Damaged beyond repair needs replacement 
+Actions:  
+ART 08 Replace damaged/worn hinges 
+Qty x 3 
+Hinge dims 100mm x 75mm 
+Failed 
+
+
+--- Page 77 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 77 
+ 
+Component: Signage 
+Reason for failure: 
+Incorrect fire sign fitted to push side of door 
+and sign missing from pull side  
+Actions:  
+ART 19 - Change fire door keep locked sign to 
+keep shut and install new fire door keep shut 
+sign to pull side of door 
+Failed 
+Inspection work summary:  
+3 issues to action  ARTs 08, 11 & 19  
+Inspection summary photos:  
+ 
+
+
+--- Page 78 ---
+ 
+Building: Alpha Sights - Thames 
+Court 
+ 
+EAS Interiors Ltd 
+75 Grove Park Road, London, SE9 4NS www.easinteriors.com sales@easinteriors.com 
+07811362650 
+Design Copyright 2026. Fire DNA Ltd. 
+Page 78 
+Action Level & Timeframe Summary 
+Level 
+Action Priority 
+N/A 
+Not applicable or compliant. 
+Low 
+Low level risk in a non-critical location. Low level non-compliance with remediation(s) or replacement(s) recommended within 12 months. 
+Moderate 
+In a location deemed moderate risk usually within or linked to an evacuation route. Moderate non-compliance with remediation(s) or replacement(s) recommended within 9-12 months. 
+High 
+In a location deemed as high risk usually in a principal position. High level non-compliance with remediation(s) or replacement(s) recommended within 3-6 months. 
+Critical 
+In a location deemed as critical and in a principal position. Critical level of non-compliance with remediation(s) or replacements(s) recommended within 3 months. 
+Replace 
+Unable to remediate to make compliant and needs replacement. 
+Test Evidence Grading Summary 
+Level 
+Test Evidence Available 
+N/A 
+Not applicable. 
+1 
+Clear test evidence/report, historical assessment/inspection, 3rd party certification or project assessment and complete records at time of inspection. Clear evidence that installation was carried out by a 
+3rd party certified contractor. 
+2 
+Clear test evidence/report, historical assessment/inspection, 3rd party certification or project assessment and complete records at time of inspection. No evidence that installation was carried out by a 3rd 
+party certified contractor. 
+3 
+No documentary evidence other than manufacturer identifier marking or labelling showing fire rating and certificating body. 
+4 
+No records or visible marking or labelling denoting as a Fire Door. Declared by Responsible Person as Fire Resisting. 
+ 
+
+

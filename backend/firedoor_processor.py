@@ -189,7 +189,7 @@ def detect_format(file_path: str, filename: str) -> str:
     Detect survey format type.
     
     Returns:
-        'TYPE_1' - PDF with FireDNA/RiskBase/BM TRADA/ART codes
+        'TYPE_1' - PDF/TXT with FireDNA/RiskBase/BM TRADA/ART codes
         'TYPE_2' - Excel with door/gaps/seals fault columns
         'UNKNOWN' - Cannot determine format
     """
@@ -209,6 +209,21 @@ def detect_format(file_path: str, filename: str) -> str:
                     return 'TYPE_1'
         except Exception as e:
             print(f"Error detecting PDF format: {e}")
+            return 'UNKNOWN'
+    
+    elif ext == '.txt':
+        # Handle pre-extracted PDF text files
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                # Read first 5000 chars
+                text_sample = f.read(5000).lower()
+                
+                # Check for TYPE_1 indicators
+                type1_keywords = ['firedna', 'riskbase', 'bm trada', 'art', 'fire door survey']
+                if any(keyword in text_sample for keyword in type1_keywords):
+                    return 'TYPE_1'
+        except Exception as e:
+            print(f"Error detecting TXT format: {e}")
             return 'UNKNOWN'
     
     elif ext in ['.xlsx', '.xls']:
@@ -233,18 +248,29 @@ def detect_format(file_path: str, filename: str) -> str:
 
 def extract_type1_pdf(file_path: str) -> List[Dict]:
     """
-    Extract door data from Type 1 PDF using Claude API.
+    Extract door data from Type 1 PDF/TXT using Claude API.
+    Supports both PDF files and pre-extracted text files.
     
     Returns:
         List of door dictionaries with keys: door_id, location, faults, art_codes
     """
-    # Extract full text from PDF
+    # Extract full text from PDF or TXT
     full_text = ""
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                full_text += page_text + "\n\n"
+    ext = Path(file_path).suffix.lower()
+    
+    if ext == '.txt':
+        # Read text file directly
+        with open(file_path, 'r', encoding='utf-8') as f:
+            full_text = f.read()
+    elif ext == '.pdf':
+        # Extract from PDF
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    full_text += page_text + "\n\n"
+    else:
+        raise ValueError(f"Unsupported file extension for Type 1: {ext}")
     
     # Use Claude to extract structured data
     prompt = f"""Extract all fire door data from this survey report. For each door, extract:

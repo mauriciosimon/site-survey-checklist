@@ -71,10 +71,11 @@ export default function FireDoorQuoting() {
       const validTypes = [
         'application/pdf',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-excel'
+        'application/vnd.ms-excel',
+        'text/plain'  // Support pre-extracted PDF text files
       ];
       if (!validTypes.includes(selectedFile.type)) {
-        setError('Please upload a PDF or Excel file');
+        setError('Please upload a PDF, Excel, or Text file');
         setFile(null);
         return;
       }
@@ -328,7 +329,7 @@ export default function FireDoorQuoting() {
               <input
                 type="file"
                 onChange={handleFileChange}
-                accept=".pdf,.xlsx,.xls"
+                accept=".pdf,.xlsx,.xls,.txt"
                 disabled={loading}
                 required
                 style={{
