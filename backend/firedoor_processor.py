@@ -419,15 +419,37 @@ def extract_type2_excel(file_path: str) -> List[Dict]:
             if not row or not any(row):  # Skip empty rows
                 continue
                 
-            door_id = row[door_col] if door_col is not None and door_col < len(row) else f"{sheet.title}-Door-{row_idx}"
+            door_id = row[door_col] if door_col is not None and door_col < len(row) else None
+            
+            # Skip rows where door_id is not a valid integer (filters out #VALUE!, headers, etc.)
+            if door_id is None:
+                continue
+            
+            # Try to convert to integer - if it fails, skip this row
+            try:
+                # Check if it's numeric (could be int or float)
+                if isinstance(door_id, (int, float)):
+                    door_number = int(door_id)
+                else:
+                    # Try to parse string as integer
+                    door_number = int(str(door_id).strip())
+            except (ValueError, TypeError):
+                # Not a valid integer - skip this row (likely #VALUE! or header)
+                continue
             
             # Collect faults from relevant columns
             faults = []
             b_codes = []
+            has_unable = False  # Track if any column contains "Unable"
             
             for col_idx in fault_cols:
                 if col_idx < len(row) and row[col_idx]:
                     fault_text = str(row[col_idx]).strip()
+                    
+                    # Check for "Unable" keyword (triggers orange flag)
+                    if 'unable' in fault_text.lower():
+                        has_unable = True
+                    
                     # Skip "OK", "None", "N/A", "NO", empty values
                     if fault_text and fault_text.upper() not in ['OK', 'NONE', 'N/A', 'NO', 'YES', '-']:
                         faults.append(fault_text)
@@ -438,10 +460,12 @@ def extract_type2_excel(file_path: str) -> List[Dict]:
             
             if faults:  # Only add doors with actual faults
                 all_doors.append({
-                    'door_id': f"{sheet.title}-{door_id}",
+                    'door_id': f"{sheet.title}-{door_number}",  # Use validated integer door number
                     'location': sheet.title,  # Use sheet name as location
                     'faults': faults,
-                    'b_codes': list(set(b_codes))  # Remove duplicates
+                    'b_codes': list(set(b_codes)),  # Remove duplicates
+                    'has_unable': has_unable,  # Flag for orange highlighting
+                    'format_type': 'TYPE_2'  # Mark as Type 2 for PENDING logic
                 })
     
     return all_doors
@@ -727,6 +751,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")  # Light green
     yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")  # Light yellow
     red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")  # Light red
+    orange_fill = PatternFill(start_color="FED8B1", end_color="FED8B1", fill_type="solid")  # Light orange (for manual review)
     
     # Data starts at row 4 (row 3 is headers)
     start_row = 4
@@ -780,7 +805,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # ws[f'M{row_num}'] = ''
         
         # Column N: OPT A REMEDIAL? (YES/NO/COMPLIANT)
-        # Column O: OPT B REPLACE? (YES/NO)
+        # Column O: OPT B REPLACE? (YES/NO/PENDING)
         # Determine if remedial, replacement, or compliant
         is_compliant = not codes or not faults_str
         # Check for replacement: A-series codes (A09, A11, A12, etc.) or "A-series" placeholder from ART18
@@ -789,9 +814,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             any(c.startswith('A0') or c.startswith('A1') or c == 'A-series' for c in codes)
         )
         
+        # Check if this is Type 2 format (no fire strategy, so Option B = PENDING)
+        is_type2 = door.get('format_type') == 'TYPE_2'
+        
         if is_compliant:
             ws[f'N{row_num}'] = 'COMPLIANT'
             ws[f'O{row_num}'] = 'NO'
+        elif is_type2:
+            # Type 2 Excel surveys: Option B = PENDING (no fire strategy to determine A-series code)
+            ws[f'N{row_num}'] = 'YES' if codes else 'NO'
+            ws[f'O{row_num}'] = 'PENDING'
         elif needs_replacement:
             ws[f'N{row_num}'] = 'NO'
             ws[f'O{row_num}'] = 'YES'
@@ -811,14 +843,32 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         ws[f'T{row_num}'] = 'NO'  # E/O EXTERNAL
         ws[f'U{row_num}'] = 'NO'  # E/O VISION
         
-        # Column V: NOTES / FLAGS (ART codes for reference)
+        # Column V: NOTES / FLAGS (ART codes for reference + flag notes)
         art_codes_str = ', '.join(door.get('art_codes', [])) if 'art_codes' in door else ''
+        flag_notes = []
+        
         if art_codes_str:
-            ws[f'V{row_num}'] = f"ARTs: {art_codes_str}"
+            flag_notes.append(f"ARTs: {art_codes_str}")
+        
+        # Add flag notes for special cases requiring manual review
+        if door.get('has_unable'):
+            flag_notes.append("⚠️ Unable to inspect - needs revisit")
+        
+        # Check for ambiguous or placeholder codes that need manual review
+        if any(c in ['MANUAL REVIEW', 'A-series', 'FLAG FOR MANUAL REVIEW'] for c in codes):
+            flag_notes.append("⚠️ Manual review required")
+        
+        if flag_notes:
+            ws[f'V{row_num}'] = ' | '.join(flag_notes)
         
         # Color code based on status
+        # Priority: Orange (manual review) > Red (replacement) > Yellow (remedial) > Green (compliant)
         color_fill = None
-        if is_compliant:
+        needs_manual_review = door.get('has_unable') or any(note.startswith('⚠️') for note in flag_notes)
+        
+        if needs_manual_review:
+            color_fill = orange_fill  # Orange - needs manual review (Unable to inspect or flag notes)
+        elif is_compliant:
             color_fill = green_fill  # Green - compliant
         elif needs_replacement:
             color_fill = red_fill  # Red - replacement
