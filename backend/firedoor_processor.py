@@ -499,47 +499,63 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                 logger.info(f"Extracted {len(template_prices)} prices from template")
             
             if not rate_items:
-                # Database is empty - seed it from CSV with template prices
-                logger.info("Database empty - auto-seeding from CSV with template prices...")
+                # Database is empty - seed ALL codes from template
+                logger.info("Database empty - auto-seeding ALL codes from template...")
                 import csv
-                csv_path = Path(__file__).parent / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
                 
+                # First, create a map of ART code descriptions from CSV
+                art_descriptions = {}
+                csv_path = Path(__file__).parent / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
                 if csv_path.exists():
                     with open(csv_path, 'r', encoding='utf-8') as f:
                         reader = csv.DictReader(f)
-                        seeded_count = 0
                         for row in reader:
                             art_code = row['ART Code']
                             description = row['Description']
                             rate_card_code = row['WestPark Rate Card Code']
                             
-                            # Skip reserved/empty codes
-                            if not rate_card_code or rate_card_code.strip() in ['', 'FLAG FOR MANUAL REVIEW', 'NO EQUIVALENT']:
-                                continue
+                            # Map rate card code to ART description
+                            if rate_card_code and rate_card_code.strip() not in ['', 'FLAG FOR MANUAL REVIEW', 'NO EQUIVALENT']:
+                                codes = [c.strip() for c in rate_card_code.split('/')]
+                                for code in codes:
+                                    if code not in art_descriptions:
+                                        art_descriptions[code] = (art_code, description)
+                
+                # Now seed ALL B-codes from template (rows 22-33 in Rate Card sheet)
+                if "Rate Card" in wb.sheetnames:
+                    rate_card_sheet = wb["Rate Card"]
+                    seeded_count = 0
+                    
+                    for row_num in range(22, 34):  # B01-B12
+                        code = rate_card_sheet.cell(row=row_num, column=1).value
+                        desc = rate_card_sheet.cell(row=row_num, column=2).value
+                        
+                        if code and str(code).startswith('B'):
+                            # Get price from template
+                            unit_price = template_prices.get(str(code), "£0.00")
                             
-                            # Get price from template for this rate card code
-                            # Handle multi-code entries like "B01 / B02"
-                            codes = [c.strip() for c in rate_card_code.split('/')]
-                            unit_price = template_prices.get(codes[0], "£0.00") if codes else "£0.00"
+                            # Get ART code mapping if exists
+                            art_info = art_descriptions.get(str(code), (str(code), desc or ""))
+                            art_code, full_desc = art_info
                             
                             # Create database entry
                             new_item = RateCardItem(
                                 art_code=art_code,
-                                description=description,
-                                rate_card_code=rate_card_code,
+                                description=full_desc[:500] if full_desc else desc[:500] if desc else "",
+                                rate_card_code=str(code),
                                 unit_price=unit_price,
                                 category="From template"
                             )
                             db.add(new_item)
                             seeded_count += 1
-                        
-                        db.commit()
-                        logger.info(f"Auto-seeded {seeded_count} rate card items from CSV with template prices")
-                        
-                        # Re-query to get the seeded items
-                        rate_items = db.query(RateCardItem).all()
+                    
+                    db.commit()
+                    logger.info(f"Auto-seeded {seeded_count} B-codes from template with prices")
+                    
+                    # Re-query to get the seeded items
+                    rate_items = db.query(RateCardItem).all()
                 else:
-                    logger.warning(f"CSV file not found at {csv_path} - cannot auto-seed")
+                    logger.warning("Rate Card sheet not found - cannot auto-seed")
             
             if rate_items:
                 # Backfill template prices for any items missing prices
