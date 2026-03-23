@@ -783,7 +783,11 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Column O: OPT B REPLACE? (YES/NO)
         # Determine if remedial, replacement, or compliant
         is_compliant = not codes or not faults_str
-        needs_replacement = 'replace' in str(door).lower() or any('A09' in c or 'A11' in c for c in codes)
+        # Check for replacement: A-series codes (A09, A11, A12, etc.) or "A-series" placeholder from ART18
+        needs_replacement = (
+            'replace' in str(door).lower() or 
+            any(c.startswith('A0') or c.startswith('A1') or c == 'A-series' for c in codes)
+        )
         
         if is_compliant:
             ws[f'N{row_num}'] = 'COMPLIANT'
