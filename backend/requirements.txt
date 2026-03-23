@@ -13,4 +13,4 @@ pydantic[email]==2.5.3
 requests==2.31.0
 pdfplumber==0.11.0
 openpyxl==3.1.2
-anthropic>=0.34.0,<1.0.0  # Force fresh install - no cache
+anthropic==0.34.2  # Force fresh install - rebuild layer cache
