@@ -533,8 +533,27 @@ async def process_firedoor_survey(
         output_filename = f"{client_name.replace(' ', '_')}_FireDoor_Quote.xlsx"
         output_path = Path(temp_dir) / output_filename
         
+        logger.info(f"Template path: {template_path}, exists: {template_path.exists()}")
+        logger.info(f"Output path: {output_path}")
+        
+        if not template_path.exists():
+            raise HTTPException(
+                status_code=500,
+                detail=f"Template file not found at: {template_path}"
+            )
+        
         try:
-            fdp.populate_excel_template(doors, client_name, template_path, str(output_path))
+            result_path = fdp.populate_excel_template(doors, client_name, str(template_path), str(output_path))
+            logger.info(f"populate_excel_template returned: {result_path}")
+            
+            # Double-check the file exists before returning
+            if not output_path.exists():
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Output file was not created at: {output_path}"
+                )
+            
+            logger.info(f"Returning file: {output_path}, size: {output_path.stat().st_size} bytes")
         except Exception as e:
             logger.error(f"Error populating Excel template: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error generating quote: {str(e)}")
