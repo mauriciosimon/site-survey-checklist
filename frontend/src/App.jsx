@@ -6,6 +6,7 @@ import ChecklistDetail from './components/ChecklistDetail';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
+import FireDoorQuoting from './components/FireDoorQuoting';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -45,6 +46,9 @@ function Header() {
                 Admin
               </button>
             )}
+            <button className="btn btn-secondary" onClick={() => navigate('/firedoor')}>
+              🔥 Fire Door Quoting
+            </button>
             <button className="btn btn-primary" onClick={() => navigate('/new')}>
               + New Checklist
             </button>
@@ -112,6 +116,11 @@ function AppContent() {
         <Route path="/admin" element={
           <ProtectedRoute>
             <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/firedoor" element={
+          <ProtectedRoute>
+            <FireDoorQuoting />
           </ProtectedRoute>
         } />
       </Routes>

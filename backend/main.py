@@ -465,6 +465,87 @@ def admin_clear_photos(
     }
 
 
+# ==================== FIRE DOOR QUOTING ENDPOINT ====================
+@app.post("/api/firedoor/process")
+async def process_firedoor_survey(
+    file: UploadFile = File(...),
+    client_name: str = None
+):
+    """
+    Process fire door survey file (PDF or Excel) and return populated quote Excel.
+    
+    Supports:
+    - Type 1: PDF with FireDNA/RiskBase/BM TRADA ART codes
+    - Type 2: Excel with door fault columns
+    """
+    import tempfile
+    import shutil
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+    import firedoor_processor as fdp
+    
+    if not client_name:
+        raise HTTPException(status_code=400, detail="Client name is required")
+    
+    # Create temp directory for processing
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Save uploaded file
+        input_path = Path(temp_dir) / file.filename
+        with open(input_path, 'wb') as f:
+            shutil.copyfileobj(file.file, f)
+        
+        # Detect format
+        file_format = fdp.detect_format(str(input_path), file.filename)
+        logger.info(f"Detected format: {file_format} for file: {file.filename}")
+        
+        if file_format == 'UNKNOWN':
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported file format. Please upload a FireDNA/RiskBase PDF or Excel survey."
+            )
+        
+        # Extract door data
+        try:
+            if file_format == 'TYPE_1':
+                logger.info("Processing TYPE_1 (PDF with ART codes)")
+                doors = fdp.extract_type1_pdf(str(input_path))
+            elif file_format == 'TYPE_2':
+                logger.info("Processing TYPE_2 (Excel with fault columns)")
+                doors = fdp.extract_type2_excel(str(input_path))
+            else:
+                raise HTTPException(status_code=400, detail=f"Unsupported format: {file_format}")
+            
+            logger.info(f"Extracted {len(doors)} doors from survey")
+            
+            if not doors:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No door data could be extracted from the file. Please check the file format."
+                )
+            
+        except Exception as e:
+            logger.error(f"Error extracting door data: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+        
+        # Populate Excel template
+        template_path = "/root/clawd/projects/westpark-surveys/firedoor-data/Fire Door Costing/WestPark_FireDoor_CostSheet_v3_AlphaSights.xlsx"
+        output_filename = f"{client_name.replace(' ', '_')}_FireDoor_Quote.xlsx"
+        output_path = Path(temp_dir) / output_filename
+        
+        try:
+            fdp.populate_excel_template(doors, client_name, template_path, str(output_path))
+        except Exception as e:
+            logger.error(f"Error populating Excel template: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error generating quote: {str(e)}")
+        
+        # Return file
+        return FileResponse(
+            path=str(output_path),
+            filename=output_filename,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

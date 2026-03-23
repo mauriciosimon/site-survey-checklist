@@ -24,3 +24,5 @@ uploads/
 # Deployment
 .vercel/
 .railway/
+.vercel
+.env*.local
