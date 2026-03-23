@@ -27,7 +27,7 @@ from auth import (
     get_current_user, get_current_user_required, get_admin_user,
     authenticate_user, create_access_token
 )
-from models import User, Checklist
+from models import User, Checklist, RateCardItem
 import crud
 import monday_api
 
@@ -593,6 +593,153 @@ async def process_firedoor_survey(
         # Final safety net - clean up on any unhandled exception
         cleanup_temp_dir(temp_dir)
         raise
+
+
+# ============================================================================
+# RATE CARD MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@app.get("/api/firedoor/rates")
+async def list_rate_card_items(
+    search: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
+    """
+    Get all rate card items with optional search.
+    """
+    query = db.query(RateCardItem)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (RateCardItem.art_code.ilike(search_term)) |
+            (RateCardItem.description.ilike(search_term)) |
+            (RateCardItem.rate_card_code.ilike(search_term))
+        )
+    
+    items = query.order_by(RateCardItem.art_code).all()
+    
+    return {
+        "items": [{
+            "id": item.id,
+            "art_code": item.art_code,
+            "description": item.description,
+            "rate_card_code": item.rate_card_code,
+            "unit_price": item.unit_price,
+            "category": item.category,
+            "updated_at": item.updated_at.isoformat() if item.updated_at else None
+        } for item in items],
+        "count": len(items)
+    }
+
+
+@app.put("/api/firedoor/rates/{item_id}")
+async def update_rate_card_item(
+    item_id: int,
+    unit_price: str = Form(...),
+    category: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
+    """
+    Update a rate card item's price and category.
+    Only unit_price and category are editable.
+    """
+    item = db.query(RateCardItem).filter(RateCardItem.id == item_id).first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Rate card item not found")
+    
+    item.unit_price = unit_price
+    if category is not None:
+        item.category = category
+    
+    db.commit()
+    db.refresh(item)
+    
+    logger.info(f"User {current_user.email} updated rate card item {item.art_code} to {unit_price}")
+    
+    return {
+        "id": item.id,
+        "art_code": item.art_code,
+        "description": item.description,
+        "rate_card_code": item.rate_card_code,
+        "unit_price": item.unit_price,
+        "category": item.category,
+        "updated_at": item.updated_at.isoformat() if item.updated_at else None
+    }
+
+
+@app.post("/api/firedoor/rates/seed")
+async def seed_rate_card(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Seed rate card items from CSV. Admin only.
+    Only runs if table is empty.
+    """
+    import csv
+    
+    # Check if already seeded
+    existing_count = db.query(RateCardItem).count()
+    if existing_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Rate card already seeded with {existing_count} items. Delete existing items first if you want to re-seed."
+        )
+    
+    # Load CSV
+    backend_dir = Path(__file__).parent
+    csv_path = backend_dir / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
+    
+    if not csv_path.exists():
+        raise HTTPException(status_code=500, detail=f"CSV file not found at {csv_path}")
+    
+    items = []
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            item = RateCardItem(
+                art_code=row['ART Code'].strip(),
+                description=row['Description'].strip(),
+                rate_card_code=row['WestPark Rate Card Code'].strip(),
+                unit_price=None,  # Will be set by user
+                category=None
+            )
+            items.append(item)
+    
+    # Bulk insert
+    db.bulk_save_objects(items)
+    db.commit()
+    
+    logger.info(f"Admin {current_user.email} seeded {len(items)} rate card items")
+    
+    return {
+        "message": f"Successfully seeded {len(items)} rate card items",
+        "count": len(items)
+    }
+
+
+@app.delete("/api/firedoor/rates/clear")
+async def clear_rate_card(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Clear all rate card items. Admin only.
+    Use with caution - this will delete all rate card data.
+    """
+    count = db.query(RateCardItem).delete()
+    db.commit()
+    
+    logger.warning(f"Admin {current_user.email} cleared {count} rate card items")
+    
+    return {
+        "message": f"Cleared {count} rate card items",
+        "count": count
+    }
 
 
 if __name__ == "__main__":

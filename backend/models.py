@@ -99,3 +99,16 @@ class Checklist(Base):
     is_draft = Column(Boolean, default=True)
 
     owner = relationship("User", back_populates="checklists")
+
+
+class RateCardItem(Base):
+    __tablename__ = "rate_card_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    art_code = Column(String(50), unique=True, index=True, nullable=False)
+    description = Column(Text, nullable=False)
+    rate_card_code = Column(String(50), nullable=False)
+    unit_price = Column(String(50))  # Store as string to preserve format (e.g., "£45.00")
+    category = Column(String(100))  # Optional categorization
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
