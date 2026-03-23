@@ -806,6 +806,10 @@ async def backfill_rate_card_descriptions(
     rate_items = db.query(RateCardItem).all()
     
     for item in rate_items:
+        # Skip ART04 - it has custom dual-mapping logic below
+        if item.art_code == "ART04":
+            continue
+            
         codes = [c.strip() for c in item.rate_card_code.split('/') if c.strip()]
         
         for code in codes:
@@ -820,6 +824,10 @@ async def backfill_rate_card_descriptions(
     art04 = db.query(RateCardItem).filter(RateCardItem.art_code == "ART04").first()
     if art04:
         art04.rate_card_description = "Supply & fit seals (B01) or Adjust / re-hang door leaf (B10) — determined by fault type on inspection."
+        # Set price from B01 if not already set
+        if not art04.unit_price and "B01" in b_code_prices:
+            art04.unit_price = b_code_prices["B01"]
+        updated += 1
         logger.info("Applied custom ART04 description for dual B01/B10 mapping")
     
     db.commit()
