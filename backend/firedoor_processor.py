@@ -219,44 +219,62 @@ def extract_type2_excel(file_path: str) -> List[Dict]:
         List of door dictionaries with keys: door_id, location, faults, b_codes
     """
     wb = load_workbook(file_path)
-    ws = wb.active
+    all_doors = []
     
-    # Find header row and relevant columns
-    headers = [cell.value.lower() if cell.value else "" for cell in ws[1]]
-    
-    # Find column indices
-    door_col = next((i for i, h in enumerate(headers) if 'door' in h and ('id' in h or 'ref' in h or 'no' in h)), None)
-    location_col = next((i for i, h in enumerate(headers) if 'location' in h or 'description' in h), None)
-    fault_cols = [i for i, h in enumerate(headers) if any(keyword in h for keyword in ['gap', 'seal', 'fault', 'defect', 'remedial'])]
-    
-    doors = []
-    for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        door_id = row[door_col] if door_col is not None else f"Door {row_idx}"
-        location = row[location_col] if location_col is not None else ""
+    # Process all sheets (some surveys have Floor 1, Floor 2, etc.)
+    for sheet in wb.worksheets:
+        # Find header row (usually row 1 or 2)
+        header_row = 1
+        headers = [cell.value.lower() if cell.value else "" for cell in sheet[1]]
         
-        # Collect faults from relevant columns
-        faults = []
-        b_codes = []
+        # If row 1 doesn't look like headers, try row 2
+        if not any('door' in h or 'gap' in h or 'seal' in h for h in headers):
+            header_row = 2
+            headers = [cell.value.lower() if cell.value else "" for cell in sheet[2]]
         
-        for col_idx in fault_cols:
-            if col_idx < len(row) and row[col_idx]:
-                fault_text = str(row[col_idx])
-                if fault_text.strip():
-                    faults.append(fault_text)
-                    # Map to B-code
-                    b_code = map_fault_to_bcode(fault_text)
-                    if b_code:
-                        b_codes.append(b_code)
+        # Find column indices
+        door_col = next((i for i, h in enumerate(headers) if 'door' in h and ('no' in h or 'number' in h or 'ref' in h)), None)
         
-        if faults:  # Only add doors with faults
-            doors.append({
-                'door_id': str(door_id),
-                'location': str(location),
-                'faults': faults,
-                'b_codes': list(set(b_codes))  # Remove duplicates
-            })
+        # Fault columns: any column with door-related keywords, excluding the door number column
+        fault_cols = [i for i, h in enumerate(headers) if i != door_col and any(
+            keyword in h for keyword in ['gap', 'seal', 'frame', 'hinge', 'lock', 'glass', 'strip', 'closer', 'ironmongery', 'wall']
+        )]
+        
+        # If no specific fault columns found, use all columns except first 3 (usually ID/ref columns)
+        if not fault_cols:
+            fault_cols = list(range(3, len(headers)))
+        
+        # Extract doors
+        for row_idx, row in enumerate(sheet.iter_rows(min_row=header_row+1, values_only=True), start=header_row+1):
+            if not row or not any(row):  # Skip empty rows
+                continue
+                
+            door_id = row[door_col] if door_col is not None and door_col < len(row) else f"{sheet.title}-Door-{row_idx}"
+            
+            # Collect faults from relevant columns
+            faults = []
+            b_codes = []
+            
+            for col_idx in fault_cols:
+                if col_idx < len(row) and row[col_idx]:
+                    fault_text = str(row[col_idx]).strip()
+                    # Skip "OK", "None", "N/A", "NO", empty values
+                    if fault_text and fault_text.upper() not in ['OK', 'NONE', 'N/A', 'NO', 'YES', '-']:
+                        faults.append(fault_text)
+                        # Map to B-code
+                        b_code = map_fault_to_bcode(fault_text)
+                        if b_code:
+                            b_codes.append(b_code)
+            
+            if faults:  # Only add doors with actual faults
+                all_doors.append({
+                    'door_id': f"{sheet.title}-{door_id}",
+                    'location': sheet.title,  # Use sheet name as location
+                    'faults': faults,
+                    'b_codes': list(set(b_codes))  # Remove duplicates
+                })
     
-    return doors
+    return all_doors
 
 
 def map_art_to_rate_card(art_codes: List[str]) -> List[str]:
