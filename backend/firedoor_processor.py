@@ -268,6 +268,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     """
     Populate Excel template with door data and color code rows.
     
+    Writes to "Door Schedule" sheet with proper column mapping:
+    - Column A: Door ID
+    - Column B: Location
+    - Column C-I: Door details (type, rating, config, size, finish, seals, closer)
+    - Column P: Primary rate card code (for Quote Sheet formulas)
+    
     Args:
         doors: List of door dictionaries
         client_name: Client name for the header
@@ -275,50 +281,77 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         output_path: Path to save output file
     """
     wb = load_workbook(template_path)
-    ws = wb.active
     
-    # Update client name in template (assuming it's in cell B2 or similar)
-    # TODO: Find exact cell location in template
-    ws['B2'] = client_name
+    # Update client name in Quote Sheet
+    quote_sheet = wb["Quote Sheet"]
+    quote_sheet['B4'] = client_name  # B4 is the Client field
+    
+    # Get Door Schedule sheet for populating door data
+    ws = wb["Door Schedule"]
     
     # Define color fills
     green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")  # Light green
     yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")  # Light yellow
     red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")  # Light red
     
-    # Find data start row (usually row 5 or 6 after header rows)
-    start_row = 6
+    # Data starts at row 4 (row 3 is headers)
+    start_row = 4
+    
+    # Clear existing data (rows 4-100)
+    for row_num in range(4, 100):
+        for col in range(1, 17):  # Columns A-P
+            ws.cell(row=row_num, column=col).value = None
+            ws.cell(row=row_num, column=col).fill = PatternFill()  # Clear fill
     
     # Populate door data
     for idx, door in enumerate(doors):
         row_num = start_row + idx
-        
-        # Column mapping (adjust based on actual template structure)
-        # Assuming: A=Door ID, B=Location, C=Faults, D=Rate Card Codes
-        ws[f'A{row_num}'] = door['door_id']
-        ws[f'B{row_num}'] = door.get('location', '')
-        ws[f'C{row_num}'] = ', '.join(door.get('faults', []))
         
         # Get codes (either b_codes from Type 2 or map art_codes from Type 1)
         codes = door.get('b_codes', [])
         if not codes and 'art_codes' in door:
             codes = map_art_to_rate_card(door['art_codes'])
         
-        ws[f'D{row_num}'] = ', '.join(codes) if codes else 'MANUAL REVIEW'
+        # Primary code (first code if multiple, or "MANUAL REVIEW" if none)
+        primary_code = codes[0] if codes else ''
+        all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
+        
+        # Column mapping based on Door Schedule template:
+        # A=DOOR ID, B=LOCATION, C=DOOR TYPE, D=CURRENT RATING, E=LEAF CONFIG,
+        # F=LEAF SIZE, G=FINISH, H=SEALS, I=CLOSER, ...P=PRIMARY CODE
+        ws[f'A{row_num}'] = door['door_id']
+        ws[f'B{row_num}'] = door.get('location', '')
+        ws[f'C{row_num}'] = 'From Survey'  # Door type placeholder
+        ws[f'D{row_num}'] = 'Unknown'  # Rating placeholder
+        ws[f'E{row_num}'] = 'Single Leaf'  # Config placeholder
+        ws[f'F{row_num}'] = 'Unknown'  # Size placeholder
+        ws[f'G{row_num}'] = 'Paint'  # Finish placeholder
+        ws[f'H{row_num}'] = 'To Check'  # Seals placeholder
+        ws[f'I{row_num}'] = 'To Check'  # Closer placeholder
+        
+        # Column J-O can be used for fault details
+        faults_str = '; '.join(door.get('faults', []))
+        ws[f'J{row_num}'] = faults_str[:250]  # Truncate if too long
+        
+        # Column P: Primary rate card code (used by Quote Sheet formulas)
+        ws[f'P{row_num}'] = primary_code
+        
+        # Column Q: All codes for reference
+        ws[f'Q{row_num}'] = all_codes_str
         
         # Color code based on number of codes
+        color_fill = None
         if not codes:
-            # Red - needs manual review
-            for col in ['A', 'B', 'C', 'D']:
-                ws[f'{col}{row_num}'].fill = red_fill
+            color_fill = red_fill  # Red - needs manual review
         elif len(codes) == 1:
-            # Green - single clear code
-            for col in ['A', 'B', 'C', 'D']:
-                ws[f'{col}{row_num}'].fill = green_fill
+            color_fill = green_fill  # Green - single clear code
         else:
-            # Yellow - multiple codes (needs verification)
-            for col in ['A', 'B', 'C', 'D']:
-                ws[f'{col}{row_num}'].fill = yellow_fill
+            color_fill = yellow_fill  # Yellow - multiple codes
+        
+        # Apply color to all columns A-Q
+        if color_fill:
+            for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'P', 'Q']:
+                ws[f'{col}{row_num}'].fill = color_fill
     
     wb.save(output_path)
     return output_path
