@@ -750,9 +750,13 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         primary_code = codes[0] if codes else ''
         all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
         
-        # Column mapping based on Door Schedule template:
+        # Column mapping based on Door Schedule template (updated Mar 2026):
         # A=DOOR ID, B=LOCATION, C=DOOR TYPE, D=CURRENT RATING, E=LEAF CONFIG,
-        # F=LEAF SIZE, G=FINISH, H=SEALS, I=CLOSER, ...P=PRIMARY CODE
+        # F=LEAF SIZE, G=FINISH, H=SEALS, I=CLOSER, J=VISION PANEL,
+        # K=ACTION DESCRIPTION, L=SEVERITY, M=DUE DATE,
+        # N=OPT A REMEDIAL?, O=OPT B REPLACE?, P=OPT B BASE ITEM, Q=QTY,
+        # R-U=E/O (OVERSIZE/HARDWOOD/EXTERNAL/VISION), V=NOTES/FLAGS
+        
         ws[f'A{row_num}'] = door['door_id']
         ws[f'B{row_num}'] = door.get('location', '')
         ws[f'C{row_num}'] = 'From Survey'  # Door type placeholder
@@ -762,30 +766,65 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         ws[f'G{row_num}'] = 'Paint'  # Finish placeholder
         ws[f'H{row_num}'] = 'To Check'  # Seals placeholder
         ws[f'I{row_num}'] = 'To Check'  # Closer placeholder
+        ws[f'J{row_num}'] = 'To Check'  # Vision panel placeholder
         
-        # Column J-O can be used for fault details
+        # Column K: ACTION DESCRIPTION (fault details)
         faults_str = '; '.join(door.get('faults', []))
-        ws[f'J{row_num}'] = faults_str[:250]  # Truncate if too long
+        ws[f'K{row_num}'] = faults_str[:500]  # Longer field for faults
         
-        # Column P: Primary rate card code (used by Quote Sheet formulas)
-        ws[f'P{row_num}'] = primary_code
+        # Column L: SEVERITY (based on number of codes/faults)
+        severity = 'HIGH' if len(codes) > 3 else 'MEDIUM' if codes else 'LOW'
+        ws[f'L{row_num}'] = severity
         
-        # Column Q: All codes for reference
+        # Column M: DUE DATE (leave empty for now)
+        # ws[f'M{row_num}'] = ''
+        
+        # Column N: OPT A REMEDIAL? (YES/NO/COMPLIANT)
+        # Column O: OPT B REPLACE? (YES/NO)
+        # Determine if remedial, replacement, or compliant
+        is_compliant = not codes or not faults_str
+        needs_replacement = 'replace' in str(door).lower() or any('A09' in c or 'A11' in c for c in codes)
+        
+        if is_compliant:
+            ws[f'N{row_num}'] = 'COMPLIANT'
+            ws[f'O{row_num}'] = 'NO'
+        elif needs_replacement:
+            ws[f'N{row_num}'] = 'NO'
+            ws[f'O{row_num}'] = 'YES'
+        else:
+            ws[f'N{row_num}'] = 'YES'
+            ws[f'O{row_num}'] = 'NO'
+        
+        # Column P: OPT B BASE ITEM (primary code for replacement cost)
+        ws[f'P{row_num}'] = primary_code if needs_replacement else ''
+        
+        # Column Q: QTY (all B-codes for remedial work)
         ws[f'Q{row_num}'] = all_codes_str
         
-        # Color code based on number of codes
-        color_fill = None
-        if not codes:
-            color_fill = red_fill  # Red - needs manual review
-        elif len(codes) == 1:
-            color_fill = green_fill  # Green - single clear code
-        else:
-            color_fill = yellow_fill  # Yellow - multiple codes
+        # Columns R-U: E/O flags (Extra Over costs)
+        ws[f'R{row_num}'] = 'NO'  # E/O OVERSIZE
+        ws[f'S{row_num}'] = 'NO'  # E/O HARDWOOD
+        ws[f'T{row_num}'] = 'NO'  # E/O EXTERNAL
+        ws[f'U{row_num}'] = 'NO'  # E/O VISION
         
-        # Apply color to all columns A-Q
+        # Column V: NOTES / FLAGS (ART codes for reference)
+        art_codes_str = ', '.join(door.get('art_codes', [])) if 'art_codes' in door else ''
+        if art_codes_str:
+            ws[f'V{row_num}'] = f"ARTs: {art_codes_str}"
+        
+        # Color code based on status
+        color_fill = None
+        if is_compliant:
+            color_fill = green_fill  # Green - compliant
+        elif needs_replacement:
+            color_fill = red_fill  # Red - replacement
+        else:
+            color_fill = yellow_fill  # Yellow - remedial work
+        
+        # Apply color to all data columns A-V
         if color_fill:
-            for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'P', 'Q']:
-                ws[f'{col}{row_num}'].fill = color_fill
+            for col_letter in 'ABCDEFGHIJKLMNOPQRSTUV':
+                ws[f'{col_letter}{row_num}'].fill = color_fill
     
     # Save workbook
     try:
