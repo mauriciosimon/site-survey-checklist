@@ -755,6 +755,78 @@ async def clear_rate_card(
     }
 
 
+@app.post("/api/firedoor/rates/backfill")
+async def backfill_rate_card_descriptions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
+    """
+    Backfill rate_card_description and unit_price from Excel template.
+    """
+    from pathlib import Path
+    from openpyxl import load_workbook
+    
+    # Load template
+    backend_dir = Path(__file__).parent
+    template_path = backend_dir / "reference_files" / "WestPark_FireDoor_CostSheet_v3_AlphaSights.xlsx"
+    
+    if not template_path.exists():
+        raise HTTPException(status_code=500, detail=f"Template not found: {template_path}")
+    
+    wb = load_workbook(template_path, data_only=True)
+    
+    # Extract B-code descriptions from Rate Card sheet
+    b_code_descriptions = {}
+    b_code_prices = {}
+    
+    if "Rate Card" in wb.sheetnames:
+        ws = wb["Rate Card"]
+        for row in range(22, 34):  # Rows 22-33
+            code = ws.cell(row, 1).value  # Column A
+            desc = ws.cell(row, 2).value  # Column B
+            unit_val = ws.cell(row, 3).value  # Column C
+            qty_val = ws.cell(row, 4).value  # Column D
+            
+            if code:
+                code = str(code).strip()
+                if desc:
+                    b_code_descriptions[code] = str(desc).strip()
+                
+                if unit_val and qty_val:
+                    try:
+                        unit_price = float(unit_val)
+                        qty = float(qty_val)
+                        total = unit_price * qty
+                        b_code_prices[code] = f"£{total:.2f}"
+                    except:
+                        pass
+    
+    # Update database
+    updated = 0
+    rate_items = db.query(RateCardItem).all()
+    
+    for item in rate_items:
+        codes = [c.strip() for c in item.rate_card_code.split('/') if c.strip()]
+        
+        for code in codes:
+            if code in b_code_descriptions:
+                item.rate_card_description = b_code_descriptions[code][:500]
+                if not item.unit_price and code in b_code_prices:
+                    item.unit_price = b_code_prices[code]
+                updated += 1
+                break
+    
+    db.commit()
+    
+    logger.info(f"User {current_user.email} backfilled {updated} rate card descriptions")
+    
+    return {
+        "message": f"Successfully backfilled {updated} rate card items",
+        "count": updated,
+        "b_codes_found": len(b_code_descriptions)
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
