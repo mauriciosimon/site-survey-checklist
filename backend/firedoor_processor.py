@@ -823,13 +823,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Check if this is Type 2 format (no fire strategy, so Option B = PENDING)
         is_type2 = door.get('format_type') == 'TYPE_2'
         
-        if is_compliant:
+        # Priority: Type 2 PENDING logic applies to ALL Type 2 doors (compliant or not)
+        if is_type2:
+            # Type 2 Excel surveys: Option B = PENDING (no fire strategy to determine A-series code)
+            if is_compliant:
+                ws[f'N{row_num}'] = 'COMPLIANT'
+            else:
+                ws[f'N{row_num}'] = 'YES'  # Has faults, needs remedial work
+            ws[f'O{row_num}'] = 'PENDING'  # All Type 2 doors get PENDING (no fire strategy)
+        elif is_compliant:
             ws[f'N{row_num}'] = 'COMPLIANT'
             ws[f'O{row_num}'] = 'NO'
-        elif is_type2:
-            # Type 2 Excel surveys: Option B = PENDING (no fire strategy to determine A-series code)
-            ws[f'N{row_num}'] = 'YES' if codes else 'NO'
-            ws[f'O{row_num}'] = 'PENDING'
         elif needs_replacement:
             ws[f'N{row_num}'] = 'NO'
             ws[f'O{row_num}'] = 'YES'
