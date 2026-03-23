@@ -674,10 +674,10 @@ async def update_rate_card_item(
 @app.post("/api/firedoor/rates/seed")
 async def seed_rate_card(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(get_current_user_required)
 ):
     """
-    Seed rate card items from CSV. Admin only.
+    Seed rate card items from CSV. Any authenticated user can seed.
     Only runs if table is empty.
     """
     import csv
@@ -714,7 +714,7 @@ async def seed_rate_card(
     db.bulk_save_objects(items)
     db.commit()
     
-    logger.info(f"Admin {current_user.email} seeded {len(items)} rate card items")
+    logger.info(f"User {current_user.email} seeded {len(items)} rate card items")
     
     return {
         "message": f"Successfully seeded {len(items)} rate card items",
@@ -725,16 +725,16 @@ async def seed_rate_card(
 @app.delete("/api/firedoor/rates/clear")
 async def clear_rate_card(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(get_current_user_required)
 ):
     """
-    Clear all rate card items. Admin only.
+    Clear all rate card items. Any authenticated user can clear.
     Use with caution - this will delete all rate card data.
     """
     count = db.query(RateCardItem).delete()
     db.commit()
     
-    logger.warning(f"Admin {current_user.email} cleared {count} rate card items")
+    logger.warning(f"User {current_user.email} cleared {count} rate card items")
     
     return {
         "message": f"Cleared {count} rate card items",
