@@ -59,7 +59,7 @@ def call_anthropic_api(prompt: str, max_tokens: int = 4096) -> str:
             "content-type": "application/json"
         },
         json={
-            "model": "claude-3-5-sonnet-20241022",
+            "model": "claude-sonnet-4-20250514",
             "max_tokens": max_tokens,
             "messages": [{"role": "user", "content": prompt}]
         },
@@ -206,7 +206,7 @@ Return ONLY the JSON array, no other text."""
     # Use SDK if available, otherwise raw HTTP
     if client is not None:
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-20250514",
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}]
         )
