@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../api';
+import { API_BASE } from '../api';
 
 function RateCardManager() {
   const [rates, setRates] = useState([]);
@@ -20,8 +20,8 @@ function RateCardManager() {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       const url = searchTerm
-        ? `${API_URL}/firedoor/rates?search=${encodeURIComponent(searchTerm)}`
-        : `${API_URL}/firedoor/rates`;
+        ? `${API_BASE}/firedoor/rates?search=${encodeURIComponent(searchTerm)}`
+        : `${API_BASE}/firedoor/rates`;
       
       const response = await fetch(url, {
         headers: {
@@ -51,7 +51,7 @@ function RateCardManager() {
     try {
       setSeeding(true);
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_URL}/firedoor/rates/seed`, {
+      const response = await fetch(`${API_BASE}/firedoor/rates/seed`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -96,7 +96,7 @@ function RateCardManager() {
       formData.append('unit_price', editValues.unit_price || '');
       formData.append('category', editValues.category || '');
 
-      const response = await fetch(`${API_URL}/firedoor/rates/${itemId}`, {
+      const response = await fetch(`${API_BASE}/firedoor/rates/${itemId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
