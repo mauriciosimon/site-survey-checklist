@@ -2,7 +2,7 @@
 import os
 import uuid
 import logging
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, status
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -469,7 +469,7 @@ def admin_clear_photos(
 @app.post("/api/firedoor/process")
 async def process_firedoor_survey(
     file: UploadFile = File(...),
-    client_name: str = None
+    client_name: str = Form(...)
 ):
     """
     Process fire door survey file (PDF or Excel) and return populated quote Excel.
