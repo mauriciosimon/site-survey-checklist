@@ -481,6 +481,66 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             db = next(get_db())
             rate_items = db.query(RateCardItem).all()
             
+            if not rate_items:
+                # Database is empty - seed it from CSV + extract template prices
+                logger.info("Database empty - auto-seeding from CSV with template prices...")
+                import csv
+                csv_path = Path(__file__).parent / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
+                
+                # First, extract prices from the template Rate Card sheet
+                template_prices = {}
+                if "Rate Card" in wb.sheetnames:
+                    rate_card_sheet = wb["Rate Card"]
+                    for row_num in range(6, 40):
+                        code = rate_card_sheet.cell(row=row_num, column=1).value
+                        if code:
+                            # Get the calculated total from columns D-G
+                            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
+                            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
+                            tj = rate_card_sheet.cell(row=row_num, column=6).value or 0
+                            hump = rate_card_sheet.cell(row=row_num, column=7).value or 0
+                            total = mat + lab + tj + hump
+                            if total > 0:
+                                template_prices[str(code)] = f"£{total:.2f}"
+                    logger.info(f"Extracted {len(template_prices)} prices from template")
+                
+                if csv_path.exists():
+                    with open(csv_path, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        seeded_count = 0
+                        for row in reader:
+                            art_code = row['ART Code']
+                            description = row['Description']
+                            rate_card_code = row['WestPark Rate Card Code']
+                            
+                            # Skip reserved/empty codes
+                            if not rate_card_code or rate_card_code.strip() in ['', 'FLAG FOR MANUAL REVIEW', 'NO EQUIVALENT']:
+                                continue
+                            
+                            # Get price from template for this rate card code
+                            # Handle multi-code entries like "B01 / B02"
+                            codes = [c.strip() for c in rate_card_code.split('/')]
+                            unit_price = template_prices.get(codes[0], "£0.00") if codes else "£0.00"
+                            
+                            # Create database entry
+                            new_item = RateCardItem(
+                                art_code=art_code,
+                                description=description,
+                                rate_card_code=rate_card_code,
+                                unit_price=unit_price,
+                                category="From template"
+                            )
+                            db.add(new_item)
+                            seeded_count += 1
+                        
+                        db.commit()
+                        logger.info(f"Auto-seeded {seeded_count} rate card items from CSV with template prices")
+                        
+                        # Re-query to get the seeded items
+                        rate_items = db.query(RateCardItem).all()
+                else:
+                    logger.warning(f"CSV file not found at {csv_path} - cannot auto-seed")
+            
             if rate_items:
                 # Create mapping: rate_card_code -> unit_price
                 price_map = {}
@@ -488,7 +548,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                     # One ART code can map to multiple rate card codes (e.g., "B01 / B02")
                     codes = [c.strip() for c in item.rate_card_code.split('/')]
                     for code in codes:
-                        if code and code not in price_map:
+                        if code and code not in price_map and item.unit_price:
                             price_map[code] = item.unit_price
                 
                 logger.info(f"Loaded {len(price_map)} rate card prices from database")
