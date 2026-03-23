@@ -116,7 +116,7 @@ export default function FireDoorQuoting() {
 
   return (
     <div className="container">
-      <h2>🔥 Fire Door Quoting</h2>
+      <h2>Fire Door Quoting</h2>
       <p style={{ marginBottom: '20px', color: '#666' }}>
         Upload a fire door survey (PDF or Excel) to generate a quote with mapped rate card codes.
       </p>
@@ -177,7 +177,7 @@ export default function FireDoorQuoting() {
               ) : (
                 <div>
                   <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                    📁 Drop file here or click to browse
+                    Drop file here or click to browse
                   </p>
                   <p style={{ fontSize: '14px', color: '#666' }}>
                     Supported: PDF, Excel (.xlsx, .xls)
@@ -197,7 +197,7 @@ export default function FireDoorQuoting() {
             borderRadius: '4px',
             marginBottom: '15px'
           }}>
-            <p style={{ margin: 0, color: '#1976d2' }}>⏳ {status}</p>
+            <p style={{ margin: 0, color: '#1976d2' }}>{status}</p>
           </div>
         )}
 
@@ -237,7 +237,7 @@ export default function FireDoorQuoting() {
             opacity: (loading || !file || !clientName.trim()) ? 0.6 : 1
           }}
         >
-          {loading ? '⏳ Processing...' : '🚀 Generate Quote'}
+          {loading ? 'Processing...' : 'Generate Quote'}
         </button>
       </form>
 
