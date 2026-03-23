@@ -307,14 +307,48 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         template_path: Path to template Excel file
         output_path: Path to save output file
     """
-    wb = load_workbook(template_path)
+    import logging
+    from pathlib import Path
+    
+    logger = logging.getLogger(__name__)
+    
+    # Validate template exists
+    template_file = Path(template_path)
+    if not template_file.exists():
+        error_msg = f"Template file not found: {template_path}"
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+    
+    logger.info(f"Loading template from: {template_path}")
+    logger.info(f"Output will be saved to: {output_path}")
+    logger.info(f"Processing {len(doors)} doors for client: {client_name}")
+    
+    try:
+        wb = load_workbook(template_path)
+        logger.info(f"Template loaded successfully. Sheets: {wb.sheetnames}")
+    except Exception as e:
+        error_msg = f"Failed to load template workbook: {str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
     
     # Update client name in Quote Sheet
-    quote_sheet = wb["Quote Sheet"]
-    quote_sheet['B4'] = client_name  # B4 is the Client field
+    try:
+        quote_sheet = wb["Quote Sheet"]
+        quote_sheet['B4'] = client_name  # B4 is the Client field
+        logger.info(f"Updated Quote Sheet with client name: {client_name}")
+    except KeyError as e:
+        error_msg = f"Quote Sheet not found in template. Available sheets: {wb.sheetnames}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
     
     # Get Door Schedule sheet for populating door data
-    ws = wb["Door Schedule"]
+    try:
+        ws = wb["Door Schedule"]
+        logger.info("Door Schedule sheet found")
+    except KeyError as e:
+        error_msg = f"Door Schedule sheet not found in template. Available sheets: {wb.sheetnames}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
     
     # Define color fills
     green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")  # Light green
@@ -380,5 +414,24 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             for col in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'P', 'Q']:
                 ws[f'{col}{row_num}'].fill = color_fill
     
-    wb.save(output_path)
+    # Save workbook
+    try:
+        logger.info(f"Saving workbook to: {output_path}")
+        wb.save(output_path)
+        logger.info("Workbook saved successfully")
+    except Exception as e:
+        error_msg = f"Failed to save workbook: {str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
+    
+    # Verify file was created
+    output_file = Path(output_path)
+    if not output_file.exists():
+        error_msg = f"Output file was not created at: {output_path}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+    
+    file_size = output_file.stat().st_size
+    logger.info(f"Output file created successfully. Size: {file_size} bytes")
+    
     return output_path
