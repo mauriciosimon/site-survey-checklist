@@ -528,7 +528,8 @@ async def process_firedoor_survey(
             raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
         
         # Populate Excel template
-        template_path = "/root/clawd/projects/westpark-surveys/firedoor-data/Fire Door Costing/WestPark_FireDoor_CostSheet_v3_AlphaSights.xlsx"
+        backend_dir = Path(__file__).parent
+        template_path = backend_dir / "reference_files" / "WestPark_FireDoor_CostSheet_v3_AlphaSights.xlsx"
         output_filename = f"{client_name.replace(' ', '_')}_FireDoor_Quote.xlsx"
         output_path = Path(temp_dir) / output_filename
         

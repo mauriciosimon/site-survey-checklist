@@ -1,0 +1,25 @@
+ART Code,Description,WestPark Rate Card Code,Notes
+ART01,Repair of damage to lipping,B11,Hardwood re-lip — min density 640kg/m3
+ART02,Over recessed hardware / voids from removed hardware,B12,Hardwood timber insert per void/hole
+ART03,Door frame joints separated leaving gaps,B06,Fire-stop frame-to-wall gap — intumescent mastic / ablative batt
+ART04,Door leaf too small for frame — oversize gaps,B01 / B10,Seals if gap issue; re-hang if alignment issue
+ART05,Door closer failure / incorrect setup,B03,Replace overhead door closer — CE-marked BS EN 1154
+ART06,Door leaf twisted bowed or cupped preventing closing,B10,Adjust / re-hang door leaf
+ART07,Door leaf swelling due to moisture absorption,B10,Adjust / re-hang door leaf — address moisture cause first
+ART08,Worn hinges causing leaf to drop — incorrect gaps,B04,Replace / fix hinge set — BS EN 1935 Grade 11
+ART09,Incorrect gaps due to poor installation or frame movement,B10,Adjust / re-hang door leaf
+ART10,Reserved / not in published list,,—
+ART11,Perimeter intumescent and/or smoke seals damaged or missing,B01 / B02,B01 if smoke seals required; B02 if intumescent only
+ART12,Latch bolt / keep misaligned — leaf not latching or closing,B05,Replace lever handles / latch set — CE-marked ironmongery
+ART13,Door leaf dropped due to loose hinge fixing,B04,Replace / fix hinge set — check screws vs full hinge replacement
+ART14,Damaged glazing / glazing beads or poorly fitted glazing,NO EQUIVALENT,Gap in rate card — flag to Alex. May need new B13 line item
+ART15,Split lipping at hinge screw positions,B11,Same repair as ART01 — hardwood re-lip
+ART16,Architrave needs refitting / fire stopping improvement required,B06,Fire-stop frame-to-wall gap
+ART17,Door leaf damaged beyond repair — leaf replacement required,A-series,Select correct A-series code based on fire rating and leaf size
+ART18,Full doorset replacement required — non-fire-rated door fitted,A-series,Select correct A-series code based on fire rating and leaf config
+ART19,Fire door signage missing or incorrect,B07,Add / replace fire door signage — 2 signs per leaf
+ART20,Door frame replacement required — damage beyond repair,A-series,Full doorset replacement — select A-series code
+ART21,Door frame repair due to damage,B06,Fire-stop / refit architrave
+ART22,Smoke seals damaged or additional smoke sealing required,B01,Supply & fit intumescent + smoke seals
+ART23,Damage present with no applicable Accepted Repair Technique,FLAG FOR MANUAL REVIEW,Claude to flag door for manual review — likely replacement
+ART24,Reserved / not in published list,,—

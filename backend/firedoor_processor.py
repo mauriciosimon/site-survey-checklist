@@ -18,7 +18,8 @@ anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Load ART code mapping
 ART_MAPPING = {}
-MAPPING_CSV_PATH = "/root/clawd/projects/westpark-surveys/firedoor-data/Fire Door Costing/BMTrada_ART_Codes_RateCard_Mapping.csv"
+SCRIPT_DIR = Path(__file__).parent
+MAPPING_CSV_PATH = SCRIPT_DIR / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
 
 def load_art_mapping():
     """Load ART code to rate card mapping from CSV."""
