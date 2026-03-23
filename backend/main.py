@@ -62,6 +62,18 @@ for col_name, col_type in columns_to_add:
         else:
             print(f"Migration skipped for {col_name}: column likely exists")
 
+# Migration: Add rate_card_description column to rate_card_items table
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE rate_card_items ADD COLUMN rate_card_description TEXT"))
+        conn.commit()
+        print("Migration: added rate_card_description column to rate_card_items")
+except Exception as e:
+    if "already exists" in str(e).lower() or "duplicate column" in str(e).lower():
+        pass  # Column already exists
+    else:
+        print(f"Migration skipped for rate_card_description: {e}")
+
 # Migration: Convert numeric building spec columns to text (VARCHAR)
 # This fixes the "numeric field overflow" error when users enter large values
 numeric_to_text_columns = [
@@ -626,6 +638,7 @@ async def list_rate_card_items(
             "art_code": item.art_code,
             "description": item.description,
             "rate_card_code": item.rate_card_code,
+            "rate_card_description": item.rate_card_description,
             "unit_price": item.unit_price,
             "category": item.category,
             "updated_at": item.updated_at.isoformat() if item.updated_at else None

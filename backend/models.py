@@ -106,8 +106,9 @@ class RateCardItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     art_code = Column(String(50), unique=True, index=True, nullable=False)
-    description = Column(Text, nullable=False)
-    rate_card_code = Column(String(50), nullable=False)
+    description = Column(Text, nullable=False)  # ART description
+    rate_card_code = Column(String(50), nullable=False)  # WestPark B-code
+    rate_card_description = Column(Text)  # WestPark B-code description
     unit_price = Column(String(50))  # Store as string to preserve format (e.g., "£45.00")
     category = Column(String(100))  # Optional categorization
     created_at = Column(DateTime(timezone=True), server_default=func.now())

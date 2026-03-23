@@ -528,21 +528,22 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                     
                     for row_num in range(22, 34):  # B01-B12
                         code = rate_card_sheet.cell(row=row_num, column=1).value
-                        desc = rate_card_sheet.cell(row=row_num, column=2).value
+                        rate_card_desc = rate_card_sheet.cell(row=row_num, column=2).value  # B-code description
                         
                         if code and str(code).startswith('B'):
                             # Get price from template
                             unit_price = template_prices.get(str(code), "£0.00")
                             
                             # Get ART code mapping if exists
-                            art_info = art_descriptions.get(str(code), (str(code), desc or ""))
-                            art_code, full_desc = art_info
+                            art_info = art_descriptions.get(str(code), (str(code), rate_card_desc or ""))
+                            art_code, art_desc = art_info
                             
                             # Create database entry
                             new_item = RateCardItem(
                                 art_code=art_code,
-                                description=full_desc[:500] if full_desc else desc[:500] if desc else "",
+                                description=art_desc[:500] if art_desc else "",  # ART description
                                 rate_card_code=str(code),
+                                rate_card_description=rate_card_desc[:500] if rate_card_desc else "",  # B-code description
                                 unit_price=unit_price,
                                 category="From template"
                             )
@@ -581,7 +582,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                     rate_card_sheet = wb["Rate Card"]
                     for row_num in range(22, 34):  # B01-B12
                         code = rate_card_sheet.cell(row=row_num, column=1).value
-                        desc = rate_card_sheet.cell(row=row_num, column=2).value
+                        rate_card_desc = rate_card_sheet.cell(row=row_num, column=2).value
                         
                         if code and str(code).startswith('B') and str(code) not in existing_rate_codes:
                             # Missing B-code - add it
@@ -589,8 +590,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                             
                             new_item = RateCardItem(
                                 art_code=str(code),  # Use code as art_code for standalone items
-                                description=desc[:500] if desc else f"Template item {code}",
+                                description=rate_card_desc[:500] if rate_card_desc else f"Template item {code}",  # Use B-code desc as ART desc for standalone
                                 rate_card_code=str(code),
+                                rate_card_description=rate_card_desc[:500] if rate_card_desc else "",
                                 unit_price=unit_price,
                                 category="Added from template"
                             )
