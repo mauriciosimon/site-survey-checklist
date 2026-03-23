@@ -481,28 +481,28 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             db = next(get_db())
             rate_items = db.query(RateCardItem).all()
             
+            # Always extract template prices for backfilling
+            template_prices = {}
+            if "Rate Card" in wb.sheetnames:
+                rate_card_sheet = wb["Rate Card"]
+                for row_num in range(6, 40):
+                    code = rate_card_sheet.cell(row=row_num, column=1).value
+                    if code:
+                        # Get the calculated total from columns D-G
+                        mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
+                        lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
+                        tj = rate_card_sheet.cell(row=row_num, column=6).value or 0
+                        hump = rate_card_sheet.cell(row=row_num, column=7).value or 0
+                        total = mat + lab + tj + hump
+                        if total > 0:
+                            template_prices[str(code)] = f"£{total:.2f}"
+                logger.info(f"Extracted {len(template_prices)} prices from template")
+            
             if not rate_items:
-                # Database is empty - seed it from CSV + extract template prices
+                # Database is empty - seed it from CSV with template prices
                 logger.info("Database empty - auto-seeding from CSV with template prices...")
                 import csv
                 csv_path = Path(__file__).parent / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
-                
-                # First, extract prices from the template Rate Card sheet
-                template_prices = {}
-                if "Rate Card" in wb.sheetnames:
-                    rate_card_sheet = wb["Rate Card"]
-                    for row_num in range(6, 40):
-                        code = rate_card_sheet.cell(row=row_num, column=1).value
-                        if code:
-                            # Get the calculated total from columns D-G
-                            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
-                            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
-                            tj = rate_card_sheet.cell(row=row_num, column=6).value or 0
-                            hump = rate_card_sheet.cell(row=row_num, column=7).value or 0
-                            total = mat + lab + tj + hump
-                            if total > 0:
-                                template_prices[str(code)] = f"£{total:.2f}"
-                    logger.info(f"Extracted {len(template_prices)} prices from template")
                 
                 if csv_path.exists():
                     with open(csv_path, 'r', encoding='utf-8') as f:
@@ -542,6 +542,22 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                     logger.warning(f"CSV file not found at {csv_path} - cannot auto-seed")
             
             if rate_items:
+                # Backfill template prices for any items missing prices
+                backfill_count = 0
+                for item in rate_items:
+                    if not item.unit_price or item.unit_price == "£0.00" or item.unit_price.strip() == "":
+                        # Get template price for this item's rate card codes
+                        codes = [c.strip() for c in item.rate_card_code.split('/')]
+                        template_price = template_prices.get(codes[0], None) if codes else None
+                        
+                        if template_price:
+                            item.unit_price = template_price
+                            backfill_count += 1
+                
+                if backfill_count > 0:
+                    db.commit()
+                    logger.info(f"Backfilled {backfill_count} missing prices from template")
+                
                 # Create mapping: rate_card_code -> unit_price
                 price_map = {}
                 for item in rate_items:
