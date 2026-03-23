@@ -26,9 +26,10 @@ export default function FireDoorQuoting() {
     try {
       setLoadingRates(true);
       const response = await api.get('/api/firedoor/rates');
-      setRateItems(response.data);
+      setRateItems(response.data.items || []);
     } catch (err) {
       console.error('Error fetching rate items:', err);
+      setRateItems([]); // Set empty array on error
     } finally {
       setLoadingRates(false);
     }
