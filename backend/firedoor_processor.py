@@ -570,9 +570,42 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                             item.unit_price = template_price
                             backfill_count += 1
                 
-                if backfill_count > 0:
+                # Also add any missing B-codes from template
+                existing_rate_codes = set()
+                for item in rate_items:
+                    codes = [c.strip() for c in item.rate_card_code.split('/')]
+                    existing_rate_codes.update(codes)
+                
+                missing_count = 0
+                if "Rate Card" in wb.sheetnames:
+                    rate_card_sheet = wb["Rate Card"]
+                    for row_num in range(22, 34):  # B01-B12
+                        code = rate_card_sheet.cell(row=row_num, column=1).value
+                        desc = rate_card_sheet.cell(row=row_num, column=2).value
+                        
+                        if code and str(code).startswith('B') and str(code) not in existing_rate_codes:
+                            # Missing B-code - add it
+                            unit_price = template_prices.get(str(code), "£0.00")
+                            
+                            new_item = RateCardItem(
+                                art_code=str(code),  # Use code as art_code for standalone items
+                                description=desc[:500] if desc else f"Template item {code}",
+                                rate_card_code=str(code),
+                                unit_price=unit_price,
+                                category="Added from template"
+                            )
+                            db.add(new_item)
+                            missing_count += 1
+                
+                if backfill_count > 0 or missing_count > 0:
                     db.commit()
-                    logger.info(f"Backfilled {backfill_count} missing prices from template")
+                    if backfill_count > 0:
+                        logger.info(f"Backfilled {backfill_count} missing prices from template")
+                    if missing_count > 0:
+                        logger.info(f"Added {missing_count} missing B-codes from template")
+                    
+                    # Re-query to get all items including newly added ones
+                    rate_items = db.query(RateCardItem).all()
                 
                 # Create mapping: rate_card_code -> unit_price
                 price_map = {}
