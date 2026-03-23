@@ -816,6 +816,12 @@ async def backfill_rate_card_descriptions(
                 updated += 1
                 break
     
+    # Special case: ART04 maps to both B01 and B10 - custom description
+    art04 = db.query(RateCardItem).filter(RateCardItem.art_code == "ART04").first()
+    if art04:
+        art04.rate_card_description = "Supply & fit seals (B01) or Adjust / re-hang door leaf (B10) — determined by fault type on inspection."
+        logger.info("Applied custom ART04 description for dual B01/B10 mapping")
+    
     db.commit()
     
     logger.info(f"User {current_user.email} backfilled {updated} rate card descriptions")
