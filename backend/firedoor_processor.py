@@ -13,8 +13,15 @@ from anthropic import Anthropic
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 
-# Initialize Anthropic client
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Lazy initialization of Anthropic client
+_anthropic_client = None
+
+def get_anthropic_client():
+    """Get or create Anthropic client (lazy initialization)."""
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    return _anthropic_client
 
 # Load ART code mapping
 ART_MAPPING = {}
@@ -123,7 +130,8 @@ Survey text:
 
 Return ONLY the JSON array, no other text."""
 
-    response = anthropic_client.messages.create(
+    client = get_anthropic_client()
+    response = client.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}]
