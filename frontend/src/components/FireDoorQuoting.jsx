@@ -166,88 +166,98 @@ export default function FireDoorQuoting() {
                 fontSize: '14px'
               }}>
                 <thead>
+                  <tr style={{ borderBottom: '2px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
+                    <th colSpan="2" style={{ padding: '8px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>
+                      BMTrada ART Standard
+                    </th>
+                    <th colSpan="3" style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>
+                      WestPark Rate Card
+                    </th>
+                  </tr>
                   <tr style={{ borderBottom: '2px solid #dee2e6' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>Code</th>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>Description</th>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>Rate Card</th>
-                    <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>Price</th>
-                    <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600' }}>Action</th>
+                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', width: '80px' }}>ART Code</th>
+                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>ART Description</th>
+                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', width: '80px' }}>B-Code</th>
+                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>WestPark Description</th>
+                    <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', width: '120px' }}>Price / Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayedRates.map((item) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                      <td style={{ padding: '8px' }}>{item.art_code}</td>
-                      <td style={{ padding: '8px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '8px', fontWeight: '500' }}>{item.art_code}</td>
+                      <td style={{ padding: '8px', borderRight: '2px solid #f0f0f0' }}>
                         {item.description}
                       </td>
-                      <td style={{ padding: '8px' }}>{item.rate_card_code}</td>
-                      <td style={{ padding: '8px', textAlign: 'right' }}>
-                        {editingId === item.id ? (
-                          <input
-                            type="text"
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value)}
-                            style={{
-                              width: '80px',
-                              padding: '4px 8px',
-                              border: '1px solid #007bff',
-                              borderRadius: '4px'
-                            }}
-                            autoFocus
-                          />
-                        ) : (
-                          <span style={{ fontWeight: '500' }}>{item.unit_price || '—'}</span>
-                        )}
+                      <td style={{ padding: '8px', fontWeight: '500' }}>{item.rate_card_code}</td>
+                      <td style={{ padding: '8px' }}>
+                        {item.rate_card_description || '—'}
                       </td>
                       <td style={{ padding: '8px', textAlign: 'center' }}>
                         {editingId === item.id ? (
-                          <>
-                            <button
-                              onClick={() => handleSavePrice(item)}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              value={editPrice}
+                              onChange={(e) => setEditPrice(e.target.value)}
                               style={{
+                                width: '80px',
                                 padding: '4px 8px',
-                                fontSize: '12px',
-                                marginRight: '4px',
-                                backgroundColor: '#28a745',
-                                color: 'white',
-                                border: 'none',
+                                border: '1px solid #007bff',
                                 borderRadius: '4px',
-                                cursor: 'pointer'
+                                fontSize: '12px'
                               }}
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '12px',
-                                backgroundColor: '#6c757d',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </>
+                              autoFocus
+                            />
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button
+                                onClick={() => handleSavePrice(item)}
+                                style={{
+                                  padding: '3px 8px',
+                                  fontSize: '11px',
+                                  backgroundColor: '#28a745',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                style={{
+                                  padding: '3px 8px',
+                                  fontSize: '11px',
+                                  backgroundColor: '#6c757d',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         ) : (
-                          <button
-                            onClick={() => handleEditPrice(item)}
-                            style={{
-                              padding: '4px 12px',
-                              fontSize: '12px',
-                              backgroundColor: '#007bff',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Edit
-                          </button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                            <span style={{ fontWeight: '500', fontSize: '13px' }}>{item.unit_price || '—'}</span>
+                            <button
+                              onClick={() => handleEditPrice(item)}
+                              style={{
+                                padding: '3px 10px',
+                                fontSize: '11px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Edit
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
