@@ -52,6 +52,9 @@ function Header() {
             <button className="btn btn-primary" onClick={() => navigate('/new')}>
               + New Checklist
             </button>
+            <button className="btn btn-secondary" onClick={() => navigate('/firedoor')}>
+              Fire Door Quoting
+            </button>
             <div className="user-menu">
               <span style={{ color: 'white', marginRight: '10px' }}>
                 {user.full_name}
