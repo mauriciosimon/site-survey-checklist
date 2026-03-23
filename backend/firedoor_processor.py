@@ -475,6 +475,59 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.error(error_msg)
         raise RuntimeError(error_msg) from e
     
+    # Update Rate Card sheet with database prices
+    if DATABASE_AVAILABLE:
+        try:
+            db = next(get_db())
+            rate_items = db.query(RateCardItem).all()
+            
+            if rate_items:
+                # Create mapping: rate_card_code -> unit_price
+                price_map = {}
+                for item in rate_items:
+                    # One ART code can map to multiple rate card codes (e.g., "B01 / B02")
+                    codes = [c.strip() for c in item.rate_card_code.split('/')]
+                    for code in codes:
+                        if code and code not in price_map:
+                            price_map[code] = item.unit_price
+                
+                logger.info(f"Loaded {len(price_map)} rate card prices from database")
+                
+                # Update Rate Card sheet
+                if "Rate Card" in wb.sheetnames:
+                    rate_card_sheet = wb["Rate Card"]
+                    updated_count = 0
+                    
+                    # Scan rows 6-39 (where rate card codes live)
+                    for row_num in range(6, 40):
+                        code_cell = rate_card_sheet.cell(row=row_num, column=1)  # Column A
+                        code = code_cell.value
+                        
+                        if code and str(code) in price_map:
+                            price_str = price_map[str(code)]
+                            # Parse price (e.g., "£45.00" -> 45.00)
+                            try:
+                                price_value = float(price_str.replace('£', '').replace(',', '').strip())
+                                # Write to column H (TOTAL RATE)
+                                total_cell = rate_card_sheet.cell(row=row_num, column=8)
+                                total_cell.value = price_value
+                                updated_count += 1
+                                logger.info(f"Updated {code} price to £{price_value}")
+                            except (ValueError, AttributeError) as e:
+                                logger.warning(f"Could not parse price for {code}: {price_str}")
+                    
+                    logger.info(f"Updated {updated_count} rate card prices in Excel template")
+                else:
+                    logger.warning("Rate Card sheet not found in template")
+            else:
+                logger.info("No rate card items in database - using template defaults")
+            
+            db.close()
+        except Exception as e:
+            logger.warning(f"Failed to load database prices: {e}. Using template defaults.")
+    else:
+        logger.info("Database not available - using template default prices")
+    
     # Update client name in Quote Sheet
     try:
         quote_sheet = wb["Quote Sheet"]
