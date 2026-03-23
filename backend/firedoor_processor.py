@@ -26,6 +26,19 @@ from pathlib import Path
 
 # Log versions for debugging
 logger = logging.getLogger(__name__)
+
+# Import database dependencies (after logger is defined)
+try:
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from database import get_db
+    from models import RateCardItem
+    DATABASE_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"Database import failed: {e}. Will use CSV fallback.")
+    DATABASE_AVAILABLE = False
+    get_db = None
+    RateCardItem = None
 if ANTHROPIC_SDK_AVAILABLE and anthropic:
     logger.info(f"Anthropic SDK version: {anthropic.__version__}")
 logger.info(f"httpx version: {httpx.__version__}")
@@ -99,8 +112,43 @@ ART_MAPPING = {}
 SCRIPT_DIR = Path(__file__).parent
 MAPPING_CSV_PATH = SCRIPT_DIR / "reference_files" / "BMTrada_ART_Codes_RateCard_Mapping.csv"
 
-def load_art_mapping():
-    """Load ART code to rate card mapping from CSV."""
+def load_art_mapping_from_db():
+    """
+    Load ART code to rate card mapping from database.
+    Returns True if successful, False if database is empty or unavailable.
+    """
+    global ART_MAPPING
+    
+    if not DATABASE_AVAILABLE:
+        return False
+    
+    try:
+        db = next(get_db())
+        items = db.query(RateCardItem).all()
+        
+        if not items:
+            logger.info("Rate card database is empty. Will load from CSV.")
+            return False
+        
+        for item in items:
+            ART_MAPPING[item.art_code] = {
+                'description': item.description,
+                'rate_card_code': item.rate_card_code,
+                'unit_price': item.unit_price,
+                'notes': f"Last updated: {item.updated_at}" if item.updated_at else ""
+            }
+        
+        logger.info(f"Loaded {len(items)} rate card items from database")
+        db.close()
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to load from database: {e}. Will fallback to CSV.")
+        return False
+
+
+def load_art_mapping_from_csv():
+    """Load ART code to rate card mapping from CSV (fallback)."""
     global ART_MAPPING
     with open(MAPPING_CSV_PATH, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -109,8 +157,28 @@ def load_art_mapping():
             ART_MAPPING[art_code] = {
                 'description': row['Description'],
                 'rate_card_code': row['WestPark Rate Card Code'],
+                'unit_price': None,  # CSV doesn't have prices
                 'notes': row['Notes']
             }
+    logger.info(f"Loaded {len(ART_MAPPING)} rate card items from CSV")
+
+
+def load_art_mapping():
+    """
+    Load ART code mapping. Try database first, fallback to CSV.
+    Database contains user-editable prices. CSV is the default reference.
+    """
+    global ART_MAPPING
+    
+    # Try database first
+    if load_art_mapping_from_db():
+        logger.info("Using rate card from database (with user-edited prices)")
+        return
+    
+    # Fallback to CSV
+    logger.info("Using rate card from CSV (default prices)")
+    load_art_mapping_from_csv()
+
 
 # Load mapping on module import
 load_art_mapping()
