@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import api, { API_BASE } from '../api';
 
 export default function FireDoorQuoting() {
   // Existing state
@@ -27,7 +25,7 @@ export default function FireDoorQuoting() {
   const fetchRateItems = async () => {
     try {
       setLoadingRates(true);
-      const response = await axios.get(`${API_BASE}/api/firedoor/rates`);
+      const response = await api.get('/api/firedoor/rates');
       setRateItems(response.data);
     } catch (err) {
       console.error('Error fetching rate items:', err);
@@ -43,7 +41,7 @@ export default function FireDoorQuoting() {
 
   const handleSavePrice = async (item) => {
     try {
-      await axios.put(`${API_BASE}/api/firedoor/rates/${item.id}`, {
+      await api.put(`/api/firedoor/rates/${item.id}`, {
         unit_price: editPrice
       });
       
@@ -107,7 +105,7 @@ export default function FireDoorQuoting() {
       formData.append('file', file);
       formData.append('client_name', clientName);
 
-      const response = await axios.post(`${API_BASE}/api/firedoor/process`, formData, {
+      const response = await api.post('/api/firedoor/process', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       });

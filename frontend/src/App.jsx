@@ -7,7 +7,6 @@ import Login from './components/Login';
 import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import FireDoorQuoting from './components/FireDoorQuoting';
-import RateCardManager from './components/RateCardManager';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -49,9 +48,6 @@ function Header() {
             )}
             <button className="btn btn-secondary" onClick={() => navigate('/firedoor')}>
               Fire Door Quoting
-            </button>
-            <button className="btn btn-secondary" onClick={() => navigate('/rates')}>
-              Rate Card
             </button>
             <button className="btn btn-primary" onClick={() => navigate('/new')}>
               + New Checklist
@@ -125,11 +121,6 @@ function AppContent() {
         <Route path="/firedoor" element={
           <ProtectedRoute>
             <FireDoorQuoting />
-          </ProtectedRoute>
-        } />
-        <Route path="/rates" element={
-          <ProtectedRoute>
-            <RateCardManager />
           </ProtectedRoute>
         } />
       </Routes>
