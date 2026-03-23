@@ -394,13 +394,19 @@ def extract_type2_excel(file_path: str) -> List[Dict]:
     # Process all sheets (some surveys have Floor 1, Floor 2, etc.)
     for sheet in wb.worksheets:
         # Find header row (usually row 1 or 2)
+        # Look for row with multiple fault-related columns
         header_row = 1
         headers = [cell.value.lower() if cell.value else "" for cell in sheet[1]]
         
-        # If row 1 doesn't look like headers, try row 2
-        if not any('door' in h or 'gap' in h or 'seal' in h for h in headers):
+        # Count how many columns look like fault columns
+        fault_keywords = ['gap', 'seal', 'frame', 'hinge', 'lock', 'glass', 'strip', 'closer', 'ironmongery']
+        fault_col_count = sum(1 for h in headers if any(keyword in h for keyword in fault_keywords))
+        
+        # If row 1 doesn't have multiple fault columns, try row 2
+        if fault_col_count < 2:
             header_row = 2
             headers = [cell.value.lower() if cell.value else "" for cell in sheet[2]]
+            fault_col_count = sum(1 for h in headers if any(keyword in h for keyword in fault_keywords))
         
         # Find column indices
         door_col = next((i for i, h in enumerate(headers) if 'door' in h and ('no' in h or 'number' in h or 'ref' in h)), None)
