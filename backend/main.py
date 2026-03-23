@@ -2,9 +2,14 @@
 import os
 import uuid
 import logging
+import shutil
+import tempfile
+from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from typing import List, Optional
@@ -478,17 +483,24 @@ async def process_firedoor_survey(
     - Type 1: PDF with FireDNA/RiskBase/BM TRADA ART codes
     - Type 2: Excel with door fault columns
     """
-    import tempfile
-    import shutil
-    from pathlib import Path
-    from fastapi.responses import FileResponse
     import firedoor_processor as fdp
     
     if not client_name:
         raise HTTPException(status_code=400, detail="Client name is required")
     
-    # Create temp directory for processing
-    with tempfile.TemporaryDirectory() as temp_dir:
+    def cleanup_temp_dir(dir_path: str):
+        """Clean up temp directory after response is sent."""
+        try:
+            shutil.rmtree(dir_path)
+            logger.info(f"Cleaned up temp directory: {dir_path}")
+        except Exception as e:
+            logger.error(f"Error cleaning up temp directory {dir_path}: {e}")
+    
+    # Create temp directory (no auto-cleanup - we'll use BackgroundTask)
+    temp_dir = tempfile.mkdtemp()
+    logger.info(f"Created temp directory: {temp_dir}")
+    
+    try:
         # Save uploaded file
         input_path = Path(temp_dir) / file.filename
         with open(input_path, 'wb') as f:
@@ -499,6 +511,7 @@ async def process_firedoor_survey(
         logger.info(f"Detected format: {file_format} for file: {file.filename}")
         
         if file_format == 'UNKNOWN':
+            cleanup_temp_dir(temp_dir)
             raise HTTPException(
                 status_code=400,
                 detail="Unsupported file format. Please upload a FireDNA/RiskBase PDF or Excel survey."
@@ -513,18 +526,23 @@ async def process_firedoor_survey(
                 logger.info("Processing TYPE_2 (Excel with fault columns)")
                 doors = fdp.extract_type2_excel(str(input_path))
             else:
+                cleanup_temp_dir(temp_dir)
                 raise HTTPException(status_code=400, detail=f"Unsupported format: {file_format}")
             
             logger.info(f"Extracted {len(doors)} doors from survey")
             
             if not doors:
+                cleanup_temp_dir(temp_dir)
                 raise HTTPException(
                     status_code=400,
                     detail="No door data could be extracted from the file. Please check the file format."
                 )
             
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error extracting door data: {str(e)}")
+            cleanup_temp_dir(temp_dir)
             raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
         
         # Populate Excel template
@@ -537,6 +555,7 @@ async def process_firedoor_survey(
         logger.info(f"Output path: {output_path}")
         
         if not template_path.exists():
+            cleanup_temp_dir(temp_dir)
             raise HTTPException(
                 status_code=500,
                 detail=f"Template file not found at: {template_path}"
@@ -548,22 +567,32 @@ async def process_firedoor_survey(
             
             # Double-check the file exists before returning
             if not output_path.exists():
+                cleanup_temp_dir(temp_dir)
                 raise HTTPException(
                     status_code=500,
                     detail=f"Output file was not created at: {output_path}"
                 )
             
             logger.info(f"Returning file: {output_path}, size: {output_path.stat().st_size} bytes")
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error populating Excel template: {str(e)}")
+            cleanup_temp_dir(temp_dir)
             raise HTTPException(status_code=500, detail=f"Error generating quote: {str(e)}")
         
-        # Return file
+        # Return file with background cleanup
         return FileResponse(
             path=str(output_path),
             filename=output_filename,
-            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            background=BackgroundTask(cleanup_temp_dir, temp_dir)
         )
+    
+    except Exception as e:
+        # Final safety net - clean up on any unhandled exception
+        cleanup_temp_dir(temp_dir)
+        raise
 
 
 if __name__ == "__main__":
