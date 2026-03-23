@@ -6,12 +6,18 @@ Handles extraction and mapping of fire door survey data to rate card codes.
 import os
 import re
 import csv
+import logging
 import pdfplumber
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
 from anthropic import Anthropic
+import anthropic
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+
+# Log anthropic version for debugging
+logger = logging.getLogger(__name__)
+logger.info(f"Anthropic SDK version: {anthropic.__version__}")
 
 # Lazy initialization of Anthropic client
 _anthropic_client = None
