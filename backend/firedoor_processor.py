@@ -6,27 +6,92 @@ Handles extraction and mapping of fire door survey data to rate card codes.
 import os
 import re
 import csv
+import json
 import logging
 import pdfplumber
+import httpx
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
-from anthropic import Anthropic
-import anthropic
+try:
+    from anthropic import Anthropic
+    import anthropic
+    ANTHROPIC_SDK_AVAILABLE = True
+except Exception as e:
+    ANTHROPIC_SDK_AVAILABLE = False
+    anthropic = None
+    Anthropic = None
+    
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 
-# Log anthropic version for debugging
+# Log versions for debugging
 logger = logging.getLogger(__name__)
-logger.info(f"Anthropic SDK version: {anthropic.__version__}")
+if ANTHROPIC_SDK_AVAILABLE and anthropic:
+    logger.info(f"Anthropic SDK version: {anthropic.__version__}")
+logger.info(f"httpx version: {httpx.__version__}")
 
 # Lazy initialization of Anthropic client
 _anthropic_client = None
+_use_raw_http = False
+
+def call_anthropic_api(prompt: str, max_tokens: int = 4096) -> str:
+    """
+    Call Anthropic API directly via HTTP (fallback when SDK fails).
+    
+    Args:
+        prompt: The prompt to send
+        max_tokens: Maximum tokens in response
+        
+    Returns:
+        The text response from Claude
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+    
+    logger.info("Using raw HTTP API call to Anthropic (SDK unavailable or failed)")
+    
+    response = httpx.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        },
+        json={
+            "model": "claude-3-5-sonnet-20241022",
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}]
+        },
+        timeout=60.0
+    )
+    response.raise_for_status()
+    result = response.json()
+    return result["content"][0]["text"]
 
 def get_anthropic_client():
-    """Get or create Anthropic client (lazy initialization)."""
-    global _anthropic_client
+    """Get or create Anthropic client (lazy initialization with fallback to raw HTTP)."""
+    global _anthropic_client, _use_raw_http
+    
+    if _use_raw_http:
+        return None  # Signal to use raw HTTP
+    
     if _anthropic_client is None:
-        _anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        if not ANTHROPIC_SDK_AVAILABLE:
+            logger.warning("Anthropic SDK not available, using raw HTTP API")
+            _use_raw_http = True
+            return None
+        
+        try:
+            logger.info("Attempting to initialize Anthropic SDK client")
+            _anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+            logger.info("Anthropic SDK client initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic SDK: {str(e)}")
+            logger.info("Falling back to raw HTTP API")
+            _use_raw_http = True
+            return None
+    
     return _anthropic_client
 
 # Load ART code mapping
@@ -137,20 +202,25 @@ Survey text:
 Return ONLY the JSON array, no other text."""
 
     client = get_anthropic_client()
-    response = client.messages.create(
-        model="claude-3-5-sonnet-20241022",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    
+    # Use SDK if available, otherwise raw HTTP
+    if client is not None:
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        response_text = response.content[0].text
+    else:
+        response_text = call_anthropic_api(prompt, max_tokens=4096)
     
     # Parse JSON response
-    import json
     try:
-        doors = json.loads(response.content[0].text)
+        doors = json.loads(response_text)
         return doors
     except json.JSONDecodeError:
         # Try to extract JSON from response
-        json_match = re.search(r'\[.*\]', response.content[0].text, re.DOTALL)
+        json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
         return []
