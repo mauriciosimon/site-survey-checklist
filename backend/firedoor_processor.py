@@ -827,6 +827,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         primary_code = get_priority_bcode(codes)
         all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
         
+        # FINAL FIX: For unable-to-inspect doors with no detectable codes,
+        # assign B01 (seals) as provisional primary code
+        # Column P must NEVER be empty for a YES door
+        if not primary_code and door.get('has_unable'):
+            primary_code = 'B01'  # Provisional code for reinspection
+        
         # Column mapping based on Door Schedule template (updated Mar 2026):
         # A=DOOR ID, B=LOCATION, C=DOOR TYPE, D=CURRENT RATING, E=LEAF CONFIG,
         # F=LEAF SIZE, G=FINISH, H=SEALS, I=CLOSER, J=VISION PANEL,
