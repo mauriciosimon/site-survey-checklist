@@ -1042,12 +1042,15 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if qty > 0:
             logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}")
     
-    # Step 5: Write number to Client Summary
+    # Step 5: Write SUM formula to Client Summary (references Quote Sheet totals)
+    # This allows Matt to edit line items and have the total auto-update
     client_summary = wb['Client Summary']
-    client_summary.cell(row=10, column=3).value = option_a_total
-    logger.info(f"Client Summary C10: £{option_a_total}")
+    # Sum the TOTAL column (F) from Quote Sheet for remedial items (rows 11-22)
+    sum_formula = "=SUM('Quote Sheet'!F11:F22)"
+    client_summary.cell(row=10, column=3).value = sum_formula
+    logger.info(f"Client Summary C10: {sum_formula} (calculated value: £{option_a_total})")
     
-    logger.info("=== Calculated numbers written (formulas not supported by openpyxl) ===")
+    logger.info("=== Line item numbers + SUM formulas written (compromise approach) ===")
     
     # Save workbook
     try:
