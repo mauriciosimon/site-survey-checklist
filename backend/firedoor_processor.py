@@ -324,6 +324,8 @@ def map_fault_to_bcode(fault_text: str) -> Optional[str]:
     """
     Map fault description to B-series code based on keywords.
     
+    BUG 2 FIX: Enhanced mapping to catch more fault patterns
+    
     B-series mapping rules:
     B01 - Intumescent + smoke seals
     B02 - Intumescent only
@@ -332,22 +334,36 @@ def map_fault_to_bcode(fault_text: str) -> Optional[str]:
     B05 - Latch/handles
     B06 - Frame fire stopping / architrave
     B07 - Fire door signage
+    B08 - Hold-open device removal (Perco chains)
     B10 - Adjust/re-hang door
     B11 - Hardwood re-lip
     B12 - Timber insert for voids
     """
     fault_lower = fault_text.lower()
     
-    # B01 - Smoke seals (with intumescent)
-    if any(keyword in fault_lower for keyword in ['smoke seal', 'smoke strip', 'perimeter seal']) and 'intumescent' in fault_lower:
+    # B08 - Hold-open devices (Perco chains, etc.)
+    if any(keyword in fault_lower for keyword in ['hold open', 'hold-open', 'perco', 'chain', 'hook']):
+        return 'B08'
+    
+    # B01 - Seals (broader matching for Type 2 Excel surveys)
+    # Matches: "seal", "strip", "coming away", "worn", "damaged", "missing", "fitted" (in seal context)
+    seal_keywords = ['seal', 'strip', 'coming away', 'worn', 'damage', 'missing', 'none fitted', 'not fitted']
+    if any(keyword in fault_lower for keyword in seal_keywords):
+        # If it mentions intumescent only (no smoke), it's B02
+        if 'intumescent' in fault_lower and 'smoke' not in fault_lower:
+            return 'B02'
+        # Otherwise assume B01 (intumescent + smoke seals, or general seal issue)
         return 'B01'
     
-    # B02 - Intumescent only
+    # B02 - Intumescent only (explicit)
     if 'intumescent' in fault_lower and 'smoke' not in fault_lower:
         return 'B02'
     
     # B03 - Door closer
-    if any(keyword in fault_lower for keyword in ['closer', 'overhead closer', 'door closer']):
+    if any(keyword in fault_lower for keyword in ['closer', 'closing']):
+        # Exclude "not closing" which is B10
+        if 'not closing' in fault_lower or 'catching' in fault_lower:
+            return 'B10'
         return 'B03'
     
     # B04 - Hinges
@@ -366,8 +382,8 @@ def map_fault_to_bcode(fault_text: str) -> Optional[str]:
     if any(keyword in fault_lower for keyword in ['sign', 'signage', 'label']):
         return 'B07'
     
-    # B10 - Re-hang/adjust
-    if any(keyword in fault_lower for keyword in ['adjust', 're-hang', 'rehang', 'alignment', 'warped', 'twisted', 'gap too']):
+    # B10 - Re-hang/adjust (catches "not closing", "catching on floor", etc.)
+    if any(keyword in fault_lower for keyword in ['adjust', 're-hang', 'rehang', 'alignment', 'warped', 'twisted', 'gap too', 'catching', 'not closing']):
         return 'B10'
     
     # B11 - Re-lip
@@ -765,12 +781,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Check if this is a Type 2 survey by looking at first door's format_type
         is_type2 = doors and doors[0].get('format_type') == 'TYPE_2'
         if is_type2:
-            # Clear site and building fields (adjust cell references as needed)
-            # Typical locations: B5=Site, B6=Building (verify against your template)
-            if 'B5' in quote_sheet and quote_sheet['B5'].value:
-                quote_sheet['B5'] = ''
-            if 'B6' in quote_sheet and quote_sheet['B6'].value:
-                quote_sheet['B6'] = ''
+            # Clear site and building fields
+            quote_sheet['B5'] = ''  # Site field
+            quote_sheet['B6'] = ''  # Building field
             logger.info("Cleared site/building fields for Type 2 survey")
     except KeyError as e:
         error_msg = f"Quote Sheet not found in template. Available sheets: {wb.sheetnames}"
