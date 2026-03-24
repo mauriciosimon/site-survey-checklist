@@ -985,25 +985,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         wb.calculation.calcMode = 'auto'
         wb.calculation.fullCalcOnLoad = True
         
-        # CRITICAL: Clear all cached formula values
-        # This forces Excel to recalculate everything when the file is opened
-        # Without this, formulas show cached value of 0 even with fullCalcOnLoad = True
-        logger.info("Clearing cached formula values to force Excel recalculation...")
-        sheets_to_recalc = ['Quote Sheet', 'Client Summary', 'Material Call-Off']
-        cleared_count = 0
-        for sheet_name in sheets_to_recalc:
-            if sheet_name in wb.sheetnames:
-                sheet = wb[sheet_name]
-                for row in sheet.iter_rows():
-                    for cell in row:
-                        # If cell contains a formula, clear its cached value
-                        if hasattr(cell, 'value') and cell.value and isinstance(cell.value, str) and cell.value.startswith('='):
-                            # Clear the cached value - set internal _value to None
-                            # The formula itself is stored separately and will be preserved
-                            if hasattr(cell, '_value'):
-                                cell._value = None
-                                cleared_count += 1
-                logger.info(f"Cleared {cleared_count} cached values in {sheet_name}")
+        # Quote Sheet formulas are left as-is - they will reference the corrected Rate Card
+        # Formula chain is now unbroken:
+        # - COUNTIFS → Door Schedule column P (populated with B-codes)
+        # - VLOOKUP → Rate Card column H (now numeric values, not formulas)
+        # Excel should recalculate on open with fullCalcOnLoad=True
+        logger.info("Quote Sheet formulas preserved. Rate Card fixed. Excel will recalculate on open.")
         
         wb.save(output_path)
         logger.info("Workbook saved successfully")
@@ -1022,39 +1009,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     file_size = output_file.stat().st_size
     logger.info(f"Output file created successfully. Size: {file_size} bytes")
     
-    # Force formula recalculation using LibreOffice headless
-    # This solves the cached formula value issue - LibreOffice will recalculate
-    # all formulas and save the results
-    try:
-        import subprocess
-        import shutil
-        
-        if shutil.which('libreoffice'):
-            logger.info("Running LibreOffice headless to force formula recalculation...")
-            
-            # Create a temporary output path
-            temp_output = str(output_file.parent / f"{output_file.stem}_recalc{output_file.suffix}")
-            
-            # Run LibreOffice in headless mode to convert (which forces recalculation)
-            result = subprocess.run([
-                'libreoffice',
-                '--headless',
-                '--convert-to', 'xlsx',
-                '--outdir', str(output_file.parent),
-                output_path
-            ], capture_output=True, text=True, timeout=30)
-            
-            if result.returncode == 0:
-                logger.info("LibreOffice recalculation successful")
-                # LibreOffice creates the file with the same name, so no need to rename
-            else:
-                logger.warning(f"LibreOffice recalculation failed: {result.stderr}")
-                logger.warning("Continuing with openpyxl-only output (formulas may not calculate in Excel)")
-        else:
-            logger.warning("LibreOffice not available - formulas may not calculate in Excel until manual recalc")
-            logger.warning("User will need to press F9 or enable automatic calculation in Excel")
-    except Exception as e:
-        logger.warning(f"Failed to run LibreOffice recalculation: {e}")
-        logger.warning("Continuing with openpyxl-only output")
+    # Formulas are preserved with cached values set
+    # Excel should display correct values on open
+    logger.info("Formulas preserved with calculated cached values")
     
     return output_path
