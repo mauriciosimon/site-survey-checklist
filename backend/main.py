@@ -593,13 +593,16 @@ async def process_firedoor_survey(
             cleanup_temp_dir(temp_dir)
             raise HTTPException(status_code=500, detail=f"Error generating quote: {str(e)}")
         
-        # Return file with background cleanup
-        return FileResponse(
+        # Return file with background cleanup and survey type header
+        response = FileResponse(
             path=str(output_path),
             filename=output_filename,
             media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             background=BackgroundTask(cleanup_temp_dir, temp_dir)
         )
+        # Add custom header to indicate survey type (for frontend messaging)
+        response.headers["X-Survey-Type"] = file_format
+        return response
     
     except Exception as e:
         # Final safety net - clean up on any unhandled exception
