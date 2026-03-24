@@ -1047,8 +1047,11 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     client_summary = wb['Client Summary']
     # Sum the TOTAL column (F) from Quote Sheet for remedial items (rows 11-22)
     sum_formula = "=SUM('Quote Sheet'!F11:F22)"
-    client_summary.cell(row=10, column=3).value = sum_formula
-    logger.info(f"Client Summary C10: {sum_formula} (calculated value: £{option_a_total})")
+    client_summary_cell = client_summary.cell(row=10, column=3)
+    client_summary_cell.value = sum_formula
+    # CRITICAL: Set cached value so Excel shows £1,685 immediately (not £0)
+    client_summary_cell._value = option_a_total
+    logger.info(f"Client Summary C10: {sum_formula} (cached value: £{option_a_total})")
     
     logger.info("=== Line item numbers + SUM formulas written (compromise approach) ===")
     
