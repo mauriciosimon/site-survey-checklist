@@ -951,6 +951,11 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # Save workbook
     try:
         logger.info(f"Saving workbook to: {output_path}")
+        
+        # Force Excel to recalculate formulas on open (fixes £0 totals issue)
+        wb.calculation.calcMode = 'auto'
+        wb.calculation.fullCalcOnLoad = True
+        
         wb.save(output_path)
         logger.info("Workbook saved successfully")
     except Exception as e:
