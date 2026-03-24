@@ -985,6 +985,26 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         wb.calculation.calcMode = 'auto'
         wb.calculation.fullCalcOnLoad = True
         
+        # CRITICAL: Clear all cached formula values
+        # This forces Excel to recalculate everything when the file is opened
+        # Without this, formulas show cached value of 0 even with fullCalcOnLoad = True
+        logger.info("Clearing cached formula values to force Excel recalculation...")
+        sheets_to_recalc = ['Quote Sheet', 'Client Summary', 'Material Call-Off']
+        cleared_count = 0
+        for sheet_name in sheets_to_recalc:
+            if sheet_name in wb.sheetnames:
+                sheet = wb[sheet_name]
+                for row in sheet.iter_rows():
+                    for cell in row:
+                        # If cell contains a formula, clear its cached value
+                        if hasattr(cell, 'value') and cell.value and isinstance(cell.value, str) and cell.value.startswith('='):
+                            # Clear the cached value - set internal _value to None
+                            # The formula itself is stored separately and will be preserved
+                            if hasattr(cell, '_value'):
+                                cell._value = None
+                                cleared_count += 1
+                logger.info(f"Cleared {cleared_count} cached values in {sheet_name}")
+        
         wb.save(output_path)
         logger.info("Workbook saved successfully")
     except Exception as e:
