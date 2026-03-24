@@ -1066,10 +1066,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # Step 7: Copy header values from Quote Sheet to Client Summary
     # Client Summary pulls these from Quote Sheet via formulas, but we need to write them
-    client_summary.cell(row=5, column=2).value = quote_sheet['B4'].value  # Client
-    client_summary.cell(row=6, column=2).value = quote_sheet['B5'].value  # Site (may be blank for Type 2)
-    client_summary.cell(row=5, column=5).value = quote_sheet['B3'].value  # Date
-    client_summary.cell(row=6, column=5).value = quote_sheet['B2'].value  # Quote Ref
+    # Correct row mapping:
+    # - Row 3: Client (B3)
+    # - Row 4: Site (B4)
+    # - Row 5: Building (B5)
+    # - Row 6: Date (E6)
+    # - Row 7: Quote Ref (B7)
+    client_summary.cell(row=3, column=2).value = quote_sheet['B4'].value  # B3 = Client
+    client_summary.cell(row=4, column=2).value = quote_sheet['B5'].value  # B4 = Site (may be blank for Type 2)
+    client_summary.cell(row=5, column=2).value = quote_sheet['B6'].value  # B5 = Building (may be blank for Type 2)
+    client_summary.cell(row=6, column=5).value = quote_sheet['B3'].value  # E6 = Date
+    client_summary.cell(row=7, column=2).value = quote_sheet['B2'].value  # B7 = Quote Ref
     logger.info(f"Client Summary headers: Client={quote_sheet['B4'].value}, Date={quote_sheet['B3'].value}, Ref={quote_sheet['B2'].value}")
     
     # Step 8: Set Option B to "PENDING" for Type 2 surveys (no fire strategy)
