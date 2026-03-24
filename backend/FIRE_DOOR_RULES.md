@@ -240,35 +240,35 @@ List ALL applicable B-codes as a comma-separated list.
 ### Type 1 (PDF) - ALWAYS PRICED
 **Rule:** Option B MUST be priced based on fire rating and leaf configuration
 
-**B-Series Codes (Replacement Doors) - from WestPark Rate Card:**
-- **B.01:** FD30 — Single Leaf, Paint Grade, Height up to 2040mm
-- **B.02:** FD30 — Single Leaf, Paint Grade, Height 2040–2400mm
-- **B.03:** FD30 — Single Leaf, Paint Grade, Height 2400–2730mm
-- **B.04:** FD30 — Double Leaf, Paint Grade, Height up to 2040mm
-- **B.05:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **B.06:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
-- **B.07:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2400–2730mm
-- **B.08:** FD30S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **B.09:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **B.10:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
-- **B.11:** FD60S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **B.12:** E/O Hardwood Veneer Finish (per door)
-- **B.13:** E/O External Grade Specification (per door)
-- **B.14:** E/O Fire-Rated Vision Panel up to 300 x 600mm
-- **B.15:** E/O Fire-Rated Vision Panel over 300 x 600mm
+**A-Series Codes (Replacement Doors) - from WestPark Rate Card:**
+- **A01:** FD30 — Single Leaf, Paint Grade, Height up to 2040mm
+- **A02:** FD30 — Single Leaf, Paint Grade, Height 2040–2400mm
+- **A03:** FD30 — Single Leaf, Paint Grade, Height 2400–2730mm
+- **A04:** FD30 — Double Leaf, Paint Grade, Height up to 2040mm
+- **A05:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
+- **A06:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
+- **A07:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2400–2730mm
+- **A08:** FD30S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
+- **A09:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
+- **A10:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
+- **A11:** FD60S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
+- **A12:** E/O Hardwood Veneer Finish — any size (uplift per door)
+- **A13:** E/O External Grade Specification — weathered locations
+- **A14:** E/O Fire-Rated Vision Panel up to 300 x 600mm
+- **A15:** E/O Fire-Rated Vision Panel over 300 x 600mm
 
-**Note:** B.12-B.15 are "E/O" (Extra Over) items added to base door codes.
+**Note:** A12-A15 are "E/O" (Extra Over) items added to base door codes.
 
 **Pricing Logic:**
 1. Extract fire rating from survey (FD30, FD30S, FD60S, etc.)
 2. Extract leaf configuration (single/double)
 3. Extract height (≤2040, 2040–2400, 2400–2730)
-4. Map to corresponding B-series replacement code (B.01–B.15)
+4. Map to corresponding A-series replacement code (A01–A15)
 5. Calculate: `QTY × RATE = TOTAL`
 
 **Example:**
 - 5 doors: FD30, single leaf, 2100mm height
-- Code: B.02 (FD30 — Single Leaf, Paint Grade, Height 2040–2400mm)
+- Code: A02 (FD30 — Single Leaf, Paint Grade, Height 2040–2400mm)
 - Rate: £450 per door (from Rate Card)
 - Total: 5 × £450 = £2,250
 
@@ -409,12 +409,12 @@ else:
 - **B-Code (Remedial):** WestPark internal code for repairs (B01-B12)
   - Maps from ART codes via CSV
   - Used in Option A (remedial works)
-- **B-Code (Replacement):** WestPark replacement door codes (B.01–B.15)
+- **A-Code (Replacement):** WestPark replacement door codes (A01–A15)
   - Used in Option B (full replacement)
-  - Note: Different from remedial B-codes despite similar naming
+  - Maps to Rate Card for VLOOKUP pricing
 - **Quote Sheet Labels:** 
   - Option A rows use "A.01"–"A.12" labels (corresponds to B01-B12 remedial codes)
-  - Option B rows use "B.01"–"B.15" labels (replacement door codes)
+  - Option B rows use "B.01"–"B.15" labels for display (maps to A01-A15 in Rate Card)
 - **Unit Price:** £ per item/door
 
 ---
@@ -455,7 +455,22 @@ This report identifies fire doors requiring remedial works based on visual inspe
 
 ## 14. Change Log
 
-### 2026-03-24
+### 2026-03-24 (Update 2)
+- **Section 4:** Fixed ART→B-code mappings - replaced incorrect mappings with complete correct data from BMTrada_ART_Codes_RateCard_Mapping.csv
+  - All 24 ART codes now correctly documented
+  - Example corrections: ART01 → B11 (lipping), ART03 → B06 (fire-stopping)
+- **Section 4.1:** Added ART14 special case rule - damaged glazing has no B-code equivalent, flag for manual review
+- **Section 4.2:** Added ART23 special case rule - no applicable repair technique exists, flag for manual review
+- **Section 4.3:** Added multiple B-codes priority rule for Type 1 surveys (B01 > B03 > B04 > B10 > B05 > B02 > B06 > B07)
+- **Section 6:** Fixed replacement door codes - corrected from B-series to A-series (A01–A15)
+  - Added A09 (FD60S Single ≤2040mm)
+  - Added A10 (FD60S Single 2040–2400mm)
+  - Added A11 (FD60S Double ≤2040mm)
+  - Added A12-A15 (Extra Over items: veneer, external grade, vision panels)
+  - Updated all references to match Rate Card VLOOKUP codes
+- **Section 11:** Clarified A-code vs B-code naming (remedial B-codes vs replacement A-codes)
+
+### 2026-03-24 (Initial)
 - Created initial FIRE_DOOR_RULES.md
 - Documented all extraction, mapping, and output rules
 - Added Type 1 vs Type 2 differentiation
