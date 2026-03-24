@@ -491,6 +491,27 @@ def map_art_to_rate_card(art_codes: List[str]) -> List[str]:
     return list(set(rate_card_codes))  # Remove duplicates
 
 
+def get_priority_bcode(codes: List[str]) -> str:
+    """
+    Get the priority B-code from a list of codes.
+    Priority order: B01 > B03 > B04 > B10 > B05 > B02 > B06 > B07
+    
+    BUG 2 FIX: This ensures the primary B-code follows the correct priority
+    for Quote Sheet COUNTIF formulas.
+    """
+    if not codes:
+        return ''
+    
+    priority_order = ['B01', 'B03', 'B04', 'B10', 'B05', 'B02', 'B06', 'B07', 'B11', 'B12']
+    
+    for priority_code in priority_order:
+        if priority_code in codes:
+            return priority_code
+    
+    # If none match priority list, return first code
+    return codes[0]
+
+
 def populate_excel_template(doors: List[Dict], client_name: str, template_path: str, output_path: str):
     """
     Populate Excel template with door data and color code rows.
@@ -739,6 +760,18 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         quote_sheet = wb["Quote Sheet"]
         quote_sheet['B4'] = client_name  # B4 is the Client field
         logger.info(f"Updated Quote Sheet with client name: {client_name}")
+        
+        # BUG 4 FIX: Clear site/building for Type 2 surveys (no site address in Excel files)
+        # Check if this is a Type 2 survey by looking at first door's format_type
+        is_type2 = doors and doors[0].get('format_type') == 'TYPE_2'
+        if is_type2:
+            # Clear site and building fields (adjust cell references as needed)
+            # Typical locations: B5=Site, B6=Building (verify against your template)
+            if 'B5' in quote_sheet and quote_sheet['B5'].value:
+                quote_sheet['B5'] = ''
+            if 'B6' in quote_sheet and quote_sheet['B6'].value:
+                quote_sheet['B6'] = ''
+            logger.info("Cleared site/building fields for Type 2 survey")
     except KeyError as e:
         error_msg = f"Quote Sheet not found in template. Available sheets: {wb.sheetnames}"
         logger.error(error_msg)
@@ -762,9 +795,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # Data starts at row 4 (row 3 is headers)
     start_row = 4
     
-    # Clear existing data (rows 4-100)
+    # BUG 5 FIX: Clear existing data (rows 4-100) - extended to column V (22)
     for row_num in range(4, 100):
-        for col in range(1, 17):  # Columns A-P
+        for col in range(1, 23):  # Columns A-V (1-22)
             ws.cell(row=row_num, column=col).value = None
             ws.cell(row=row_num, column=col).fill = PatternFill()  # Clear fill
     
@@ -777,8 +810,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if not codes and 'art_codes' in door:
             codes = map_art_to_rate_card(door['art_codes'])
         
-        # Primary code (first code if multiple, or "MANUAL REVIEW" if none)
-        primary_code = codes[0] if codes else ''
+        # BUG 2 FIX: Get primary code using priority order
+        primary_code = get_priority_bcode(codes)
         all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
         
         # Column mapping based on Door Schedule template (updated Mar 2026):
@@ -812,8 +845,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         
         # Column N: OPT A REMEDIAL? (YES/NO/COMPLIANT)
         # Column O: OPT B REPLACE? (YES/NO/PENDING)
-        # Determine if remedial, replacement, or compliant
-        is_compliant = not codes or not faults_str
+        # BUG 1 FIX: Door is compliant ONLY if no codes AND no faults
+        # Rule: any detected fault = Opt A YES
+        is_compliant = not codes and not faults_str
         # Check for replacement: A-series codes (A09, A11, A12, etc.) or "A-series" placeholder from ART18
         needs_replacement = (
             'replace' in str(door).lower() or 
@@ -841,8 +875,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             ws[f'N{row_num}'] = 'YES'
             ws[f'O{row_num}'] = 'NO'
         
-        # Column P: OPT B BASE ITEM (primary code for replacement cost)
-        ws[f'P{row_num}'] = primary_code if needs_replacement else ''
+        # BUG 2 FIX: Column P should contain primary B-code for ALL doors with faults
+        # (not just replacements) - this feeds the Quote Sheet COUNTIF formulas
+        ws[f'P{row_num}'] = primary_code if primary_code else ''
         
         # Column Q: QTY (all B-codes for remedial work)
         ws[f'Q{row_num}'] = all_codes_str
@@ -853,12 +888,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         ws[f'T{row_num}'] = 'NO'  # E/O EXTERNAL
         ws[f'U{row_num}'] = 'NO'  # E/O VISION
         
-        # Column V: NOTES / FLAGS (ART codes for reference + flag notes)
-        art_codes_str = ', '.join(door.get('art_codes', [])) if 'art_codes' in door else ''
+        # Column V: NOTES / FLAGS (B-codes and flag notes)
         flag_notes = []
         
-        if art_codes_str:
-            flag_notes.append(f"ARTs: {art_codes_str}")
+        # BUG 3 FIX: Only add ART codes for Type 1 (PDF) surveys
+        # Type 2 (Excel) surveys have no ART codes
+        is_type1 = door.get('format_type') == 'TYPE_1' or 'art_codes' in door
+        if is_type1 and 'art_codes' in door:
+            art_codes_str = ', '.join(door.get('art_codes', []))
+            if art_codes_str:
+                flag_notes.append(f"ARTs: {art_codes_str}")
         
         # Add flag notes for special cases requiring manual review
         if door.get('has_unable'):
