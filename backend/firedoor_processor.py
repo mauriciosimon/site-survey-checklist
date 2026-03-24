@@ -568,6 +568,35 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.error(error_msg)
         raise RuntimeError(error_msg) from e
     
+    # FIX: Replace Rate Card column H formulas with calculated numeric values
+    # This fixes the formula chain break where VLOOKUP returns 0
+    # Rate Card column H has formulas like =SUM(D22:G22) which openpyxl saves with cached value 0
+    try:
+        if "Rate Card" in wb.sheetnames:
+            rc = wb['Rate Card']
+            logger.info("Replacing Rate Card column H formulas with calculated values...")
+            
+            for row_idx in range(6, 40):  # Rows 6-39 cover all rate card items
+                row = rc[row_idx]
+                # Get values from columns D, E, F, G (indices 3, 4, 5, 6)
+                d = row[3].value  # MAT'S
+                e = row[4].value  # LABOUR
+                f = row[5].value  # T & J
+                g = row[6].value  # HUMP
+                
+                # If all are numeric, calculate and write to column H (index 7)
+                if all(isinstance(v, (int, float)) for v in [d, e, f, g]):
+                    total = d + e + f + g
+                    row[7].value = total  # Replace formula with numeric value
+                    logger.debug(f"Row {row_idx}: H = {total} (was formula)")
+            
+            # Verify fix worked (check B01 row which should be row 22)
+            h22_value = rc['H22'].value
+            logger.info(f"Verification: H22 value = {h22_value} (expected 120)")
+            
+    except Exception as e:
+        logger.warning(f"Failed to replace Rate Card formulas: {e}. Continuing anyway...")
+    
     # Update Rate Card sheet with database prices
     if DATABASE_AVAILABLE:
         try:
