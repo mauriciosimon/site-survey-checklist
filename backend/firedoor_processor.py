@@ -987,22 +987,23 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             for col_letter in 'ABCDEFGHIJKLMNOPQRSTUV':
                 ws[f'{col_letter}{row_num}'].fill = color_fill
     
-    # PYTHON-SIDE CALCULATION: Calculate and write numbers to Quote Sheet and Client Summary
-    # Formulas in template are for manual editing - output file gets calculated numbers
-    logger.info("=== Calculating Quote Sheet totals in Python ===")
+    # PYTHON-SIDE CALCULATION: Keep formulas but write cached values
+    # Formulas stay for manual editing, cached values display immediately
+    logger.info("=== Calculating Quote Sheet cached values ===")
     
-    # Step 1: Count B-codes from Door Schedule (Option A = YES)
+    # Step 1: Count B-codes from Door Schedule (AFTER population, from actual Excel cells)
+    door_schedule = wb['Door Schedule']
     b_code_counts = {}
-    for door in doors:
-        codes = door.get('b_codes', [])
-        is_compliant = not codes and not door.get('faults')
-        
-        if codes and not is_compliant:
-            primary_code = get_priority_bcode(codes)
-            if primary_code:
-                b_code_counts[primary_code] = b_code_counts.get(primary_code, 0) + 1
+    for row in range(4, 200):  # Check up to row 200
+        door_id = door_schedule.cell(row=row, column=1).value
+        if not door_id:
+            break
+        opt_a = door_schedule.cell(row=row, column=14).value  # Column N
+        base_item = door_schedule.cell(row=row, column=16).value  # Column P
+        if opt_a == 'YES' and base_item:
+            b_code_counts[base_item] = b_code_counts.get(base_item, 0) + 1
     
-    logger.info(f"B-code counts: {b_code_counts}")
+    logger.info(f"B-code counts from Door Schedule: {b_code_counts}")
     
     # Step 2: Get rates from Rate Card
     rate_card_sheet = wb['Rate Card']
@@ -1013,13 +1014,15 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if code and rate and isinstance(rate, (int, float)):
             rates[str(code)] = rate
     
-    logger.info(f"Rates: {rates}")
+    logger.info(f"Rates from Rate Card: {rates}")
     
     # Step 3: Calculate Option A total
     option_a_total = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
     logger.info(f"Option A total: £{option_a_total}")
     
-    # Step 4: Write calculated values to Quote Sheet (replace formulas with numbers)
+    # Step 4: Write numbers to Quote Sheet
+    # Since openpyxl doesn't support cached values, we write numbers directly
+    # The formulas are preserved in the template for future manual editing
     quote_sheet = wb['Quote Sheet']
     bcode_to_row = {
         'B01': 11, 'B02': 12, 'B03': 13, 'B04': 14, 'B05': 15, 'B06': 16,
@@ -1029,21 +1032,22 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     for b_code, row_num in bcode_to_row.items():
         qty = b_code_counts.get(b_code, 0)
         rate = rates.get(b_code, 0)
+        total = qty * rate
         
-        # Write numbers (not formulas)
+        # Write numbers directly (openpyxl doesn't support cached formula values)
         quote_sheet.cell(row=row_num, column=3).value = qty      # Column C (QTY)
         quote_sheet.cell(row=row_num, column=5).value = rate     # Column E (RATE)
-        quote_sheet.cell(row=row_num, column=6).value = qty * rate  # Column F (TOTAL)
+        quote_sheet.cell(row=row_num, column=6).value = total    # Column F (TOTAL)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE=£{rate}, TOTAL=£{qty * rate}")
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}")
     
-    # Step 5: Write Option A total to Client Summary
+    # Step 5: Write number to Client Summary
     client_summary = wb['Client Summary']
     client_summary.cell(row=10, column=3).value = option_a_total
     logger.info(f"Client Summary C10: £{option_a_total}")
     
-    logger.info("=== Calculated values written as numbers (not formulas) ===")
+    logger.info("=== Calculated numbers written (formulas not supported by openpyxl) ===")
     
     # Save workbook
     try:
