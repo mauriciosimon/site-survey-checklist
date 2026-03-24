@@ -776,8 +776,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     try:
         if "Rate Card" in wb.sheetnames:
             rc = wb['Rate Card']
-            logger.info("Replacing Rate Card column H formulas with calculated values (final pass)...")
+            logger.info("=== FINAL PASS: Replacing Rate Card column H with calculated values ===")
             
+            replaced_count = 0
             for row_idx in range(6, 40):  # Rows 6-39 cover all rate card items
                 row = rc[row_idx]
                 # Get values from columns D, E, F, G (indices 3, 4, 5, 6)
@@ -790,16 +791,24 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                 if all(isinstance(v, (int, float)) for v in [d, e, f, g]):
                     total = d + e + f + g
                     row[7].value = total  # Replace formula with numeric value
-                    logger.debug(f"Row {row_idx}: H = {total} (calculated from template)")
+                    replaced_count += 1
+                    # Log specific rows we care about
+                    if row_idx in [22, 23, 26, 31]:  # B01, B02, B05, B10
+                        code = row[0].value
+                        logger.info(f"Row {row_idx} ({code}): Set H = {total} (D={d} + E={e} + F={f} + G={g})")
+            
+            logger.info(f"Replaced {replaced_count} Rate Card formula cells with calculated values")
             
             # Verify fix worked (check B01, B02, B10)
             h22_value = rc['H22'].value
             h23_value = rc['H23'].value
             h31_value = rc['H31'].value
-            logger.info(f"Verification: B01={h22_value}, B02={h23_value}, B10={h31_value} (expected 120, 90, 85)")
+            logger.info(f"=== VERIFICATION: B01={h22_value}, B02={h23_value}, B10={h31_value} (expected 120, 90, 85) ===")
             
     except Exception as e:
-        logger.warning(f"Failed to replace Rate Card formulas: {e}. Continuing anyway...")
+        logger.error(f"CRITICAL: Failed to replace Rate Card formulas: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
     
     # Update client name in Quote Sheet
     try:
