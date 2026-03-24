@@ -1042,12 +1042,23 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if qty > 0:
             logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}")
     
-    # Step 5: Write calculated NUMBER to Client Summary
-    # Originally wanted SUM formula, but openpyxl can't set cached values reliably
-    # Writing the number directly ensures Excel shows £1,685 immediately
+    # Step 5: Write calculated NUMBERs to Client Summary
+    # Originally wanted SUM formulas, but openpyxl can't set cached values reliably
+    # Writing the numbers directly ensures Excel shows £1,685 immediately
     client_summary = wb['Client Summary']
+    
+    # C10 = NET COST (raw total from Quote Sheet)
     client_summary.cell(row=10, column=3).value = option_a_total
-    logger.info(f"Client Summary C10: £{option_a_total} (number, not formula)")
+    
+    # D10 = OPTION A TOTAL (same as NET COST for Option A only)
+    client_summary.cell(row=10, column=4).value = option_a_total
+    
+    # D13 = TOTAL INVESTMENT (sum of all option totals - just Option A in this case)
+    client_summary.cell(row=13, column=4).value = option_a_total
+    
+    logger.info(f"Client Summary C10 (NET COST): £{option_a_total}")
+    logger.info(f"Client Summary D10 (OPTION A TOTAL): £{option_a_total}")
+    logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{option_a_total}")
     
     logger.info("=== Line item numbers + SUM formulas written (compromise approach) ===")
     
