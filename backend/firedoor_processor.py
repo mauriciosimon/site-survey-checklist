@@ -1060,7 +1060,25 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Client Summary D10 (OPTION A TOTAL): £{option_a_total}")
     logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{option_a_total}")
     
-    logger.info("=== Line item numbers + SUM formulas written (compromise approach) ===")
+    # Step 6: Write Option A TOTAL to Quote Sheet row 23
+    quote_sheet.cell(row=23, column=6).value = option_a_total  # F23
+    logger.info(f"Quote Sheet F23 (Option A TOTAL): £{option_a_total}")
+    
+    # Step 7: Copy header values from Quote Sheet to Client Summary
+    # Client Summary pulls these from Quote Sheet via formulas, but we need to write them
+    client_summary.cell(row=5, column=2).value = quote_sheet['B4'].value  # Client
+    client_summary.cell(row=6, column=2).value = quote_sheet['B5'].value  # Site (may be blank for Type 2)
+    client_summary.cell(row=5, column=5).value = quote_sheet['B3'].value  # Date
+    client_summary.cell(row=6, column=5).value = quote_sheet['B2'].value  # Quote Ref
+    logger.info(f"Client Summary headers: Client={quote_sheet['B4'].value}, Date={quote_sheet['B3'].value}, Ref={quote_sheet['B2'].value}")
+    
+    # Step 8: Set Option B to "PENDING" for Type 2 surveys (no fire strategy)
+    is_type2 = doors and doors[0].get('format_type') == 'TYPE_2'
+    if is_type2:
+        client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B TOTAL)
+        logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
+    
+    logger.info("=== Line item numbers + header values written ===")
     
     # Save workbook
     try:
