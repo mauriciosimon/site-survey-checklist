@@ -9,6 +9,7 @@ export default function FireDoorQuoting() {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [surveyType, setSurveyType] = useState('');
 
   // Rate card state
   const [rateItems, setRateItems] = useState([]);
@@ -111,6 +112,10 @@ export default function FireDoorQuoting() {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       });
+
+      // Read survey type from response headers
+      const surveyTypeHeader = response.headers['x-survey-type'] || '';
+      setSurveyType(surveyTypeHeader);
 
       const blob = new Blob([response.data], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -356,9 +361,26 @@ export default function FireDoorQuoting() {
           )}
 
           {success && (
-            <div style={{ padding: '12px', backgroundColor: '#e8f5e9', borderRadius: '4px', marginBottom: '15px' }}>
-              <p style={{ margin: 0, color: '#2e7d32', fontSize: '14px' }}>{success}</p>
-            </div>
+            <>
+              <div style={{ padding: '12px', backgroundColor: '#e8f5e9', borderRadius: '4px', marginBottom: '15px' }}>
+                <p style={{ margin: 0, color: '#2e7d32', fontSize: '14px' }}>{success}</p>
+              </div>
+              
+              {surveyType === 'TYPE_2' && (
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: '#fff3cd', 
+                  border: '1px solid #ffc107',
+                  borderRadius: '4px', 
+                  marginBottom: '15px' 
+                }}>
+                  <p style={{ margin: 0, color: '#856404', fontSize: '14px', fontWeight: '500' }}>
+                    ⚠️ Option B (full replacement) could not be priced — fire strategy drawings were not included in this survey. 
+                    To unlock Option B pricing, ask the client for their fire strategy drawings and forward to the estimating team.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           <button
