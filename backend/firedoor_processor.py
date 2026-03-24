@@ -1002,4 +1002,39 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     file_size = output_file.stat().st_size
     logger.info(f"Output file created successfully. Size: {file_size} bytes")
     
+    # Force formula recalculation using LibreOffice headless
+    # This solves the cached formula value issue - LibreOffice will recalculate
+    # all formulas and save the results
+    try:
+        import subprocess
+        import shutil
+        
+        if shutil.which('libreoffice'):
+            logger.info("Running LibreOffice headless to force formula recalculation...")
+            
+            # Create a temporary output path
+            temp_output = str(output_file.parent / f"{output_file.stem}_recalc{output_file.suffix}")
+            
+            # Run LibreOffice in headless mode to convert (which forces recalculation)
+            result = subprocess.run([
+                'libreoffice',
+                '--headless',
+                '--convert-to', 'xlsx',
+                '--outdir', str(output_file.parent),
+                output_path
+            ], capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                logger.info("LibreOffice recalculation successful")
+                # LibreOffice creates the file with the same name, so no need to rename
+            else:
+                logger.warning(f"LibreOffice recalculation failed: {result.stderr}")
+                logger.warning("Continuing with openpyxl-only output (formulas may not calculate in Excel)")
+        else:
+            logger.warning("LibreOffice not available - formulas may not calculate in Excel until manual recalc")
+            logger.warning("User will need to press F9 or enable automatic calculation in Excel")
+    except Exception as e:
+        logger.warning(f"Failed to run LibreOffice recalculation: {e}")
+        logger.warning("Continuing with openpyxl-only output")
+    
     return output_path
