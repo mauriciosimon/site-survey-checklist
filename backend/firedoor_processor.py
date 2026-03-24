@@ -987,20 +987,71 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             for col_letter in 'ABCDEFGHIJKLMNOPQRSTUV':
                 ws[f'{col_letter}{row_num}'].fill = color_fill
     
+    # PYTHON-SIDE CALCULATION: Calculate and write numbers to Quote Sheet and Client Summary
+    # Formulas in template are for manual editing - output file gets calculated numbers
+    logger.info("=== Calculating Quote Sheet totals in Python ===")
+    
+    # Step 1: Count B-codes from Door Schedule (Option A = YES)
+    b_code_counts = {}
+    for door in doors:
+        codes = door.get('b_codes', [])
+        is_compliant = not codes and not door.get('faults')
+        
+        if codes and not is_compliant:
+            primary_code = get_priority_bcode(codes)
+            if primary_code:
+                b_code_counts[primary_code] = b_code_counts.get(primary_code, 0) + 1
+    
+    logger.info(f"B-code counts: {b_code_counts}")
+    
+    # Step 2: Get rates from Rate Card
+    rate_card_sheet = wb['Rate Card']
+    rates = {}
+    for row_num in range(22, 34):  # B01-B12
+        code = rate_card_sheet.cell(row=row_num, column=1).value
+        rate = rate_card_sheet.cell(row=row_num, column=8).value
+        if code and rate and isinstance(rate, (int, float)):
+            rates[str(code)] = rate
+    
+    logger.info(f"Rates: {rates}")
+    
+    # Step 3: Calculate Option A total
+    option_a_total = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
+    logger.info(f"Option A total: £{option_a_total}")
+    
+    # Step 4: Write calculated values to Quote Sheet (replace formulas with numbers)
+    quote_sheet = wb['Quote Sheet']
+    bcode_to_row = {
+        'B01': 11, 'B02': 12, 'B03': 13, 'B04': 14, 'B05': 15, 'B06': 16,
+        'B07': 17, 'B08': 18, 'B09': 19, 'B10': 20, 'B11': 21, 'B12': 22,
+    }
+    
+    for b_code, row_num in bcode_to_row.items():
+        qty = b_code_counts.get(b_code, 0)
+        rate = rates.get(b_code, 0)
+        
+        # Write numbers (not formulas)
+        quote_sheet.cell(row=row_num, column=3).value = qty      # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=5).value = rate     # Column E (RATE)
+        quote_sheet.cell(row=row_num, column=6).value = qty * rate  # Column F (TOTAL)
+        
+        if qty > 0:
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE=£{rate}, TOTAL=£{qty * rate}")
+    
+    # Step 5: Write Option A total to Client Summary
+    client_summary = wb['Client Summary']
+    client_summary.cell(row=10, column=3).value = option_a_total
+    logger.info(f"Client Summary C10: £{option_a_total}")
+    
+    logger.info("=== Calculated values written as numbers (not formulas) ===")
+    
     # Save workbook
     try:
         logger.info(f"Saving workbook to: {output_path}")
         
-        # Force Excel to recalculate formulas on open (fixes £0 totals issue)
+        # Keep calculation settings for any remaining formulas
         wb.calculation.calcMode = 'auto'
         wb.calculation.fullCalcOnLoad = True
-        
-        # Quote Sheet formulas are left as-is - they will reference the corrected Rate Card
-        # Formula chain is now unbroken:
-        # - COUNTIFS → Door Schedule column P (populated with B-codes)
-        # - VLOOKUP → Rate Card column H (now numeric values, not formulas)
-        # Excel should recalculate on open with fullCalcOnLoad=True
-        logger.info("Quote Sheet formulas preserved. Rate Card fixed. Excel will recalculate on open.")
         
         wb.save(output_path)
         logger.info("Workbook saved successfully")
