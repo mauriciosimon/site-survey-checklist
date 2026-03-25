@@ -769,7 +769,6 @@ function ChecklistForm() {
                   <input
                     type="file"
                     accept="image/*,video/*"
-                    capture="environment"
                     multiple
                     onChange={(e) => {
                       console.log('[EDIT MODE FILE INPUT] onChange fired, files:', e.target.files?.length || 0);
@@ -953,7 +952,6 @@ function ChecklistForm() {
                   <input
                     type="file"
                     accept="image/*,video/*"
-                    capture="environment"
                     multiple
                     onChange={(e) => {
                       console.log('[FILE INPUT] onChange fired, files:', e.target.files?.length || 0);
