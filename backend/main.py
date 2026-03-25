@@ -114,6 +114,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Survey-Type"],  # Expose custom header for frontend
 )
 
 # Uploads now use Vercel Blob - no local storage needed
