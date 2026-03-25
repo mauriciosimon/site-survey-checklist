@@ -70,6 +70,8 @@ function ChecklistForm() {
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
   const uploadInProgress = useRef(false); // Prevent concurrent uploads
+  const submittingInProgress = useRef(false); // Prevent duplicate submissions
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, fileName: '' }); // Track upload progress
   const [draftSaved, setDraftSaved] = useState(false);
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
   const [lastSaveTime, setLastSaveTime] = useState(null);
@@ -84,6 +86,12 @@ function ChecklistForm() {
       // Don't save if form is essentially empty
       if (!formData.site_name && !formData.client_name && !formData.site_address) {
         setHasUnsavedChanges(false);
+        return;
+      }
+      
+      // Don't auto-save if submission is in progress
+      if (submittingInProgress.current) {
+        console.log('[AUTO-SAVE] Skipped - submission in progress');
         return;
       }
 
@@ -216,13 +224,22 @@ function ChecklistForm() {
 
   const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (submittingInProgress.current) {
+      console.log('[SUBMIT] Already submitting, ignoring duplicate click');
+      return;
+    }
+    
     if (!formData.site_name.trim()) {
       setError('Site Name is required');
       return;
     }
 
+    submittingInProgress.current = true;
     setSaving(true);
     setError(null);
+    setUploadProgress({ current: 0, total: 0, fileName: '' });
 
     try {
       // Clean up empty strings to nulls for optional fields (EXCLUDE site_photos)
@@ -243,23 +260,49 @@ function ChecklistForm() {
         finalId = response.data.id;
       }
 
-      // Upload any pending photos
+      // Upload any pending photos with progress tracking
       if (pendingPhotos.length > 0) {
-        for (const photo of pendingPhotos) {
+        console.log(`[SUBMIT] Uploading ${pendingPhotos.length} pending photos...`);
+        const failedUploads = [];
+        
+        for (let i = 0; i < pendingPhotos.length; i++) {
+          const photo = pendingPhotos[i];
+          setUploadProgress({
+            current: i + 1,
+            total: pendingPhotos.length,
+            fileName: photo.name || `File ${i + 1}`
+          });
+          
           try {
             await checklistApi.uploadPhoto(finalId, photo);
+            console.log(`[SUBMIT] ✅ Uploaded ${i + 1}/${pendingPhotos.length}: ${photo.name}`);
           } catch (photoErr) {
-            console.error('Failed to upload photo:', photoErr);
+            console.error(`[SUBMIT] ❌ Failed to upload ${photo.name}:`, photoErr);
+            failedUploads.push(photo.name);
           }
+        }
+        
+        // Clear pending photos after upload attempt
+        setPendingPhotos([]);
+        
+        // Show error if some uploads failed
+        if (failedUploads.length > 0) {
+          setError(`Survey saved, but ${failedUploads.length} file(s) failed to upload: ${failedUploads.join(', ')}`);
+          // Still navigate away, but show error briefly
+          setTimeout(() => navigate('/'), 3000);
+          return;
         }
       }
 
+      // Success - navigate away
       navigate('/');
     } catch (err) {
       setError('Failed to save checklist. Check your input and try again.');
-      console.error(err);
+      console.error('[SUBMIT] Error:', err);
     } finally {
       setSaving(false);
+      submittingInProgress.current = false;
+      setUploadProgress({ current: 0, total: 0, fileName: '' });
     }
   };
 
@@ -1031,9 +1074,15 @@ function ChecklistForm() {
 
         <div className="form-actions">
           <button type="submit" className="btn btn-success" disabled={saving}>
-            {saving ? 'Submitting...' : (isEdit || draftId ? 'Submit Survey' : 'Submit Survey')}
+            {saving && uploadProgress.total > 0 ? (
+              `Uploading ${uploadProgress.current}/${uploadProgress.total} - ${uploadProgress.fileName.slice(0, 20)}...`
+            ) : saving ? (
+              'Submitting...'
+            ) : (
+              isEdit || draftId ? 'Submit Survey' : 'Submit Survey'
+            )}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate('/')} disabled={saving}>
             Back
           </button>
           {(isEdit || draftId) && (
