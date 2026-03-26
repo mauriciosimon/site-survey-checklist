@@ -121,15 +121,27 @@ function ChecklistForm() {
         // Upload any pending photos after saving draft
         if (pendingPhotos.length > 0 && currentId) {
           console.log('[AUTO-SAVE] Uploading', pendingPhotos.length, 'pending photos');
+          let uploadedCount = 0;
           for (const photo of pendingPhotos) {
             try {
-              const response = await checklistApi.uploadPhoto(currentId, photo);
-              // Update form data with new photos
-              setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+              await checklistApi.uploadPhoto(currentId, photo);
+              uploadedCount++;
             } catch (photoErr) {
               console.error('[AUTO-SAVE] Failed to upload photo:', photoErr);
             }
           }
+          
+          // Fetch the checklist ONCE after all uploads to get complete photo list
+          if (uploadedCount > 0) {
+            try {
+              const response = await checklistApi.get(currentId);
+              setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+              console.log('[AUTO-SAVE] Fetched updated checklist with', response.data.site_photos?.length || 0, 'photos');
+            } catch (fetchErr) {
+              console.error('[AUTO-SAVE] Failed to fetch updated checklist:', fetchErr);
+            }
+          }
+          
           // Clear pending photos after upload
           setPendingPhotos([]);
         }
@@ -166,15 +178,26 @@ function ChecklistForm() {
         const successfulUploads = [];
         const failedPhotos = [];
         
+        // Upload all photos first
         for (const photo of pendingPhotos) {
           try {
-            const response = await checklistApi.uploadPhoto(currentId, photo);
-            setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+            await checklistApi.uploadPhoto(currentId, photo);
             successfulUploads.push(photo.name);
             console.log('[IMMEDIATE UPLOAD] Photo uploaded:', photo.name);
           } catch (photoErr) {
             failedPhotos.push(photo);
             console.error('[IMMEDIATE UPLOAD] Failed to upload photo:', photo.name, photoErr);
+          }
+        }
+        
+        // Fetch the checklist ONCE to get all photos (avoids state update race condition)
+        if (successfulUploads.length > 0) {
+          try {
+            const response = await checklistApi.get(currentId);
+            setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
+            console.log('[IMMEDIATE UPLOAD] Fetched updated checklist with', response.data.site_photos?.length || 0, 'photos');
+          } catch (fetchErr) {
+            console.error('[IMMEDIATE UPLOAD] Failed to fetch updated checklist:', fetchErr);
           }
         }
         
