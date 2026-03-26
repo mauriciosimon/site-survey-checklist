@@ -18,9 +18,17 @@ export default function FireDoorQuoting() {
   const [editingId, setEditingId] = useState(null);
   const [editPrice, setEditPrice] = useState('');
 
-  // Fetch rate card items on mount
+  // Quote history state
+  const [quotes, setQuotes] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
+  const [quotesPage, setQuotesPage] = useState(1);
+  const [quotesTotalPages, setQuotesTotalPages] = useState(0);
+
+  // Fetch rate card items and initial quotes on mount
   useEffect(() => {
     fetchRateItems();
+    fetchQuotes(1);
   }, []);
 
   const fetchRateItems = async () => {
@@ -33,6 +41,33 @@ export default function FireDoorQuoting() {
       setRateItems([]); // Set empty array on error
     } finally {
       setLoadingRates(false);
+    }
+  };
+
+  const fetchQuotes = async (page) => {
+    try {
+      setLoadingQuotes(true);
+      const pageSize = showHistory ? 10 : 5;
+      const response = await api.get(`/api/firedoor/quotes?page=${page}&page_size=${pageSize}`);
+      setQuotes(response.data.quotes || []);
+      setQuotesTotalPages(response.data.total_pages || 0);
+      setQuotesPage(page);
+    } catch (err) {
+      console.error('Error fetching quotes:', err);
+      setQuotes([]);
+    } finally {
+      setLoadingQuotes(false);
+    }
+  };
+
+  const handleToggleHistory = () => {
+    setShowHistory(!showHistory);
+    if (!showHistory) {
+      // Expanding to show more - fetch 10 per page
+      fetchQuotes(1);
+    } else {
+      // Collapsing back to 5
+      fetchQuotes(1);
     }
   };
 
@@ -134,6 +169,9 @@ export default function FireDoorQuoting() {
       setStatus('');
       setFile(null);
       setClientName('');
+      
+      // Refresh quote history
+      fetchQuotes(1);
     } catch (err) {
       console.error('Error processing file:', err);
       setError(err.response?.data?.detail || 'Failed to process file');
@@ -400,6 +438,160 @@ export default function FireDoorQuoting() {
             {loading ? 'Processing...' : 'Generate Quote'}
           </button>
         </form>
+      </div>
+
+      {/* Quote History Section */}
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        border: '1px solid #dee2e6',
+        borderRadius: '8px',
+        padding: '20px',
+        marginTop: '25px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h3 style={{ margin: 0, fontSize: '18px' }}>
+            Quote History
+          </h3>
+          {quotes.length > 5 && (
+            <button
+              onClick={handleToggleHistory}
+              style={{
+                padding: '6px 12px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              {showHistory ? 'Show Less' : 'See History'}
+            </button>
+          )}
+        </div>
+
+        {loadingQuotes ? (
+          <p style={{ color: '#666', fontSize: '14px' }}>Loading quotes...</p>
+        ) : quotes.length === 0 ? (
+          <p style={{ color: '#666', fontSize: '14px' }}>No quotes generated yet.</p>
+        ) : (
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px'
+              }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #dee2e6', backgroundColor: '#e9ecef' }}>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>Date</th>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>Client</th>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>User</th>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>Type</th>
+                    <th style={{ padding: '10px', textAlign: 'center', fontWeight: '600' }}>Doors</th>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>Comments</th>
+                    <th style={{ padding: '10px', textAlign: 'center', fontWeight: '600' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((quote) => (
+                    <tr key={quote.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: '10px' }}>
+                        {new Date(quote.created_at).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+                      <td style={{ padding: '10px', fontWeight: '500' }}>{quote.client_name}</td>
+                      <td style={{ padding: '10px' }}>{quote.user_name}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '3px',
+                          fontSize: '12px',
+                          backgroundColor: quote.survey_type === 'TYPE_1' ? '#d1ecf1' : '#fff3cd',
+                          color: quote.survey_type === 'TYPE_1' ? '#0c5460' : '#856404'
+                        }}>
+                          {quote.survey_type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{quote.door_count}</td>
+                      <td style={{ padding: '10px', fontSize: '13px', color: '#666' }}>
+                        {quote.comments || '—'}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <a
+                          href={quote.excel_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: '5px 10px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            borderRadius: '4px',
+                            textDecoration: 'none',
+                            fontSize: '13px',
+                            display: 'inline-block'
+                          }}
+                        >
+                          Download
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {showHistory && quotesTotalPages > 1 && (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: '10px', 
+                marginTop: '15px' 
+              }}>
+                <button
+                  onClick={() => fetchQuotes(quotesPage - 1)}
+                  disabled={quotesPage === 1}
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: quotesPage === 1 ? '#ccc' : '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: quotesPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  Previous
+                </button>
+                <span style={{ fontSize: '14px', color: '#666' }}>
+                  Page {quotesPage} of {quotesTotalPages}
+                </span>
+                <button
+                  onClick={() => fetchQuotes(quotesPage + 1)}
+                  disabled={quotesPage === quotesTotalPages}
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: quotesPage === quotesTotalPages ? '#ccc' : '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: quotesPage === quotesTotalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

@@ -113,3 +113,18 @@ class RateCardItem(Base):
     category = Column(String(100))  # Optional categorization
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+
+class FireDoorQuote(Base):
+    __tablename__ = "firedoor_quotes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_name = Column(String(255), nullable=False)
+    survey_type = Column(String(20))  # TYPE_1 or TYPE_2
+    door_count = Column(Integer)
+    excel_url = Column(Text, nullable=False)  # Vercel Blob URL
+    comments = Column(Text)  # E.g., "Option B warning" for Type 2
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")

@@ -27,7 +27,7 @@ from auth import (
     get_current_user, get_current_user_required, get_admin_user,
     authenticate_user, create_access_token
 )
-from models import User, Checklist, RateCardItem
+from models import User, Checklist, RateCardItem, FireDoorQuote
 import crud
 import monday_api
 
@@ -487,7 +487,9 @@ def admin_clear_photos(
 @app.post("/api/firedoor/process")
 async def process_firedoor_survey(
     file: UploadFile = File(...),
-    client_name: str = Form(...)
+    client_name: str = Form(...),
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db)
 ):
     """
     Process fire door survey file (PDF or Excel) and return populated quote Excel.
@@ -593,6 +595,57 @@ async def process_firedoor_survey(
             logger.error(f"Error populating Excel template: {str(e)}")
             cleanup_temp_dir(temp_dir)
             raise HTTPException(status_code=500, detail=f"Error generating quote: {str(e)}")
+        
+        # Upload Excel to Vercel Blob and save quote metadata to database
+        blob_url = None
+        comments = ""
+        try:
+            # Prepare comments (e.g., Option B warning for Type 2)
+            if file_format == 'TYPE_2':
+                comments = "⚠️ Type 2 Survey: Review Option B requirements carefully"
+            
+            # Upload to Vercel Blob
+            blob_token = "vercel_blob_rw_sVwnQznFPrCYs2uq_OHVOAjS4N9DidHZPyt4nJfIntS12k7"
+            with open(output_path, 'rb') as excel_file:
+                excel_content = excel_file.read()
+            
+            blob_filename = f"firedoor-quotes/{uuid.uuid4()}_{output_filename}"
+            blob_upload_url = f"https://blob.vercel-storage.com/{blob_filename}"
+            
+            import requests
+            blob_response = requests.put(
+                blob_upload_url,
+                data=excel_content,
+                headers={
+                    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Authorization": f"Bearer {blob_token}"
+                }
+            )
+            
+            if blob_response.status_code == 200:
+                blob_data = blob_response.json()
+                blob_url = blob_data.get("url")
+                logger.info(f"Excel uploaded to Blob: {blob_url}")
+            else:
+                logger.error(f"Blob upload failed: {blob_response.status_code} {blob_response.text}")
+            
+            # Save quote to database
+            if blob_url:
+                from models import FireDoorQuote
+                quote = FireDoorQuote(
+                    user_id=current_user.id,
+                    client_name=client_name,
+                    survey_type=file_format,
+                    door_count=len(doors),
+                    excel_url=blob_url,
+                    comments=comments
+                )
+                db.add(quote)
+                db.commit()
+                logger.info(f"Quote saved to database: ID {quote.id}")
+        except Exception as e:
+            logger.error(f"Error uploading to Blob or saving to database: {e}")
+            # Don't fail the whole request - still return the file
         
         # Return file with background cleanup and survey type header
         response = FileResponse(
@@ -842,6 +895,52 @@ async def backfill_rate_card_descriptions(
         "message": f"Successfully backfilled {updated} rate card items",
         "count": updated,
         "b_codes_found": len(b_code_descriptions)
+    }
+
+
+@app.get("/api/firedoor/quotes")
+async def list_firedoor_quotes(
+    page: int = 1,
+    page_size: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
+    """
+    List fire door quotes with pagination.
+    Returns quotes for all users (global history).
+    """
+    from models import FireDoorQuote
+    from sqlalchemy import desc
+    
+    # Calculate offset
+    offset = (page - 1) * page_size
+    
+    # Query quotes ordered by newest first
+    quotes_query = db.query(FireDoorQuote).order_by(desc(FireDoorQuote.created_at))
+    total = quotes_query.count()
+    quotes = quotes_query.offset(offset).limit(page_size).all()
+    
+    # Format response
+    quote_list = []
+    for quote in quotes:
+        quote_list.append({
+            "id": quote.id,
+            "user_name": quote.user.full_name if quote.user else "Unknown",
+            "user_email": quote.user.email if quote.user else "Unknown",
+            "client_name": quote.client_name,
+            "survey_type": quote.survey_type,
+            "door_count": quote.door_count,
+            "excel_url": quote.excel_url,
+            "comments": quote.comments,
+            "created_at": quote.created_at.isoformat() if quote.created_at else None
+        })
+    
+    return {
+        "quotes": quote_list,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
     }
 
 
