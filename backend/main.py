@@ -555,8 +555,13 @@ async def process_firedoor_survey(
             
         except HTTPException:
             raise
+        except ValueError as e:
+            # ValueError is raised by our extraction code with user-friendly messages
+            logger.error(f"Validation error during extraction: {str(e)}")
+            cleanup_temp_dir(temp_dir)
+            raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            logger.error(f"Error extracting door data: {str(e)}")
+            logger.error(f"Unexpected error extracting door data: {str(e)}")
             cleanup_temp_dir(temp_dir)
             raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
         

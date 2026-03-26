@@ -253,6 +253,9 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
     
     Returns:
         List of door dictionaries with keys: door_id, location, faults, art_codes
+    
+    Raises:
+        ValueError: If file format is unsupported or text extraction fails
     """
     # Extract full text from PDF or TXT
     full_text = ""
@@ -260,17 +263,39 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
     
     if ext == '.txt':
         # Read text file directly
+        logger.info(f"Reading text file: {file_path}")
         with open(file_path, 'r', encoding='utf-8') as f:
             full_text = f.read()
+        logger.info(f"Text file read: {len(full_text)} characters")
     elif ext == '.pdf':
         # Extract from PDF
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    full_text += page_text + "\n\n"
+        logger.info(f"Extracting text from PDF: {file_path}")
+        try:
+            with pdfplumber.open(file_path) as pdf:
+                logger.info(f"PDF opened: {len(pdf.pages)} pages")
+                for page_num, page in enumerate(pdf.pages, 1):
+                    page_text = page.extract_text()
+                    if page_text:
+                        full_text += page_text + "\n\n"
+                        logger.info(f"Page {page_num}: extracted {len(page_text)} characters")
+                    else:
+                        logger.warning(f"Page {page_num}: no text extracted (may be image-only)")
+            logger.info(f"PDF extraction complete: {len(full_text)} total characters")
+        except Exception as e:
+            logger.error(f"PDF extraction failed: {e}")
+            raise ValueError(f"Failed to extract text from PDF. Error: {str(e)}. If this is an image-heavy PDF, please use a PDF-to-text converter first and upload the .txt file instead.")
     else:
-        raise ValueError(f"Unsupported file extension for Type 1: {ext}")
+        raise ValueError(f"Unsupported file extension for Type 1: {ext}. Please upload a PDF or TXT file.")
+    
+    # Check if we got any text
+    if not full_text or len(full_text.strip()) < 100:
+        logger.error(f"Insufficient text extracted from {file_path}: {len(full_text)} characters")
+        raise ValueError(
+            "Could not extract sufficient text from the uploaded file. "
+            "This may be an image-only PDF or scanned document. "
+            "Please use a PDF-to-text converter (or Claude Code) to extract the text first, "
+            "then upload the resulting .txt file instead."
+        )
     
     # Use Claude to extract structured data
     prompt = f"""Extract all fire door data from this survey report. For each door, extract:
