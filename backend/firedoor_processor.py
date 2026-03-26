@@ -198,15 +198,16 @@ def detect_format(file_path: str, filename: str) -> str:
     if ext == '.pdf':
         # Try to read first few pages and look for TYPE_1 indicators
         try:
-            with pdfplumber.open(file_path) as pdf:
-                first_page_text = pdf.pages[0].extract_text() if len(pdf.pages) > 0 else ""
-                second_page_text = pdf.pages[1].extract_text() if len(pdf.pages) > 1 else ""
-                combined_text = (first_page_text + " " + second_page_text).lower()
-                
-                # Check for TYPE_1 indicators
-                type1_keywords = ['firedna', 'riskbase', 'bm trada', 'art', 'fire door survey']
-                if any(keyword in combined_text for keyword in type1_keywords):
-                    return 'TYPE_1'
+            doc = fitz.open(file_path)
+            first_page_text = doc[0].get_text() if doc.page_count > 0 else ""
+            second_page_text = doc[1].get_text() if doc.page_count > 1 else ""
+            combined_text = (first_page_text + " " + second_page_text).lower()
+            doc.close()
+            
+            # Check for TYPE_1 indicators
+            type1_keywords = ['firedna', 'riskbase', 'bm trada', 'art', 'fire door survey']
+            if any(keyword in combined_text for keyword in type1_keywords):
+                return 'TYPE_1'
         except Exception as e:
             print(f"Error detecting PDF format: {e}")
             return 'UNKNOWN'

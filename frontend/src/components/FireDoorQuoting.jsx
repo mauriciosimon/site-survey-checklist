@@ -174,7 +174,21 @@ export default function FireDoorQuoting() {
       fetchQuotes(1);
     } catch (err) {
       console.error('Error processing file:', err);
-      setError(err.response?.data?.detail || 'Failed to process file');
+      
+      // When responseType is 'blob', error responses are also blobs
+      // We need to read the blob as text to get the error message
+      if (err.response?.data instanceof Blob) {
+        try {
+          const errorText = await err.response.data.text();
+          const errorData = JSON.parse(errorText);
+          setError(errorData.detail || 'Failed to process file');
+        } catch (parseErr) {
+          console.error('Could not parse error response:', parseErr);
+          setError('Failed to process file. Please check the file format and try again.');
+        }
+      } else {
+        setError(err.response?.data?.detail || 'Failed to process file. Please check the file format and try again.');
+      }
       setStatus('');
     } finally {
       setLoading(false);
