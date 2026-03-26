@@ -55,15 +55,24 @@ function ChecklistList() {
     <div>
       {error && <div className="error">{error}</div>}
 
-      <form className="search-bar" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search by site name, client, project..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button type="submit" className="btn btn-primary">Search</button>
-      </form>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <form className="search-bar" onSubmit={handleSearch} style={{ flex: 1, marginBottom: 0 }}>
+          <input
+            type="text"
+            placeholder="Search by site name, client, project..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary">Search</button>
+        </form>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => navigate('/new')}
+          style={{ marginLeft: '15px', whiteSpace: 'nowrap' }}
+        >
+          + New Survey
+        </button>
+      </div>
 
       <div className="card">
         {checklists.length === 0 ? (

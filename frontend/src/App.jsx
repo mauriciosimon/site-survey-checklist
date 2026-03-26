@@ -46,11 +46,11 @@ function Header() {
                 Admin
               </button>
             )}
+            <button className="btn btn-secondary" onClick={() => navigate('/')}>
+              Site Surveys
+            </button>
             <button className="btn btn-secondary" onClick={() => navigate('/firedoor')}>
               Fire Door Quoting
-            </button>
-            <button className="btn btn-primary" onClick={() => navigate('/new')}>
-              + New Checklist
             </button>
             <div className="user-menu">
               <span style={{ color: 'white', marginRight: '10px' }}>
