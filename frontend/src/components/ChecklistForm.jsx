@@ -216,7 +216,7 @@ function ChecklistForm() {
   const reloadChecklist = async (checklistId) => {
     reloadingInProgress.current = true;
     try {
-      const response = await checklistApi.get(checklistId);
+      const response = await checklistApi.getById(checklistId);
       const data = response.data;
       // Format dates for input fields
       if (data.survey_date) data.survey_date = data.survey_date.split('T')[0];
