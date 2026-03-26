@@ -76,7 +76,6 @@ function ChecklistForm() {
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
   const uploadInProgress = useRef(false); // Prevent concurrent uploads
   const submittingInProgress = useRef(false); // Prevent duplicate submissions
-  const reloadingInProgress = useRef(false); // Prevent auto-save during reload
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, fileName: '' }); // Track upload progress
   const [draftSaved, setDraftSaved] = useState(false);
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
@@ -86,12 +85,6 @@ function ChecklistForm() {
 
   // Auto-save to BACKEND (Gmail-style, debounced)
   useEffect(() => {
-    // Skip if reloading from server (prevents infinite loop)
-    if (reloadingInProgress.current) {
-      console.log('[AUTO-SAVE] Skipped - reloading in progress');
-      return;
-    }
-    
     // Check if ONLY site_photos changed (ignore photo-only updates)
     const prevData = prevFormDataRef.current;
     const { site_photos: prevPhotos, ...prevRest } = prevData;
@@ -115,8 +108,8 @@ function ChecklistForm() {
         return;
       }
       
-      // Don't auto-save if submission/upload/reload is in progress
-      if (submittingInProgress.current || uploadInProgress.current || reloadingInProgress.current) {
+      // Don't auto-save if submission/upload is in progress
+      if (submittingInProgress.current || uploadInProgress.current) {
         console.log('[AUTO-SAVE] Skipped - operation in progress');
         return;
       }
@@ -184,21 +177,24 @@ function ChecklistForm() {
         const successfulUploads = [];
         const failedPhotos = [];
         
-        // Upload all photos first
+        // Upload all photos and collect responses
         for (const photo of photosToUpload) {
           try {
-            await checklistApi.uploadPhoto(currentId, photo);
+            const response = await checklistApi.uploadPhoto(currentId, photo);
             successfulUploads.push(photo.name);
             console.log('[IMMEDIATE UPLOAD] ✅ Photo uploaded:', photo.name);
+            // Update formData with the response (which includes updated site_photos)
+            if (response.data.site_photos) {
+              setFormData(prev => ({
+                ...prev,
+                site_photos: response.data.site_photos
+              }));
+              console.log('[IMMEDIATE UPLOAD] Updated site_photos, now', response.data.site_photos.length, 'photos');
+            }
           } catch (photoErr) {
             failedPhotos.push(photo);
             console.error('[IMMEDIATE UPLOAD] ❌ Failed to upload photo:', photo.name, photoErr);
           }
-        }
-        
-        // Reload entire checklist to ensure UI matches backend
-        if (successfulUploads.length > 0) {
-          await reloadChecklist(currentId);
         }
         
         // Re-add failed photos to pending list
@@ -218,23 +214,6 @@ function ChecklistForm() {
   }, [pendingPhotos, draftId, id]);
 
   // Helper function to reload checklist from server (used after photo uploads)
-  const reloadChecklist = async (checklistId) => {
-    reloadingInProgress.current = true;
-    try {
-      const response = await checklistApi.getById(checklistId);
-      const data = response.data;
-      // Format dates for input fields
-      if (data.survey_date) data.survey_date = data.survey_date.split('T')[0];
-      if (data.start_date) data.start_date = data.start_date.split('T')[0];
-      setFormData({ ...initialFormData, ...data });
-      console.log('[RELOAD] Checklist reloaded with', data.site_photos?.length || 0, 'photos');
-    } catch (err) {
-      console.error('[RELOAD] Failed to reload checklist:', err);
-    } finally {
-      reloadingInProgress.current = false;
-    }
-  };
-
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
