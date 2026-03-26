@@ -181,7 +181,7 @@ export default function FireDoorQuoting() {
     }
   };
 
-  const displayedRates = showAllRates ? rateItems : rateItems.slice(0, 5);
+  const displayedRates = showAllRates ? rateItems : rateItems.slice(0, 3);
 
   return (
     <div className="container">
@@ -211,33 +211,36 @@ export default function FireDoorQuoting() {
               }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #dee2e6', backgroundColor: '#f8f9fa' }}>
-                    <th colSpan="2" style={{ padding: '8px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>
+                    <th colSpan="2" style={{ padding: '5px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>
                       BMTrada ART Standard
                     </th>
-                    <th colSpan="3" style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>
+                    <th colSpan="3" style={{ padding: '5px', textAlign: 'left', fontWeight: '600' }}>
                       WestPark Rate Card
                     </th>
                   </tr>
                   <tr style={{ borderBottom: '2px solid #dee2e6' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', width: '80px' }}>ART Code</th>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>ART Description</th>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', width: '80px' }}>B-Code</th>
-                    <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600' }}>WestPark Description</th>
-                    <th style={{ padding: '8px', textAlign: 'center', fontWeight: '600', width: '120px' }}>Price / Action</th>
+                    <th style={{ padding: '5px', textAlign: 'left', fontWeight: '600', width: '60px', whiteSpace: 'nowrap' }}>ART Code</th>
+                    <th style={{ padding: '5px', textAlign: 'left', fontWeight: '600', borderRight: '2px solid #dee2e6' }}>ART Description</th>
+                    <th style={{ padding: '5px', textAlign: 'left', fontWeight: '600', width: '70px' }}>B-Code</th>
+                    <th style={{ padding: '5px', textAlign: 'left', fontWeight: '600' }}>WestPark Description</th>
+                    <th style={{ padding: '5px', textAlign: 'center', fontWeight: '600', width: '110px' }}>Price / Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedRates.map((item) => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                      <td style={{ padding: '8px', fontWeight: '500' }}>{item.art_code}</td>
-                      <td style={{ padding: '8px', borderRight: '2px solid #f0f0f0' }}>
+                  {displayedRates.map((item, index) => (
+                    <tr key={item.id} style={{ 
+                      borderBottom: '1px solid #dee2e6',
+                      opacity: !showAllRates && index === 2 ? 0.4 : 1 
+                    }}>
+                      <td style={{ padding: '5px', fontWeight: '500' }}>{item.art_code}</td>
+                      <td style={{ padding: '5px', borderRight: '2px solid #f0f0f0' }}>
                         {item.description}
                       </td>
-                      <td style={{ padding: '8px', fontWeight: '500' }}>{item.rate_card_code}</td>
-                      <td style={{ padding: '8px' }}>
+                      <td style={{ padding: '5px', fontWeight: '500' }}>{item.rate_card_code}</td>
+                      <td style={{ padding: '5px' }}>
                         {item.rate_card_description || '—'}
                       </td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>
+                      <td style={{ padding: '5px', textAlign: 'center' }}>
                         {editingId === item.id ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                             <input
@@ -310,21 +313,21 @@ export default function FireDoorQuoting() {
               </table>
             </div>
 
-            {rateItems.length > 5 && (
+            {rateItems.length > 3 && (
               <button
                 onClick={() => setShowAllRates(!showAllRates)}
                 style={{
-                  marginTop: '15px',
-                  padding: '8px 16px',
+                  marginTop: '12px',
+                  padding: '6px 14px',
                   backgroundColor: 'white',
                   border: '1px solid #007bff',
                   color: '#007bff',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  fontSize: '14px'
+                  fontSize: '13px'
                 }}
               >
-                {showAllRates ? 'Show less' : `See all ${rateItems.length} items`}
+                {showAllRates ? 'Show less' : `See all ${rateItems.length} elements`}
               </button>
             )}
           </>
