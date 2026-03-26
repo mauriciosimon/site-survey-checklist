@@ -76,11 +76,25 @@ function ChecklistForm() {
   const [draftId, setDraftId] = useState(null); // Track backend draft ID for auto-save
   const [lastSaveTime, setLastSaveTime] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const prevFormDataRef = useRef(initialFormData); // Track previous formData to detect changes
 
   // Auto-save to BACKEND (Gmail-style, debounced)
   useEffect(() => {
+    // Check if ONLY site_photos changed (ignore photo-only updates)
+    const prevData = prevFormDataRef.current;
+    const { site_photos: prevPhotos, ...prevRest } = prevData;
+    const { site_photos: currentPhotos, ...currentRest } = formData;
+    const onlyPhotosChanged = JSON.stringify(prevRest) === JSON.stringify(currentRest);
+    
+    if (onlyPhotosChanged) {
+      console.log('[AUTO-SAVE] Skipped - only site_photos changed');
+      prevFormDataRef.current = formData;
+      return;
+    }
+    
     // Mark as having unsaved changes when formData changes
     setHasUnsavedChanges(true);
+    prevFormDataRef.current = formData;
     
     const timeoutId = setTimeout(async () => {
       // Don't save if form is essentially empty
@@ -89,9 +103,9 @@ function ChecklistForm() {
         return;
       }
       
-      // Don't auto-save if submission is in progress
-      if (submittingInProgress.current) {
-        console.log('[AUTO-SAVE] Skipped - submission in progress');
+      // Don't auto-save if submission is in progress OR photo upload is in progress
+      if (submittingInProgress.current || uploadInProgress.current) {
+        console.log('[AUTO-SAVE] Skipped - submission or upload in progress');
         return;
       }
 
@@ -118,33 +132,8 @@ function ChecklistForm() {
           console.log('[AUTO-SAVE] Draft created:', currentId);
         }
 
-        // Upload any pending photos after saving draft
-        if (pendingPhotos.length > 0 && currentId) {
-          console.log('[AUTO-SAVE] Uploading', pendingPhotos.length, 'pending photos');
-          let uploadedCount = 0;
-          for (const photo of pendingPhotos) {
-            try {
-              await checklistApi.uploadPhoto(currentId, photo);
-              uploadedCount++;
-            } catch (photoErr) {
-              console.error('[AUTO-SAVE] Failed to upload photo:', photoErr);
-            }
-          }
-          
-          // Fetch the checklist ONCE after all uploads to get complete photo list
-          if (uploadedCount > 0) {
-            try {
-              const response = await checklistApi.get(currentId);
-              setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
-              console.log('[AUTO-SAVE] Fetched updated checklist with', response.data.site_photos?.length || 0, 'photos');
-            } catch (fetchErr) {
-              console.error('[AUTO-SAVE] Failed to fetch updated checklist:', fetchErr);
-            }
-          }
-          
-          // Clear pending photos after upload
-          setPendingPhotos([]);
-        }
+        // NOTE: Do NOT upload pending photos here - that's handled by immediate upload effect
+        // This prevents duplicate uploads
 
         setDraftSaved(true);
         setLastSaveTime(new Date());
@@ -156,7 +145,7 @@ function ChecklistForm() {
     }, 3000); // 3 second debounce to avoid hammering API
 
     return () => clearTimeout(timeoutId);
-  }, [formData, isEdit, draftId, id, pendingPhotos]);
+  }, [formData, isEdit, draftId, id]);
 
   // Separate effect: Upload pending photos immediately when they're added (if draft exists)
   useEffect(() => {
@@ -173,20 +162,25 @@ function ChecklistForm() {
       }
       
       if (pendingPhotos.length > 0 && currentId) {
+        // Clear pendingPhotos immediately to prevent duplicate uploads
+        const photosToUpload = [...pendingPhotos];
+        setPendingPhotos([]);
+        
         uploadInProgress.current = true;
-        console.log('[IMMEDIATE UPLOAD] Conditions met! Uploading', pendingPhotos.length, 'photos to draft', currentId);
+        console.log('[IMMEDIATE UPLOAD] Starting upload of', photosToUpload.length, 'photos to draft', currentId);
+        
         const successfulUploads = [];
         const failedPhotos = [];
         
         // Upload all photos first
-        for (const photo of pendingPhotos) {
+        for (const photo of photosToUpload) {
           try {
             await checklistApi.uploadPhoto(currentId, photo);
             successfulUploads.push(photo.name);
-            console.log('[IMMEDIATE UPLOAD] Photo uploaded:', photo.name);
+            console.log('[IMMEDIATE UPLOAD] ✅ Photo uploaded:', photo.name);
           } catch (photoErr) {
             failedPhotos.push(photo);
-            console.error('[IMMEDIATE UPLOAD] Failed to upload photo:', photo.name, photoErr);
+            console.error('[IMMEDIATE UPLOAD] ❌ Failed to upload photo:', photo.name, photoErr);
           }
         }
         
@@ -194,22 +188,26 @@ function ChecklistForm() {
         if (successfulUploads.length > 0) {
           try {
             const response = await checklistApi.get(currentId);
-            setFormData(prev => ({ ...prev, site_photos: response.data.site_photos }));
             console.log('[IMMEDIATE UPLOAD] Fetched updated checklist with', response.data.site_photos?.length || 0, 'photos');
+            // Update photos WITHOUT triggering auto-save (only update site_photos field)
+            setFormData(prev => {
+              const updated = { ...prev, site_photos: response.data.site_photos };
+              console.log('[IMMEDIATE UPLOAD] Updated formData.site_photos');
+              return updated;
+            });
           } catch (fetchErr) {
             console.error('[IMMEDIATE UPLOAD] Failed to fetch updated checklist:', fetchErr);
           }
         }
         
-        if (failedPhotos.length === 0) {
-          setPendingPhotos([]);
-          console.log('[IMMEDIATE UPLOAD] All photos uploaded successfully, pendingPhotos cleared');
-        } else {
+        // Re-add failed photos to pending list
+        if (failedPhotos.length > 0) {
+          console.log('[IMMEDIATE UPLOAD] Re-adding', failedPhotos.length, 'failed photos to pendingPhotos');
           setPendingPhotos(failedPhotos);
-          console.log('[IMMEDIATE UPLOAD] Some uploads failed. Keeping', failedPhotos.length, 'photos in pendingPhotos');
         }
         
         uploadInProgress.current = false;
+        console.log('[IMMEDIATE UPLOAD] Upload complete');
       } else {
         console.log('[IMMEDIATE UPLOAD] Conditions NOT met - skipping upload');
       }
