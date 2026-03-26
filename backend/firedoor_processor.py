@@ -8,7 +8,7 @@ import re
 import csv
 import json
 import logging
-import pdfplumber
+import fitz  # pymupdf
 import httpx
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
@@ -268,18 +268,20 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
             full_text = f.read()
         logger.info(f"Text file read: {len(full_text)} characters")
     elif ext == '.pdf':
-        # Extract from PDF
+        # Extract from PDF using pymupdf (recommended by Mauricio)
         logger.info(f"Extracting text from PDF: {file_path}")
         try:
-            with pdfplumber.open(file_path) as pdf:
-                logger.info(f"PDF opened: {len(pdf.pages)} pages")
-                for page_num, page in enumerate(pdf.pages, 1):
-                    page_text = page.extract_text()
-                    if page_text:
-                        full_text += page_text + "\n\n"
-                        logger.info(f"Page {page_num}: extracted {len(page_text)} characters")
-                    else:
-                        logger.warning(f"Page {page_num}: no text extracted (may be image-only)")
+            doc = fitz.open(file_path)
+            logger.info(f"PDF opened: {doc.page_count} pages")
+            for page_num in range(doc.page_count):
+                page = doc[page_num]
+                page_text = page.get_text()
+                if page_text:
+                    full_text += page_text + "\n\n"
+                    logger.info(f"Page {page_num + 1}: extracted {len(page_text)} characters")
+                else:
+                    logger.warning(f"Page {page_num + 1}: no text extracted (may be image-only)")
+            doc.close()
             logger.info(f"PDF extraction complete: {len(full_text)} total characters")
         except Exception as e:
             logger.error(f"PDF extraction failed: {e}")
