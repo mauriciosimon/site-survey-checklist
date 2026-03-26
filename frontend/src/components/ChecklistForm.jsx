@@ -66,6 +66,11 @@ function ChecklistForm() {
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Debug: Log whenever site_photos changes
+  useEffect(() => {
+    console.log('[DEBUG] formData.site_photos changed:', formData.site_photos?.length || 0, 'photos');
+  }, [formData.site_photos]);
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
@@ -923,6 +928,7 @@ function ChecklistForm() {
                   <>
                     <div style={{ marginTop: '20px', marginBottom: '10px' }}>
                       <strong>Already uploaded:</strong>
+                      {console.log('[RENDER] Displaying', formData.site_photos.length, 'uploaded photos')}
                     </div>
                     <div className="photo-grid">
                       {formData.site_photos.map((media, idx) => {
