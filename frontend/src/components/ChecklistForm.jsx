@@ -67,10 +67,6 @@ function ChecklistForm() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  // Debug: Log whenever site_photos changes
-  useEffect(() => {
-    console.log('[DEBUG] formData.site_photos changed:', formData.site_photos?.length || 0, 'photos');
-  }, [formData.site_photos]);
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [pendingPhotos, setPendingPhotos] = useState([]); // Photos to upload on create
@@ -152,66 +148,7 @@ function ChecklistForm() {
     return () => clearTimeout(timeoutId);
   }, [formData, isEdit, draftId, id]);
 
-  // Separate effect: Upload pending photos immediately when they're added (if draft exists)
-  useEffect(() => {
-    console.log('[IMMEDIATE UPLOAD EFFECT] Triggered - pendingPhotos:', pendingPhotos.length, 'draftId:', draftId, 'id:', id);
-    
-    const uploadPhotosImmediately = async () => {
-      const currentId = draftId || id;
-      console.log('[IMMEDIATE UPLOAD] Checking conditions - pendingPhotos.length:', pendingPhotos.length, 'currentId:', currentId, 'uploadInProgress:', uploadInProgress.current);
-      
-      // Skip if upload already in progress
-      if (uploadInProgress.current) {
-        console.log('[IMMEDIATE UPLOAD] Upload already in progress, skipping');
-        return;
-      }
-      
-      if (pendingPhotos.length > 0 && currentId) {
-        // Clear pendingPhotos immediately to prevent duplicate uploads
-        const photosToUpload = [...pendingPhotos];
-        setPendingPhotos([]);
-        
-        uploadInProgress.current = true;
-        console.log('[IMMEDIATE UPLOAD] Starting upload of', photosToUpload.length, 'photos to draft', currentId);
-        
-        const successfulUploads = [];
-        const failedPhotos = [];
-        
-        // Upload all photos and collect responses
-        for (const photo of photosToUpload) {
-          try {
-            const response = await checklistApi.uploadPhoto(currentId, photo);
-            successfulUploads.push(photo.name);
-            console.log('[IMMEDIATE UPLOAD] ✅ Photo uploaded:', photo.name);
-            // Update formData with the response (which includes updated site_photos)
-            if (response.data.site_photos) {
-              setFormData(prev => ({
-                ...prev,
-                site_photos: response.data.site_photos
-              }));
-              console.log('[IMMEDIATE UPLOAD] Updated site_photos, now', response.data.site_photos.length, 'photos');
-            }
-          } catch (photoErr) {
-            failedPhotos.push(photo);
-            console.error('[IMMEDIATE UPLOAD] ❌ Failed to upload photo:', photo.name, photoErr);
-          }
-        }
-        
-        // Re-add failed photos to pending list
-        if (failedPhotos.length > 0) {
-          console.log('[IMMEDIATE UPLOAD] Re-adding', failedPhotos.length, 'failed photos to pendingPhotos');
-          setPendingPhotos(failedPhotos);
-        }
-        
-        uploadInProgress.current = false;
-        console.log('[IMMEDIATE UPLOAD] Upload complete');
-      } else {
-        console.log('[IMMEDIATE UPLOAD] Conditions NOT met - skipping upload');
-      }
-    };
-
-    uploadPhotosImmediately();
-  }, [pendingPhotos, draftId, id]);
+    // Photos upload on Submit only (no auto-upload to avoid state sync issues)
 
   // Helper function to reload checklist from server (used after photo uploads)
   useEffect(() => {
@@ -907,7 +844,6 @@ function ChecklistForm() {
                   <>
                     <div style={{ marginTop: '20px', marginBottom: '10px' }}>
                       <strong>Already uploaded:</strong>
-                      {console.log('[RENDER] Displaying', formData.site_photos.length, 'uploaded photos')}
                     </div>
                     <div className="photo-grid">
                       {formData.site_photos.map((media, idx) => {
