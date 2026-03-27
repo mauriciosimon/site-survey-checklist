@@ -608,12 +608,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                 for row_num in range(6, 40):
                     code = rate_card_sheet.cell(row=row_num, column=1).value
                     if code:
-                        # Get the calculated total from columns D-G
+                        # FIX #4: Use Materials + Labour only (not T&J or Humping)
                         mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
                         lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
-                        tj = rate_card_sheet.cell(row=row_num, column=6).value or 0
-                        hump = rate_card_sheet.cell(row=row_num, column=7).value or 0
-                        total = mat + lab + tj + hump
+                        # tj = rate_card_sheet.cell(row=row_num, column=6).value or 0  # Removed
+                        # hump = rate_card_sheet.cell(row=row_num, column=7).value or 0  # Removed
+                        total = mat + lab  # Materials + Labour only
                         if total > 0:
                             template_prices[str(code)] = f"£{total:.2f}"
                 logger.info(f"Extracted {len(template_prices)} prices from template")
@@ -1049,15 +1049,20 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"B-code door IDs: {b_code_door_ids}")
     
     # Step 2: Get rates from Rate Card
+    # FIX #4: Calculate rate from Materials + Labour only (not T&J or Humping)
     rate_card_sheet = wb['Rate Card']
     rates = {}
     for row_num in range(22, 34):  # B01-B12
         code = rate_card_sheet.cell(row=row_num, column=1).value
-        rate = rate_card_sheet.cell(row=row_num, column=8).value
+        # OLD: rate = rate_card_sheet.cell(row=row_num, column=8).value  # Column H (TOTAL with T&J+Humping)
+        # NEW: Calculate from Materials + Labour only
+        mat = rate_card_sheet.cell(row=row_num, column=4).value or 0  # Column D (Materials)
+        lab = rate_card_sheet.cell(row=row_num, column=5).value or 0  # Column E (Labour)
+        rate = mat + lab
         if code and rate and isinstance(rate, (int, float)):
             rates[str(code)] = rate
     
-    logger.info(f"Rates from Rate Card: {rates}")
+    logger.info(f"Rates from Rate Card (Materials + Labour only): {rates}")
     
     # Step 3: Calculate Option A total
     option_a_total = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
