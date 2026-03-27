@@ -1573,7 +1573,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # Scan Door Schedule column P (Base Item) for A-series codes
     door_schedule = wb["Door Schedule"]
-    for row_num in range(door_schedule_start_row, door_schedule_start_row + len(doors)):
+    # Door data starts at row 4 (row 3 is headers)
+    for row_num in range(4, 4 + len(doors)):
         door_id = door_schedule.cell(row=row_num, column=1).value  # Column A
         base_item = door_schedule.cell(row=row_num, column=16).value  # Column P
         
