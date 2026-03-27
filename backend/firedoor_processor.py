@@ -1086,9 +1086,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         
         # Write numbers directly (openpyxl doesn't support cached formula values)
         quote_sheet.cell(row=row_num, column=3).value = qty          # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE)
+        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE - Materials + Labour only)
         quote_sheet.cell(row=row_num, column=6).value = total        # Column F (TOTAL)
-        quote_sheet.cell(row=row_num, column=7).value = door_ids_str # Column G (DOOR IDs) - NEW!
+        
+        # FIX #3: Write zero to T&J and Humping rate columns to exclude from breakdown
+        quote_sheet.cell(row=row_num, column=11).value = 0           # Column K (T&J rate) = 0
+        quote_sheet.cell(row=row_num, column=13).value = 0           # Column M (Humping rate) = 0
+        # This makes columns L and N = 0, so column O = columns H + J only (Materials + Labour)
+        
+        # FIX #1: Door IDs reference column (use column S, after all existing columns)
+        quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
         
         if qty > 0:
             logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}, DOOR_IDS={door_ids_str}")
