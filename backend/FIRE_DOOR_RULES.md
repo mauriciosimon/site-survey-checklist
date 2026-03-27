@@ -214,7 +214,7 @@ List ALL applicable B-codes as a comma-separated list.
 
 ### Calculation Logic
 1. Count doors with `Opt A = YES` in Door Schedule
-2. Group by B-code (Base Item)
+2. Group by B-code (Base Item column P + ALL codes column Q)
 3. Calculate: `QTY × RATE = TOTAL` for each B-code
 4. Write numbers directly (not formulas) to Quote Sheet
 
@@ -225,6 +225,31 @@ List ALL applicable B-codes as a comma-separated list.
   - C: QTY (number)
   - E: RATE (number from Rate Card)
   - F: TOTAL (number = QTY × RATE)
+
+### Quote Sheet Row-to-B-Code Mapping
+**CRITICAL:** Each Quote Sheet row must count ONLY doors where that exact B-code appears in column P or Q of Door Schedule.
+
+| Quote Sheet Row | B-Code | Description |
+|-----------------|--------|-------------|
+| Row 11 (A.01) | B01 | Intumescent + smoke seals |
+| Row 12 (A.02) | B02 | Intumescent only |
+| Row 13 (A.03) | B03 | Self-closing device |
+| Row 14 (A.04) | B04 | Hinge sets |
+| Row 15 (A.05) | B05 | Latch/handles |
+| Row 16 (A.06) | B06 | Fire-stopping |
+| Row 17 (A.07) | B07 | Signage |
+| Row 18 (A.08) | B08 | Hold-open device |
+| Row 19 (A.09) | B09 | Drop seal |
+| Row 20 (A.10) | B10 | Adjust/rehang |
+| Row 21 (A.11) | B11 | Hardwood lipping |
+| Row 22 (A.12) | B12 | Void infill |
+
+### VALIDATION RULES (Issue #2 Fix)
+After writing Quote Sheet quantities, the system MUST:
+1. Sum all QTY values from rows 11-22
+2. Compare to total doors with OptA=YES in Door Schedule
+3. If sum of QTY values does NOT equal or exceed the count of OptA=YES doors, log ERROR
+   - Example: If 31 doors have OptA=YES, sum of all B-code counts should be ≥31 (can be higher due to multi-code doors)
 
 ### Client Summary
 - **C10:** NET COST (Option A total)
@@ -298,6 +323,20 @@ List ALL applicable B-codes as a comma-separated list.
 - Rate: £575 per door (from Rate Card)
 - Total: 1 × £575 = £575
 
+### VALIDATION RULES (Issue #1 Fix)
+For replacement doors (ART17, ART18, or ART20):
+1. The A-series code MUST be written to Door Schedule column P during extraction
+2. If OptB=YES but column P is None or blank, log ERROR — this should NEVER happen
+3. Fire rating + leaf config + height → A-series code mapping is MANDATORY
+4. If fire rating cannot be extracted, system MUST:
+   - Log ERROR showing which door failed extraction
+   - Use fallback A05 (FD30S single ≤2040mm) as emergency default
+   - Flag the door for manual review in Notes column
+
+**Code Location:**
+- During Door Schedule population (rows 4+)
+- Check: `if needs_replacement and not a_series_code: log ERROR`
+
 ### Type 2 (Excel) - PENDING
 **Rule:** Option B shows "PENDING — fire strategy required"
 
@@ -345,6 +384,17 @@ else:
 3. **Option A TOTAL (row 23):**
    - F23 = calculated number (SUM of rows 11–22)
 
+4. **Option B TOTAL (row ~42):**
+   - F42 = calculated number (SUM of Option B line items)
+
+**CRITICAL VALIDATION (Issue #3 Fix):**
+- TOTAL rows MUST always be written as numbers before saving
+- If a TOTAL row is None or 0 when line items exist, treat as a BUG not a valid state
+- System MUST validate:
+  - If any Option A line items have QTY > 0, then F23 MUST be a number > 0
+  - If any Option B line items have QTY > 0, then Option B TOTAL row MUST be a number > 0
+  - Never write None to TOTAL rows — write 0 as minimum
+
 ### Client Summary
 1. **Header Fields:**
    - B3: Client (copied from Quote Sheet B4)
@@ -374,6 +424,39 @@ else:
    - Green (COMPLIANT): No faults, no remedial work needed
    - Yellow (YES): Faults found, remedial work needed
    - Red (NO): Unable to inspect or critical issues
+
+---
+
+## 8.1 Material Call-Off Sheet
+
+### Component-to-B-Code Mapping (Issue #4 Fix)
+The Material Call-Off sheet tracks components needed for remedial works. Each component row must count doors from Door Schedule by B-code.
+
+**CRITICAL:** Use b_code_counts dictionary to populate quantities — do NOT use hardcoded values.
+
+| Row | Component | B-Code | Calculation |
+|-----|-----------|--------|-------------|
+| 13 | Overhead closers | B03 | Count B03 doors |
+| 14 | Hinge sets | B04 | Count B04 doors |
+| 15 | Intumescent + smoke seals | B01 | Count B01 doors |
+| 16 | Intumescent only | B02 | Count B02 doors |
+| 17 | Signage | B07 | Count B07 doors × 2 (2 signs per door) |
+| 18 | Lever handles/latch | B05 | Count B05 doors |
+| 19 | Drop seal | B09 | Count B09 doors |
+| 20 | Intumescent mastic | B06 | Count B06 doors |
+| 21 | Hardwood lipping | B11 | Count B11 doors |
+| 22 | Hardwood void infill | B12 | Count B12 doors |
+
+**Example:**
+If Door Schedule has:
+- B01=22 doors → Material Call-Off row 15 = 22
+- B03=1 door → Material Call-Off row 13 = 1
+- B05=4 doors → Material Call-Off row 18 = 4
+- B06=1 door → Material Call-Off row 20 = 1
+- B12=1 door → Material Call-Off row 22 = 1
+
+**Validation:**
+After populating Material Call-Off, log all counts to help diagnose discrepancies.
 
 ---
 

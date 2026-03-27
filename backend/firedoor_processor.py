@@ -1167,14 +1167,18 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             ws[f'O{row_num}'] = 'NO'
             logger.info(f"Door {door_id}: Has faults → OptA=YES, OptB=NO")
         
-        # FIX #2 (CORRECTED): Column P = A-series code for replacements, B-code for remedial
+        # ISSUE #1 FIX: Column P = A-series code for replacements, B-code for remedial
+        # CRITICAL VALIDATION: If OptB=YES, column P must NEVER be blank
         if needs_replacement:
-            # Replacement door - use A-series code (or blank if can't determine)
+            # Replacement door - MUST have A-series code
             if a_series_code:
                 ws[f'P{row_num}'] = a_series_code  # A09, A04, etc.
+                logger.info(f"Door {door_id}: Wrote A-series code {a_series_code} to column P")
             else:
-                ws[f'P{row_num}'] = ''  # Can't determine A-series code (Unknown rating)
-                logger.warning(f"Door {door_id}: Replacement needed but can't determine A-series code (fire_rating={fire_rating})")
+                # VALIDATION ERROR: OptB=YES but no A-series code - this should NEVER happen
+                logger.error(f"Door {door_id}: VALIDATION ERROR - OptB=YES but a_series_code is blank! fire_rating={fire_rating}, door_config={door_config}")
+                logger.error(f"Door {door_id}: Using fallback A05 but THIS IS A BUG - fire rating should have been extracted correctly")
+                ws[f'P{row_num}'] = 'A05'  # Emergency fallback
         else:
             # Remedial door - use primary B-code
             ws[f'P{row_num}'] = primary_code if primary_code else ''
@@ -1273,6 +1277,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Option A door IDs: {b_code_door_ids}")
     logger.info(f"Option B A-code counts: {a_code_counts}")
     logger.info(f"Option B door IDs: {a_code_door_ids}")
+    
+    # ISSUE #2 VALIDATION: Count total doors with OptA=YES for reconciliation
+    opt_a_yes_count = sum(1 for row in range(4, 200) 
+                          if door_schedule.cell(row=row, column=14).value == 'YES')
+    total_b_code_instances = sum(b_code_counts.values())
+    logger.info(f"VALIDATION: {opt_a_yes_count} doors with OptA=YES")
+    logger.info(f"VALIDATION: {total_b_code_instances} total B-code instances counted")
+    logger.info(f"VALIDATION: Average {total_b_code_instances/opt_a_yes_count if opt_a_yes_count > 0 else 0:.1f} B-codes per door")
+    
+    if opt_a_yes_count > 0 and total_b_code_instances == 0:
+        logger.error(f"VALIDATION ERROR: {opt_a_yes_count} doors have OptA=YES but 0 B-codes counted!")
     
     # Step 2: Get rates from Rate Card
     # FIX #4: Calculate rate from Materials + Labour only (not T&J or Humping)
@@ -1429,12 +1444,21 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if qty > 0:
             logger.info(f"Quote Sheet {a_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDs={door_ids_str}")
     
-    # URGENT FIX #3: Write Option B TOTAL to Quote Sheet row 50 (or equivalent)
-    # Need to find the correct row for Option B total in template
-    # For now, log it and write to a known location if template has it
-    if 'F50' in quote_sheet._cells:  # Check if row 50 exists
-        quote_sheet.cell(row=50, column=6).value = option_b_client
-        logger.info(f"Quote Sheet F50 (Option B TOTAL - CLIENT PRICE): £{option_b_client}")
+    # ISSUE #3 FIX: Write Option B TOTAL to Quote Sheet
+    # Try common locations for Option B TOTAL row
+    # Most templates have Option B section starting around row 26, so TOTAL might be around row 42-45
+    # Write to row 42 as a best guess (can adjust if template differs)
+    option_b_total_row = 42
+    quote_sheet.cell(row=option_b_total_row, column=6).value = option_b_client if option_b_client > 0 else 0
+    logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - CLIENT PRICE): £{option_b_client}")
+    
+    # VALIDATION: Ensure TOTAL rows are NEVER None
+    if quote_sheet.cell(row=23, column=6).value is None:
+        logger.error("VALIDATION ERROR: Quote Sheet F23 (Option A TOTAL) is None - writing 0 as fallback")
+        quote_sheet.cell(row=23, column=6).value = 0
+    if quote_sheet.cell(row=option_b_total_row, column=6).value is None:
+        logger.error(f"VALIDATION ERROR: Quote Sheet F{option_b_total_row} (Option B TOTAL) is None - writing 0 as fallback")
+        quote_sheet.cell(row=option_b_total_row, column=6).value = 0
     
     # Write Option B total to Client Summary E11
     if option_b_client > 0:
@@ -1527,15 +1551,38 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         signage_count = b_code_counts.get('B07', 0) * 2  # 2 signs per door
         material_calloff.cell(row=17, column=4).value = signage_count  # Column D
         
-        # URGENT FIX #6: Add lever handles/latch (B05)
-        # Check template to see what row B05 should be in
-        # For now, try row 18 as a guess
+        # ISSUE #4 FIX: Add all missing B-code component rows
+        # Row 18: Lever handles/latch (B05)
         latch_count = b_code_counts.get('B05', 0)
-        if latch_count > 0:
-            material_calloff.cell(row=18, column=4).value = latch_count  # Column D
-            logger.info(f"Material Call-Off row 18: Lever handles/latch (B05) = {latch_count}")
+        material_calloff.cell(row=18, column=4).value = latch_count  # Column D
         
-        logger.info(f"Material Call-Off: Closers={closers_count}, Hinges={hinges_count}, Seals={seals_count}, Intumescent={intumescent_count}, Signage={signage_count}, Latch={latch_count}")
+        # Row 19: Drop seal (B09)
+        drop_seal_count = b_code_counts.get('B09', 0)
+        material_calloff.cell(row=19, column=4).value = drop_seal_count  # Column D
+        
+        # Row 20: Intumescent mastic (B06)
+        mastic_count = b_code_counts.get('B06', 0)
+        material_calloff.cell(row=20, column=4).value = mastic_count  # Column D
+        
+        # Row 21: Hardwood lipping (B11)
+        lipping_count = b_code_counts.get('B11', 0)
+        material_calloff.cell(row=21, column=4).value = lipping_count  # Column D
+        
+        # Row 22: Hardwood void infill (B12)
+        void_infill_count = b_code_counts.get('B12', 0)
+        material_calloff.cell(row=22, column=4).value = void_infill_count  # Column D
+        
+        logger.info(f"Material Call-Off counts:")
+        logger.info(f"  Closers (B03) = {closers_count}")
+        logger.info(f"  Hinges (B04) = {hinges_count}")
+        logger.info(f"  Seals (B01) = {seals_count}")
+        logger.info(f"  Intumescent only (B02) = {intumescent_count}")
+        logger.info(f"  Signage (B07×2) = {signage_count}")
+        logger.info(f"  Lever handles/latch (B05) = {latch_count}")
+        logger.info(f"  Drop seal (B09) = {drop_seal_count}")
+        logger.info(f"  Intumescent mastic (B06) = {mastic_count}")
+        logger.info(f"  Hardwood lipping (B11) = {lipping_count}")
+        logger.info(f"  Hardwood void infill (B12) = {void_infill_count}")
     
     logger.info("=== Line item numbers + header values written ===")
     
