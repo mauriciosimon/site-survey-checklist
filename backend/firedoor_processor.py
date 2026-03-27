@@ -306,6 +306,9 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
 2. Location/Description
 3. List of faults found
 4. ART codes mentioned (if any)
+5. Fire rating (FD60, FD60S, FD30, FD30S, or "Unknown" if not specified)
+6. Door configuration: "Single Leaf" or "Double Leaf" (infer from context/dimensions if needed)
+7. Whether this is a replacement door (true/false)
 
 Return as JSON array with this structure:
 [
@@ -313,7 +316,10 @@ Return as JSON array with this structure:
     "door_id": "FD-001",
     "location": "Main Entrance",
     "faults": ["Gap too large", "Seal missing"],
-    "art_codes": ["ART04", "ART11"]
+    "art_codes": ["ART04", "ART11"],
+    "fire_rating": "FD60S",
+    "door_config": "Single Leaf",
+    "is_replacement": false
   }},
   ...
 ]
@@ -339,12 +345,19 @@ Return ONLY the JSON array, no other text."""
     # Parse JSON response
     try:
         doors = json.loads(response_text)
+        # FIX #2: Mark all Type 1 doors with format_type
+        for door in doors:
+            door['format_type'] = 'TYPE_1'
         return doors
     except json.JSONDecodeError:
         # Try to extract JSON from response
         json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
         if json_match:
-            return json.loads(json_match.group())
+            doors = json.loads(json_match.group())
+            # FIX #2: Mark all Type 1 doors with format_type
+            for door in doors:
+                door['format_type'] = 'TYPE_1'
+            return doors
         return []
 
 
@@ -509,13 +522,25 @@ def extract_type2_excel(file_path: str) -> List[Dict]:
                             b_codes.append(b_code)
             
             if faults:  # Only add doors with actual faults
+                # FIX #2 (CORRECTED): Try to infer fire rating and door config from Excel data
+                # For Type 2, these are usually Unknown unless specified in the Excel
+                fire_rating = 'Unknown'
+                door_config = 'Single Leaf'  # Default assumption
+                is_replacement = False
+                
+                # TODO: Check if Excel has columns for fire rating, dimensions, or config
+                # For now, use placeholders - will be PENDING in Quote Sheet
+                
                 all_doors.append({
                     'door_id': f"{sheet.title}-{door_number}",  # Use validated integer door number
                     'location': sheet.title,  # Use sheet name as location
                     'faults': faults,
                     'b_codes': list(set(b_codes)),  # Remove duplicates
                     'has_unable': has_unable,  # Flag for orange highlighting
-                    'format_type': 'TYPE_2'  # Mark as Type 2 for PENDING logic
+                    'format_type': 'TYPE_2',  # Mark as Type 2 for PENDING logic
+                    'fire_rating': fire_rating,  # FIX #2: Add fire rating
+                    'door_config': door_config,  # FIX #2: Add door config
+                    'is_replacement': is_replacement  # FIX #2: Add replacement flag
                 })
     
     return all_doors
@@ -554,6 +579,52 @@ def get_priority_bcode(codes: List[str]) -> str:
     
     # If none match priority list, return first code
     return codes[0]
+
+
+def map_to_aseries_code(fire_rating: str, door_config: str) -> str:
+    """
+    Map fire rating + door configuration to A-series replacement code.
+    
+    Args:
+        fire_rating: Fire rating (FD60, FD60S, FD30, FD30S, Nominal, etc.)
+        door_config: Door configuration ("Single Leaf" or "Double Leaf")
+    
+    Returns:
+        A-series code (A01-A15) or empty string if no match
+    
+    Mapping table (from Mauricio 2026-03-27):
+        FD60 / FD60S + Single → A09
+        FD60 / FD60S + Double → A11
+        FD30 / FD30S + Single → A05
+        FD30 / FD30S + Double → A08
+        Nominal + Single → A05 (default to FD30S)
+    """
+    if not fire_rating or not door_config:
+        return ''
+    
+    rating_upper = str(fire_rating).upper()
+    config_lower = str(door_config).lower()
+    
+    # Normalize config
+    is_single = 'single' in config_lower
+    is_double = 'double' in config_lower
+    
+    # Map based on rating + config
+    if 'FD60' in rating_upper:  # Matches FD60 and FD60S
+        if is_single:
+            return 'A09'
+        elif is_double:
+            return 'A11'
+    elif 'FD30' in rating_upper:  # Matches FD30 and FD30S
+        if is_single:
+            return 'A05'
+        elif is_double:
+            return 'A08'
+    elif 'NOMINAL' in rating_upper:
+        if is_single:
+            return 'A05'  # Default to FD30S
+    
+    return ''  # No match
 
 
 def populate_excel_template(doors: List[Dict], client_name: str, template_path: str, output_path: str):
@@ -596,63 +667,6 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.error(error_msg)
         raise RuntimeError(error_msg) from e
     
-    # FIX #2: Read Material Call-Off sheet for replacement door specs (Type 2 surveys)
-    replacement_door_specs = {}
-    if "Material Call-Off" in wb.sheetnames:
-        mc_sheet = wb["Material Call-Off"]
-        logger.info("Reading Material Call-Off for replacement door specs...")
-        
-        # Rows 9-11 may contain pre-filled replacement door data
-        for row in range(9, 12):
-            door_id = mc_sheet.cell(row=row, column=1).value  # Column A
-            spec_text = mc_sheet.cell(row=row, column=3).value  # Column C
-            
-            if door_id and spec_text and isinstance(spec_text, str):
-                # Parse spec text like "FD60S Single Leaf — MEASURE BEFORE ORDER"
-                # Extract fire rating and config
-                spec_upper = spec_text.upper()
-                
-                # Determine fire rating
-                fire_rating = None
-                if 'FD60S' in spec_upper:
-                    fire_rating = 'FD60S'
-                elif 'FD60' in spec_upper:
-                    fire_rating = 'FD60'
-                elif 'FD30S' in spec_upper:
-                    fire_rating = 'FD30S'
-                elif 'FD30' in spec_upper:
-                    fire_rating = 'FD30'
-                
-                # Determine config
-                config = None
-                if 'DOUBLE' in spec_upper:
-                    config = 'Double Leaf'
-                elif 'SINGLE' in spec_upper:
-                    config = 'Single Leaf'
-                
-                # Map to A-series code
-                a_series_code = None
-                if fire_rating and config:
-                    # Simple mapping (expand as needed)
-                    if fire_rating == 'FD60S' and config == 'Single Leaf':
-                        a_series_code = 'A09'
-                    elif fire_rating == 'FD30' and config == 'Double Leaf':
-                        a_series_code = 'A04'
-                    elif fire_rating == 'FD30' and config == 'Single Leaf':
-                        a_series_code = 'A01'  # Base code
-                    elif fire_rating == 'FD30S' and config == 'Single Leaf':
-                        a_series_code = 'A05'  # Base code
-                    # Add more mappings as needed
-                
-                if a_series_code:
-                    replacement_door_specs[str(door_id)] = {
-                        'fire_rating': fire_rating,
-                        'config': config,
-                        'a_series_code': a_series_code
-                    }
-                    logger.info(f"Material Call-Off: {door_id} → {fire_rating} {config} → {a_series_code}")
-        
-        logger.info(f"Found {len(replacement_door_specs)} replacement door specs in Material Call-Off")
     # Update Rate Card sheet with database prices
     if DATABASE_AVAILABLE:
         try:
@@ -965,21 +979,18 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # N=OPT A REMEDIAL?, O=OPT B REPLACE?, P=OPT B BASE ITEM, Q=QTY,
         # R-U=E/O (OVERSIZE/HARDWOOD/EXTERNAL/VISION), V=NOTES/FLAGS
         
-        # FIX #2: Check if this door has replacement specs from Material Call-Off
         door_id = door['door_id']
-        replacement_spec = replacement_door_specs.get(door_id, None)
         
         ws[f'A{row_num}'] = door_id
         ws[f'B{row_num}'] = door.get('location', '')
         ws[f'C{row_num}'] = 'From Survey'  # Door type placeholder
         
-        # Use replacement spec data if available
-        if replacement_spec:
-            ws[f'D{row_num}'] = replacement_spec['fire_rating']  # Rating from Material Call-Off
-            ws[f'E{row_num}'] = replacement_spec['config']       # Config from Material Call-Off
-        else:
-            ws[f'D{row_num}'] = 'Unknown'  # Rating placeholder
-            ws[f'E{row_num}'] = 'Single Leaf'  # Config placeholder
+        # FIX #2 (CORRECTED): Get fire rating and config from door data (extracted by Claude or Excel)
+        fire_rating = door.get('fire_rating', 'Unknown')
+        door_config = door.get('door_config', 'Single Leaf')
+        
+        ws[f'D{row_num}'] = fire_rating
+        ws[f'E{row_num}'] = door_config
         
         ws[f'F{row_num}'] = 'Unknown'  # Size placeholder
         ws[f'G{row_num}'] = 'Paint'  # Finish placeholder
@@ -1012,14 +1023,23 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Check if this is Type 2 format (no fire strategy, so Option B = PENDING)
         is_type2 = door.get('format_type') == 'TYPE_2'
         
-        # FIX #2: Check if door has replacement spec from Material Call-Off
-        # If so, override Type 2 PENDING logic
-        if replacement_spec:
-            # Replacement door with known specs from Material Call-Off
+        # FIX #2 (CORRECTED): Determine if this is a replacement door and map to A-series code
+        is_replacement_door = door.get('is_replacement', False) or needs_replacement
+        a_series_code = ''
+        
+        if is_replacement_door and fire_rating != 'Unknown':
+            # Map fire rating + config to A-series code
+            a_series_code = map_to_aseries_code(fire_rating, door_config)
+            if a_series_code:
+                logger.info(f"Door {door_id}: {fire_rating} {door_config} → {a_series_code}")
+        
+        # Set Option A/B columns
+        if is_replacement_door and a_series_code:
+            # Replacement door with known A-series code
             ws[f'N{row_num}'] = 'NO'   # No remedial work - full replacement
             ws[f'O{row_num}'] = 'YES'  # Option B replacement
         elif is_type2:
-            # Type 2 Excel surveys without replacement specs: Option B = PENDING
+            # Type 2 Excel surveys without replacement data: Option B = PENDING
             if is_compliant:
                 ws[f'N{row_num}'] = 'COMPLIANT'
             else:
@@ -1035,9 +1055,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             ws[f'N{row_num}'] = 'YES'
             ws[f'O{row_num}'] = 'NO'
         
-        # FIX #2: Column P = A-series code for replacements, B-code for remedial
-        if replacement_spec:
-            ws[f'P{row_num}'] = replacement_spec['a_series_code']  # A09, A04, etc.
+        # FIX #2 (CORRECTED): Column P = A-series code for replacements, B-code for remedial
+        if a_series_code:
+            ws[f'P{row_num}'] = a_series_code  # A09, A04, etc.
         else:
             # BUG 2 FIX: Column P should contain primary B-code for ALL doors with faults
             ws[f'P{row_num}'] = primary_code if primary_code else ''
