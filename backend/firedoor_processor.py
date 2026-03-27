@@ -695,12 +695,16 @@ def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = N
         elif is_double:
             return 'A08'  # FD30S double (with smoke seals)
     
-    # Check for FD60S
-    elif 'FD60S' in rating_upper:
+    # Check for FD60 or FD60S (treat FD60 same as FD60S)
+    elif 'FD60' in rating_upper:  # Matches both FD60 and FD60S
         if is_single:
             if height_range == 1:
                 return 'A09'
             elif height_range == 2:
+                return 'A10'
+            elif height_range == 3:
+                # Height > 2400mm - outside standard range, use A10 (largest available)
+                logger.warning(f"FD60 single door height > 2400mm - using A10 (standard range exceeded)")
                 return 'A10'
         elif is_double:
             return 'A11'
@@ -1516,11 +1520,13 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B)
         logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
     
-    # MEDIUM FIX #7: Set correct compliance note based on survey type
-    # Compliance note is typically in Client Summary around row 15-20
+    # ISSUE #5 FIX: Set correct compliance note based on survey type
+    # is_type2 already set above (around line 1497)
+    logger.info(f"Survey type for compliance note: is_type2={is_type2}, first door format_type={doors[0].get('format_type') if doors else None}")
+    
+    # Compliance note is typically in Client Summary around row 15-25
     # Type 1: Full FireDNA survey with fire strategy
     # Type 2: Excel survey without fire strategy
-    compliance_note_row = 16  # Adjust if needed based on template
     if is_type2:
         compliance_note = (
             "This report identifies fire doors requiring remedial works based on visual inspection. "
@@ -1585,13 +1591,13 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         material_calloff.cell(row=17, column=4).value = signage_count  # Column D
         
         # ISSUE #4 FIX: Add all missing B-code component rows
-        # Row 18: Lever handles/latch (B05)
-        latch_count = b_code_counts.get('B05', 0)
-        material_calloff.cell(row=18, column=4).value = latch_count  # Column D
-        
-        # Row 19: Drop seal (B09)
+        # Row 18: Drop seal (B09) - SWAPPED from previous version
         drop_seal_count = b_code_counts.get('B09', 0)
-        material_calloff.cell(row=19, column=4).value = drop_seal_count  # Column D
+        material_calloff.cell(row=18, column=4).value = drop_seal_count  # Column D
+        
+        # Row 19: Lever handles/latch (B05) - SWAPPED from previous version
+        latch_count = b_code_counts.get('B05', 0)
+        material_calloff.cell(row=19, column=4).value = latch_count  # Column D
         
         # Row 20: Intumescent mastic (B06)
         mastic_count = b_code_counts.get('B06', 0)
