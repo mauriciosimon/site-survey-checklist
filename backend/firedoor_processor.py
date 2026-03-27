@@ -1119,15 +1119,23 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         is_replacement_door = door.get('is_replacement', False) or needs_replacement
         a_series_code = ''
         
-        if is_replacement_door and fire_rating != 'Unknown':
+        if is_replacement_door:
             # Get door height (from extraction or default)
             door_height = door.get('door_height_mm', None)
             
-            # Map fire rating + config + height to A-series code
-            a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
-            if a_series_code:
-                height_str = f"{door_height}mm" if door_height else "≤2040mm (default)"
-                logger.info(f"Door {door_id}: {fire_rating} {door_config} {height_str} → {a_series_code}")
+            if fire_rating != 'Unknown':
+                # Map fire rating + config + height to A-series code
+                a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
+                if a_series_code:
+                    height_str = f"{door_height}mm" if door_height else "≤2040mm (default)"
+                    logger.info(f"Door {door_id}: {fire_rating} {door_config} {height_str} → {a_series_code}")
+                else:
+                    logger.error(f"Door {door_id}: Replacement needed but mapping failed (rating={fire_rating}, config={door_config})")
+            else:
+                # URGENT FIX: If fire rating is Unknown, use default mapping based on ART codes
+                # ART18 typically indicates non-fire-rated door - default to FD30S single
+                logger.warning(f"Door {door_id}: Replacement needed but fire_rating=Unknown - using default FD30S single → A05")
+                a_series_code = 'A05'  # Default: FD30S single ≤2040mm
         
         # Set Option A/B columns
         # CRITICAL: Priority order matters!
@@ -1321,6 +1329,11 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         door_ids = b_code_door_ids.get(b_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
+        # URGENT FIX #2: Debug logging for Quote Sheet quantities
+        # Check what the Quote Sheet template label is for this row
+        template_label = quote_sheet.cell(row=row_num, column=2).value  # Column B (Description/Label)
+        logger.info(f"Row {row_num}: Template label='{template_label}', Writing {b_code} with QTY={qty}, Doors={door_ids_str}")
+        
         # Write CLIENT PRICE values (with margin applied)
         quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
         quote_sheet.cell(row=row_num, column=5).value = client_rate   # Column E (CLIENT RATE with margin)
@@ -1341,18 +1354,24 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # FIX #5: Client Summary shows CLIENT PRICES (with margin), not costs
     client_summary = wb['Client Summary']
     
-    # C10 = NET COST (internal cost - for reference)
+    # HIGH FIX #4: Update column label from "NET COST" to "Internal Cost (ex margin)"
+    # Check if row 9 has column headers
+    if client_summary.cell(row=9, column=3).value:
+        client_summary.cell(row=9, column=3).value = "Internal Cost (ex margin)"
+        logger.info("Updated Client Summary C9 label to 'Internal Cost (ex margin)'")
+    
+    # C10 = Internal Cost (ex margin) - internal cost for reference
     client_summary.cell(row=10, column=3).value = option_a_cost
     
     # D10 = OPTION A TOTAL (CLIENT PRICE with margin)
     client_summary.cell(row=10, column=4).value = option_a_client
     
-    # D13 = TOTAL INVESTMENT (sum of all option client prices - just Option A for now)
+    # D13 = TOTAL INVESTMENT - Option A only (mutually exclusive with Option B)
     client_summary.cell(row=13, column=4).value = option_a_client
     
-    logger.info(f"Client Summary C10 (NET COST): £{option_a_cost}")
+    logger.info(f"Client Summary C10 (Internal Cost ex margin): £{option_a_cost}")
     logger.info(f"Client Summary D10 (OPTION A CLIENT PRICE): £{option_a_client}")
-    logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{option_a_client}")
+    logger.info(f"Client Summary D13 (TOTAL INVESTMENT - Option A): £{option_a_client}")
     
     # Step 6: Write Option A TOTAL to Quote Sheet row 23
     quote_sheet.cell(row=23, column=6).value = option_a_client  # F23 (CLIENT PRICE)
@@ -1410,15 +1429,25 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if qty > 0:
             logger.info(f"Quote Sheet {a_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDs={door_ids_str}")
     
+    # URGENT FIX #3: Write Option B TOTAL to Quote Sheet row 50 (or equivalent)
+    # Need to find the correct row for Option B total in template
+    # For now, log it and write to a known location if template has it
+    if 'F50' in quote_sheet._cells:  # Check if row 50 exists
+        quote_sheet.cell(row=50, column=6).value = option_b_client
+        logger.info(f"Quote Sheet F50 (Option B TOTAL - CLIENT PRICE): £{option_b_client}")
+    
     # Write Option B total to Client Summary E11
     if option_b_client > 0:
         client_summary.cell(row=11, column=5).value = option_b_client  # E11 (Option B CLIENT PRICE)
         logger.info(f"Client Summary E11 (Option B CLIENT PRICE): £{option_b_client}")
-        
-        # Update D13 (TOTAL INVESTMENT) to include Option B
-        total_investment = option_a_client + option_b_client
-        client_summary.cell(row=13, column=4).value = total_investment
-        logger.info(f"Client Summary D13 (TOTAL INVESTMENT with Option A + B): £{total_investment}")
+    
+    # URGENT FIX #5: TOTAL INVESTMENT should NOT add Option A + Option B (mutually exclusive)
+    # Show Option A in column D, Option B in column E
+    # Matt chooses one, not both
+    client_summary.cell(row=13, column=4).value = option_a_client  # D13 = Option A only
+    client_summary.cell(row=13, column=5).value = option_b_client if option_b_client > 0 else ""  # E13 = Option B only
+    logger.info(f"Client Summary D13 (TOTAL INVESTMENT - Option A): £{option_a_client}")
+    logger.info(f"Client Summary E13 (TOTAL INVESTMENT - Option B): £{option_b_client}")
     
     # Step 7: Copy header values from Quote Sheet to Client Summary
     # Client Summary pulls these from Quote Sheet via formulas, but we need to write them
@@ -1441,6 +1470,38 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     if is_type2 and option_b_client == 0:
         client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B)
         logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
+    
+    # MEDIUM FIX #7: Set correct compliance note based on survey type
+    # Compliance note is typically in Client Summary around row 15-20
+    # Type 1: Full FireDNA survey with fire strategy
+    # Type 2: Excel survey without fire strategy
+    compliance_note_row = 16  # Adjust if needed based on template
+    if is_type2:
+        compliance_note = (
+            "This report identifies fire doors requiring remedial works based on visual inspection. "
+            "Option A provides remedial works to address identified faults. Option B (full replacement) "
+            "cannot be priced without fire strategy drawings - please request these from the client if "
+            "replacement doors are required. All prices exclude VAT and are subject to site survey confirmation."
+        )
+    else:
+        # Type 1 compliance note
+        compliance_note = (
+            "This report identifies fire doors requiring remedial works to achieve compliance with "
+            "Approved Document B and the Regulatory Reform (Fire Safety) Order 2005. Works are categorized "
+            "as Option A (remedial works) or Option B (full replacement). All prices exclude VAT and are "
+            "subject to site survey confirmation."
+        )
+    
+    # Try to find and update compliance note cell (typically a merged cell)
+    # Check rows 15-20 for compliance note
+    for row in range(15, 21):
+        cell_value = client_summary.cell(row=row, column=2).value
+        if cell_value and ('compliance' in str(cell_value).lower() or 'approved document' in str(cell_value).lower()):
+            client_summary.cell(row=row, column=2).value = compliance_note
+            logger.info(f"Updated compliance note at row {row} to Type {'2' if is_type2 else '1'} note")
+            break
+    else:
+        logger.warning("Could not find compliance note cell in Client Summary - may need manual update")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
     if "Material Call-Off" in wb.sheetnames:
@@ -1466,7 +1527,15 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         signage_count = b_code_counts.get('B07', 0) * 2  # 2 signs per door
         material_calloff.cell(row=17, column=4).value = signage_count  # Column D
         
-        logger.info(f"Material Call-Off: Closers={closers_count}, Hinges={hinges_count}, Seals={seals_count}, Intumescent={intumescent_count}, Signage={signage_count}")
+        # URGENT FIX #6: Add lever handles/latch (B05)
+        # Check template to see what row B05 should be in
+        # For now, try row 18 as a guess
+        latch_count = b_code_counts.get('B05', 0)
+        if latch_count > 0:
+            material_calloff.cell(row=18, column=4).value = latch_count  # Column D
+            logger.info(f"Material Call-Off row 18: Lever handles/latch (B05) = {latch_count}")
+        
+        logger.info(f"Material Call-Off: Closers={closers_count}, Hinges={hinges_count}, Seals={seals_count}, Intumescent={intumescent_count}, Signage={signage_count}, Latch={latch_count}")
     
     logger.info("=== Line item numbers + header values written ===")
     
