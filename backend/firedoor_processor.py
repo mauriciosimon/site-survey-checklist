@@ -1608,51 +1608,76 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.info("No A-series codes found in Door Schedule - no verification notes needed")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
+    # CRITICAL: Material Call-Off must count ALL B-code occurrences across all doors
+    # for component ordering, not just primary codes (column P) used for pricing.
+    # We scan column Q (All Codes) to count every occurrence of each B-code.
     if "Material Call-Off" in wb.sheetnames:
         material_calloff = wb["Material Call-Off"]
         
+        # Count ALL B-code occurrences from Door Schedule column Q
+        all_codes_counts = {}
+        door_schedule = wb["Door Schedule"]
+        
+        for row_num in range(4, 4 + len(doors)):
+            all_codes_str = door_schedule.cell(row=row_num, column=17).value  # Column Q
+            if all_codes_str:
+                # Parse the comma-separated B-codes
+                codes = [code.strip() for code in str(all_codes_str).split(',')]
+                for code in codes:
+                    # Only count valid B-codes (B01-B12)
+                    if code.startswith('B') and len(code) >= 3:
+                        try:
+                            b_num = int(code[1:3])
+                            if 1 <= b_num <= 12:
+                                all_codes_counts[code] = all_codes_counts.get(code, 0) + 1
+                        except (ValueError, IndexError):
+                            pass  # Not a valid B-code
+        
+        logger.info("Material Call-Off counts from ALL B-code occurrences (column Q):")
+        for code, count in sorted(all_codes_counts.items()):
+            logger.info(f"  {code} = {count}")
+        
         # Row 13: Closers (B03)
-        closers_count = b_code_counts.get('B03', 0)
-        material_calloff.cell(row=13, column=4).value = closers_count  # Column D
+        closers_count = all_codes_counts.get('B03', 0)
+        material_calloff.cell(row=13, column=4).value = closers_count
         
         # Row 14: Hinges (B04)
-        hinges_count = b_code_counts.get('B04', 0)
-        material_calloff.cell(row=14, column=4).value = hinges_count  # Column D
+        hinges_count = all_codes_counts.get('B04', 0)
+        material_calloff.cell(row=14, column=4).value = hinges_count
         
         # Row 15: Seals (B01 - intumescent + smoke)
-        seals_count = b_code_counts.get('B01', 0)
-        material_calloff.cell(row=15, column=4).value = seals_count  # Column D
+        seals_count = all_codes_counts.get('B01', 0)
+        material_calloff.cell(row=15, column=4).value = seals_count
         
         # Row 16: Intumescent only (B02)
-        intumescent_count = b_code_counts.get('B02', 0)
-        material_calloff.cell(row=16, column=4).value = intumescent_count  # Column D
+        intumescent_count = all_codes_counts.get('B02', 0)
+        material_calloff.cell(row=16, column=4).value = intumescent_count
         
-        # Row 17: Signage (B07 × 2)
-        signage_count = b_code_counts.get('B07', 0) * 2  # 2 signs per door
-        material_calloff.cell(row=17, column=4).value = signage_count  # Column D
+        # Row 17: Signage (B07 × 2) - 2 signs per door
+        signage_count = all_codes_counts.get('B07', 0) * 2
+        material_calloff.cell(row=17, column=4).value = signage_count
         
-        # ISSUE #4 FIX: Add all missing B-code component rows
-        # Row 18: Drop seal (B09) - SWAPPED from previous version
-        drop_seal_count = b_code_counts.get('B09', 0)
-        material_calloff.cell(row=18, column=4).value = drop_seal_count  # Column D
+        # Row 18: Drop seal (B09)
+        drop_seal_count = all_codes_counts.get('B09', 0)
+        material_calloff.cell(row=18, column=4).value = drop_seal_count
         
-        # Row 19: Lever handles/latch (B05) - SWAPPED from previous version
-        latch_count = b_code_counts.get('B05', 0)
-        material_calloff.cell(row=19, column=4).value = latch_count  # Column D
+        # Row 19: Lever handles/latch (B05)
+        latch_count = all_codes_counts.get('B05', 0)
+        material_calloff.cell(row=19, column=4).value = latch_count
         
         # Row 20: Intumescent mastic (B06)
-        mastic_count = b_code_counts.get('B06', 0)
-        material_calloff.cell(row=20, column=4).value = mastic_count  # Column D
+        mastic_count = all_codes_counts.get('B06', 0)
+        material_calloff.cell(row=20, column=4).value = mastic_count
         
         # Row 21: Hardwood lipping (B11)
-        lipping_count = b_code_counts.get('B11', 0)
-        material_calloff.cell(row=21, column=4).value = lipping_count  # Column D
+        lipping_count = all_codes_counts.get('B11', 0)
+        material_calloff.cell(row=21, column=4).value = lipping_count
         
         # Row 22: Hardwood void infill (B12)
-        void_infill_count = b_code_counts.get('B12', 0)
-        material_calloff.cell(row=22, column=4).value = void_infill_count  # Column D
+        void_infill_count = all_codes_counts.get('B12', 0)
+        material_calloff.cell(row=22, column=4).value = void_infill_count
         
-        logger.info(f"Material Call-Off counts:")
+        logger.info(f"Material Call-Off populated:")
         logger.info(f"  Closers (B03) = {closers_count}")
         logger.info(f"  Hinges (B04) = {hinges_count}")
         logger.info(f"  Seals (B01) = {seals_count}")
