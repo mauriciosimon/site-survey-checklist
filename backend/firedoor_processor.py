@@ -1433,8 +1433,18 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Client Summary D13 (TOTAL INVESTMENT - Option A): £{option_a_client}")
     
     # Step 6: Write Option A TOTAL to Quote Sheet row 23
-    quote_sheet.cell(row=23, column=6).value = option_a_client  # F23 (CLIENT PRICE)
-    logger.info(f"Quote Sheet F23 (Option A TOTAL - CLIENT PRICE): £{option_a_client}")
+    # CRITICAL: Ensure we write a NUMBER, not None
+    if option_a_client is None or not isinstance(option_a_client, (int, float)):
+        logger.error(f"CRITICAL: option_a_client is {type(option_a_client)} with value {option_a_client} - forcing to 0")
+        option_a_client = 0
+    
+    option_a_total_to_write = float(option_a_client)  # Explicitly cast to float
+    quote_sheet.cell(row=23, column=6).value = option_a_total_to_write  # F23 (CLIENT PRICE)
+    logger.info(f"Quote Sheet F23 (Option A TOTAL - CLIENT PRICE): £{option_a_total_to_write}")
+    
+    # IMMEDIATE VERIFICATION: Read back what we just wrote
+    written_value = quote_sheet.cell(row=23, column=6).value
+    logger.info(f"VERIFICATION: Read back Quote Sheet F23 = {written_value} (type: {type(written_value)})")
     
     # Step 6b: FIX #2 - Calculate and write Option B totals (replacement doors)
     # Get A-series rates from Rate Card
@@ -1501,8 +1511,19 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # Most templates have Option B section starting around row 26, so TOTAL might be around row 42-45
     # Write to row 42 as a best guess (can adjust if template differs)
     option_b_total_row = 42
-    quote_sheet.cell(row=option_b_total_row, column=6).value = option_b_client if option_b_client > 0 else 0
-    logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - CLIENT PRICE): £{option_b_client}")
+    
+    # CRITICAL: Ensure we write a NUMBER, not None
+    if option_b_client is None or not isinstance(option_b_client, (int, float)):
+        logger.error(f"CRITICAL: option_b_client is {type(option_b_client)} with value {option_b_client} - forcing to 0")
+        option_b_client = 0
+    
+    option_b_total_to_write = float(option_b_client) if option_b_client > 0 else 0.0
+    quote_sheet.cell(row=option_b_total_row, column=6).value = option_b_total_to_write
+    logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - CLIENT PRICE): £{option_b_total_to_write}")
+    
+    # IMMEDIATE VERIFICATION: Read back what we just wrote
+    written_value = quote_sheet.cell(row=option_b_total_row, column=6).value
+    logger.info(f"VERIFICATION: Read back Quote Sheet F{option_b_total_row} = {written_value} (type: {type(written_value)})")
     
     # VALIDATION: Ensure TOTAL rows are NEVER None
     if quote_sheet.cell(row=23, column=6).value is None:
