@@ -1123,18 +1123,23 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             # Get door height (from extraction or default)
             door_height = door.get('door_height_mm', None)
             
+            # ISSUE #1 FIX: Add detailed logging to diagnose mapping failures
+            logger.info(f"Door {door_id}: Replacement door - fire_rating='{fire_rating}', door_config='{door_config}', door_height={door_height}")
+            
             if fire_rating != 'Unknown':
                 # Map fire rating + config + height to A-series code
                 a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
                 if a_series_code:
                     height_str = f"{door_height}mm" if door_height else "≤2040mm (default)"
-                    logger.info(f"Door {door_id}: {fire_rating} {door_config} {height_str} → {a_series_code}")
+                    logger.info(f"Door {door_id}: MAPPED {fire_rating} {door_config} {height_str} → {a_series_code}")
                 else:
-                    logger.error(f"Door {door_id}: Replacement needed but mapping failed (rating={fire_rating}, config={door_config})")
+                    logger.error(f"Door {door_id}: MAPPING FAILED - rating='{fire_rating}', config='{door_config}', height={door_height}")
+                    logger.error(f"Door {door_id}: This should NEVER happen - check map_to_aseries_code function")
             else:
                 # URGENT FIX: If fire rating is Unknown, use default mapping based on ART codes
                 # ART18 typically indicates non-fire-rated door - default to FD30S single
                 logger.warning(f"Door {door_id}: Replacement needed but fire_rating=Unknown - using default FD30S single → A05")
+                logger.warning(f"Door {door_id}: Claude extraction FAILED to extract fire rating - check survey text")
                 a_series_code = 'A05'  # Default: FD30S single ≤2040mm
         
         # Set Option A/B columns
@@ -1254,16 +1259,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         base_item = door_schedule.cell(row=row, column=16).value  # Column P (Base Item code)
         all_codes_str = door_schedule.cell(row=row, column=17).value  # Column Q (ALL codes)
         
-        # Count Option A B-codes
-        if opt_a == 'YES' and all_codes_str:
-            # Parse comma-separated B-codes from column Q
-            codes = [c.strip() for c in str(all_codes_str).split(',')]
-            for code in codes:
-                if code and code.startswith('B'):
-                    b_code_counts[code] = b_code_counts.get(code, 0) + 1
-                    if code not in b_code_door_ids:
-                        b_code_door_ids[code] = []
-                    b_code_door_ids[code].append(str(door_id))
+        # ISSUE #2 FIX: Count Option A B-codes from column P ONLY (not column Q)
+        # Column P = Base Item (primary B-code for Quote Sheet COUNTIF)
+        # Column Q = ALL codes (for reference only, not for Quote Sheet)
+        if opt_a == 'YES' and base_item and str(base_item).startswith('B'):
+            b_code = str(base_item).strip()
+            b_code_counts[b_code] = b_code_counts.get(b_code, 0) + 1
+            if b_code not in b_code_door_ids:
+                b_code_door_ids[b_code] = []
+            b_code_door_ids[b_code].append(str(door_id))
+            logger.debug(f"Door {door_id}: Counted {b_code} from column P")
         
         # FIX #2: Count Option B A-series codes
         if opt_b == 'YES' and base_item and str(base_item).startswith('A'):
@@ -1311,6 +1316,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # FIX #5: Get target margin and calculate client price
     target_margin = quote_sheet['R2'].value or 0
     option_a_client = option_a_cost / (1 - target_margin) if (1 - target_margin) > 0 else option_a_cost
+    
+    # ISSUE #3 VALIDATION: Ensure totals are never None
+    if option_a_cost is None:
+        logger.error("ISSUE #3: option_a_cost is None - setting to 0")
+        option_a_cost = 0
+    if option_a_client is None:
+        logger.error("ISSUE #3: option_a_client is None - setting to 0")
+        option_a_client = 0
     
     logger.info(f"Option A cost: £{option_a_cost}")
     logger.info(f"Option A client price (with {target_margin*100}% margin): £{option_a_client}")
@@ -1410,6 +1423,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # FIX #5: Apply margin to Option B
     option_b_client = option_b_cost / (1 - target_margin) if (1 - target_margin) > 0 else option_b_cost
+    
+    # ISSUE #3 VALIDATION: Ensure totals are never None
+    if option_b_cost is None:
+        logger.error("ISSUE #3: option_b_cost is None - setting to 0")
+        option_b_cost = 0
+    if option_b_client is None:
+        logger.error("ISSUE #3: option_b_client is None - setting to 0")
+        option_b_client = 0
     
     logger.info(f"Option B cost: £{option_b_cost}")
     logger.info(f"Option B client price (with {target_margin*100}% margin): £{option_b_client}")
@@ -1516,16 +1537,28 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             "subject to site survey confirmation."
         )
     
-    # Try to find and update compliance note cell (typically a merged cell)
-    # Check rows 15-20 for compliance note
-    for row in range(15, 21):
+    # ISSUE #5 FIX: Find and update compliance note cell
+    # Check rows 15-25 for compliance note (expanded range)
+    found_compliance_note = False
+    for row in range(15, 26):
         cell_value = client_summary.cell(row=row, column=2).value
-        if cell_value and ('compliance' in str(cell_value).lower() or 'approved document' in str(cell_value).lower()):
-            client_summary.cell(row=row, column=2).value = compliance_note
-            logger.info(f"Updated compliance note at row {row} to Type {'2' if is_type2 else '1'} note")
-            break
-    else:
-        logger.warning("Could not find compliance note cell in Client Summary - may need manual update")
+        logger.debug(f"Client Summary row {row} column B: '{cell_value}'")
+        if cell_value and isinstance(cell_value, str):
+            if ('compliance' in cell_value.lower() or 
+                'approved document' in cell_value.lower() or
+                'fire safety order' in cell_value.lower() or
+                'remedial works' in cell_value.lower()):
+                client_summary.cell(row=row, column=2).value = compliance_note
+                logger.info(f"Updated compliance note at Client Summary row {row} to Type {'2' if is_type2 else '1'} note")
+                found_compliance_note = True
+                break
+    
+    if not found_compliance_note:
+        logger.error("ISSUE #5: Could not find compliance note cell in Client Summary rows 15-25")
+        logger.error("Cell values checked:")
+        for row in range(15, 26):
+            val = client_summary.cell(row=row, column=2).value
+            logger.error(f"  Row {row}: '{val}'")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
     if "Material Call-Off" in wb.sheetnames:
