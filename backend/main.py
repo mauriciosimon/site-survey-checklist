@@ -670,6 +670,68 @@ async def process_firedoor_survey(
 
 
 # ============================================================================
+# TEST ENDPOINT (NO AUTH)
+# ============================================================================
+
+@app.post("/api/firedoor/test")
+async def process_firedoor_test(
+    file: UploadFile = File(...),
+    client_name: str = Form(default="Test Client")
+):
+    """
+    TEST ENDPOINT - Process fire door survey without authentication.
+    Use for development and testing iterations.
+    """
+    import firedoor_processor as fdp
+    
+    temp_dir = tempfile.mkdtemp()
+    logger.info(f"TEST: Created temp directory: {temp_dir}")
+    
+    try:
+        # Save uploaded file
+        input_path = Path(temp_dir) / file.filename
+        with open(input_path, 'wb') as f:
+            shutil.copyfileobj(file.file, f)
+        
+        # Detect format
+        file_format = fdp.detect_format(str(input_path), file.filename)
+        logger.info(f"TEST: Detected format: {file_format}")
+        
+        if file_format == 'UNKNOWN':
+            raise HTTPException(400, "Unsupported file format")
+        
+        # Extract doors
+        if file_format == 'TYPE_1':
+            doors = fdp.extract_type1_pdf(str(input_path))
+        else:
+            doors = fdp.extract_type2_excel(str(input_path))
+        
+        logger.info(f"TEST: Extracted {len(doors)} doors")
+        
+        # Generate output
+        output_filename = f"{client_name.replace(' ', '_')}_FireDoor_Quote.xlsx"
+        output_path = Path(temp_dir) / output_filename
+        
+        template_path = Path(__file__).parent / "reference_files" / "WestPark_FireDoor_CostSheet_v3_AlphaSights.xlsx"
+        
+        fdp.populate_excel_template(doors, client_name, str(template_path), str(output_path))
+        logger.info(f"TEST: Generated output: {output_path}")
+        
+        # Return file
+        return FileResponse(
+            path=str(output_path),
+            filename=output_filename,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            background=BackgroundTask(lambda: shutil.rmtree(temp_dir))
+        )
+    
+    except Exception as e:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        logger.error(f"TEST: Error: {e}")
+        raise HTTPException(500, str(e))
+
+
+# ============================================================================
 # RATE CARD MANAGEMENT ENDPOINTS
 # ============================================================================
 
