@@ -1096,34 +1096,46 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # Formulas stay for manual editing, cached values display immediately
     logger.info("=== Calculating Quote Sheet cached values ===")
     
-    # Step 1: Count B-codes from Door Schedule (AFTER population, from actual Excel cells)
-    # FIX #1: Count ALL B-codes from column Q (not just primary from column P)
-    # and track which door IDs each B-code relates to
+    # Step 1: Count B-codes AND A-series codes from Door Schedule
     door_schedule = wb['Door Schedule']
     b_code_counts = {}
-    b_code_door_ids = {}  # NEW: Track door IDs for each B-code
+    b_code_door_ids = {}
+    a_code_counts = {}  # FIX #2: Track A-series codes for Option B
+    a_code_door_ids = {}
     
     for row in range(4, 200):  # Check up to row 200
         door_id = door_schedule.cell(row=row, column=1).value
         if not door_id:
             break
-        opt_a = door_schedule.cell(row=row, column=14).value  # Column N
+        
+        opt_a = door_schedule.cell(row=row, column=14).value  # Column N (Option A)
+        opt_b = door_schedule.cell(row=row, column=15).value  # Column O (Option B)
+        base_item = door_schedule.cell(row=row, column=16).value  # Column P (Base Item code)
         all_codes_str = door_schedule.cell(row=row, column=17).value  # Column Q (ALL codes)
         
+        # Count Option A B-codes
         if opt_a == 'YES' and all_codes_str:
             # Parse comma-separated B-codes from column Q
             codes = [c.strip() for c in str(all_codes_str).split(',')]
             for code in codes:
                 if code and code.startswith('B'):
-                    # Count this B-code
                     b_code_counts[code] = b_code_counts.get(code, 0) + 1
-                    # Track which door ID this B-code relates to
                     if code not in b_code_door_ids:
                         b_code_door_ids[code] = []
                     b_code_door_ids[code].append(str(door_id))
+        
+        # FIX #2: Count Option B A-series codes
+        if opt_b == 'YES' and base_item and str(base_item).startswith('A'):
+            a_code = str(base_item).strip()
+            a_code_counts[a_code] = a_code_counts.get(a_code, 0) + 1
+            if a_code not in a_code_door_ids:
+                a_code_door_ids[a_code] = []
+            a_code_door_ids[a_code].append(str(door_id))
     
-    logger.info(f"B-code counts from Door Schedule: {b_code_counts}")
-    logger.info(f"B-code door IDs: {b_code_door_ids}")
+    logger.info(f"Option A B-code counts: {b_code_counts}")
+    logger.info(f"Option A door IDs: {b_code_door_ids}")
+    logger.info(f"Option B A-code counts: {a_code_counts}")
+    logger.info(f"Option B door IDs: {a_code_door_ids}")
     
     # Step 2: Get rates from Rate Card
     # FIX #4: Calculate rate from Materials + Labour only (not T&J or Humping)
@@ -1199,6 +1211,63 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     quote_sheet.cell(row=23, column=6).value = option_a_total  # F23
     logger.info(f"Quote Sheet F23 (Option A TOTAL): £{option_a_total}")
     
+    # Step 6b: FIX #2 - Calculate and write Option B totals (replacement doors)
+    # Get A-series rates from Rate Card
+    a_series_rates = {}
+    for row_num in range(6, 40):  # Check all rows in Rate Card
+        code = rate_card_sheet.cell(row=row_num, column=1).value
+        if code and str(code).startswith('A'):
+            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
+            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
+            rate = mat + lab
+            a_series_rates[str(code)] = rate
+    
+    logger.info(f"A-series rates from Rate Card: {a_series_rates}")
+    
+    # Calculate Option B total
+    option_b_total = sum(a_code_counts.get(code, 0) * a_series_rates.get(code, 0) for code in a_series_rates.keys())
+    logger.info(f"Option B total: £{option_b_total}")
+    
+    # Write Option B line items to Quote Sheet (rows 26-40)
+    acode_to_row = {
+        'A01': 26, 'A02': 27, 'A03': 28, 'A04': 29, 'A05': 30, 'A06': 31,
+        'A07': 32, 'A08': 33, 'A09': 34, 'A10': 35, 'A11': 36, 'A12': 37,
+        'A13': 38, 'A14': 39, 'A15': 40,
+    }
+    
+    for a_code, row_num in acode_to_row.items():
+        qty = a_code_counts.get(a_code, 0)
+        rate = a_series_rates.get(a_code, 0)
+        total = qty * rate
+        door_ids = a_code_door_ids.get(a_code, [])
+        door_ids_str = ', '.join(door_ids) if door_ids else ''
+        
+        # Write Option B values
+        quote_sheet.cell(row=row_num, column=3).value = qty          # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE)
+        quote_sheet.cell(row=row_num, column=6).value = total        # Column F (TOTAL)
+        quote_sheet.cell(row=row_num, column=11).value = 0           # Column K (T&J rate) = 0
+        quote_sheet.cell(row=row_num, column=13).value = 0           # Column M (Humping rate) = 0
+        quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
+        
+        if qty > 0:
+            logger.info(f"Quote Sheet {a_code}: QTY={qty}, RATE={rate}, TOTAL={total}, DOOR_IDs={door_ids_str}")
+    
+    # Write Option B TOTAL to Quote Sheet row 50 (or wherever Option B total goes)
+    # (Row number may vary - need to verify from template)
+    # For now, just log it
+    logger.info(f"Quote Sheet Option B TOTAL: £{option_b_total}")
+    
+    # Write Option B total to Client Summary E11
+    if option_b_total > 0:
+        client_summary.cell(row=11, column=5).value = option_b_total  # E11 (Option B TOTAL)
+        logger.info(f"Client Summary E11 (Option B TOTAL): £{option_b_total}")
+        
+        # Update D13 (TOTAL INVESTMENT) to include Option B
+        total_investment = option_a_total + option_b_total
+        client_summary.cell(row=13, column=4).value = total_investment
+        logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{total_investment}")
+    
     # Step 7: Copy header values from Quote Sheet to Client Summary
     # Client Summary pulls these from Quote Sheet via formulas, but we need to write them
     # Correct row mapping:
@@ -1215,8 +1284,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Client Summary headers: Client={quote_sheet['B4'].value}, Date={quote_sheet['B3'].value}, Ref={quote_sheet['B2'].value}")
     
     # Step 8: Set Option B to "PENDING" for Type 2 surveys (no fire strategy)
+    # UNLESS we already calculated Option B total above (replacement doors with specs)
     is_type2 = doors and doors[0].get('format_type') == 'TYPE_2'
-    if is_type2:
+    if is_type2 and option_b_total == 0:
         client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B TOTAL)
         logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
     
