@@ -302,21 +302,28 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
     
     # Use Claude to extract structured data
     prompt = f"""Extract all fire door data from this survey report. For each door, extract:
-1. Door ID/Number
-2. Location/Description
-3. List of faults found
-4. ART codes mentioned (if any)
-5. Fire rating (FD60, FD60S, FD30, FD30S, or "Unknown" if not specified)
-   - IMPORTANT: Distinguish FD30 from FD30S (the S means smoke seals)
-6. Door configuration: "Single Leaf" or "Double Leaf" (infer from context/dimensions if needed)
-7. Door height in millimeters (extract from dimensions like "2100x900mm" or context)
-8. Whether this is a replacement door (true/false)
+1. Door ID/Number - MUST include floor suffix if present in survey (e.g. A01-L2, A02-L3)
+2. Location/Description (building name, floor level)
+3. List of faults found (any issues or deficiencies noted)
+4. ART codes mentioned (e.g. ART01, ART04, ART18)
+5. Fire rating - Extract exact rating from survey:
+   - FD30 (30-minute, no smoke seals)
+   - FD30S (30-minute with smoke seals)
+   - FD60 (60-minute, no smoke seals)
+   - FD60S (60-minute with smoke seals)
+   - FD90, FD120, etc.
+   - ONLY use "Unknown" if truly not mentioned
+6. Door configuration: "Single Leaf" or "Double Leaf"
+7. Door height in millimeters (extract from dimensions)
+8. Whether this is a replacement door (true ONLY if ART17, ART18, or ART20 present)
+
+CRITICAL: Door IDs MUST match survey exactly. If survey shows "A01" for Level 2, extract as "A01-L2".
 
 Return as JSON array with this structure:
 [
   {{
-    "door_id": "FD-001",
-    "location": "Main Entrance",
+    "door_id": "A01-L2",
+    "location": "Level 2 - Main Corridor",
     "faults": ["Gap too large", "Seal missing"],
     "art_codes": ["ART04", "ART11"],
     "fire_rating": "FD60S",
@@ -1095,10 +1102,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # BUG 1 FIX: Door is compliant ONLY if no codes AND no faults
         # Rule: any detected fault = Opt A YES
         is_compliant = not codes and not faults_str
-        # Check for replacement: A-series codes (A09, A11, A12, etc.) or "A-series" placeholder from ART18
+        
+        # CRITICAL FIX: Check for replacement doors - ONLY ART17, ART18, ART20
+        # ART17 = leaf replacement, ART18 = full doorset replacement, ART20 = frame replacement
+        art_codes = door.get('art_codes', [])
         needs_replacement = (
-            'replace' in str(door).lower() or 
-            any(c.startswith('A0') or c.startswith('A1') or c == 'A-series' for c in codes)
+            any(art in ['ART17', 'ART18', 'ART20'] for art in art_codes) or
+            'A-series' in codes or  # CSV mapping returns 'A-series' for replacement codes
+            door.get('is_replacement', False)  # Claude's explicit flag
         )
         
         # Check if this is Type 2 format (no fire strategy, so Option B = PENDING)
@@ -1119,10 +1130,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                 logger.info(f"Door {door_id}: {fire_rating} {door_config} {height_str} → {a_series_code}")
         
         # Set Option A/B columns
-        if is_replacement_door and a_series_code:
-            # Replacement door with known A-series code
+        # CRITICAL: Priority order matters!
+        # 1. Replacement (ART17/18/20) → OptA=NO, OptB=YES
+        # 2. Type 2 → OptA=YES/COMPLIANT, OptB=PENDING
+        # 3. Compliant (no faults) → OptA=COMPLIANT, OptB=NO
+        # 4. Has faults → OptA=YES, OptB=NO
+        
+        if needs_replacement:
+            # Replacement door (ART17, ART18, or ART20)
             ws[f'N{row_num}'] = 'NO'   # No remedial work - full replacement
             ws[f'O{row_num}'] = 'YES'  # Option B replacement
+            logger.info(f"Door {door_id}: Replacement needed (ART17/18/20) → OptA=NO, OptB=YES")
         elif is_type2:
             # Type 2 Excel surveys without replacement data: Option B = PENDING
             if is_compliant:
@@ -1131,20 +1149,26 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
                 ws[f'N{row_num}'] = 'YES'  # Has faults, needs remedial work
             ws[f'O{row_num}'] = 'PENDING'  # All Type 2 doors get PENDING (no fire strategy)
         elif is_compliant:
+            # Door passed inspection - no work needed
             ws[f'N{row_num}'] = 'COMPLIANT'
             ws[f'O{row_num}'] = 'NO'
-        elif needs_replacement:
-            ws[f'N{row_num}'] = 'NO'
-            ws[f'O{row_num}'] = 'YES'
+            logger.info(f"Door {door_id}: Compliant → OptA=COMPLIANT, OptB=NO")
         else:
+            # Door has faults - needs remedial work
             ws[f'N{row_num}'] = 'YES'
             ws[f'O{row_num}'] = 'NO'
+            logger.info(f"Door {door_id}: Has faults → OptA=YES, OptB=NO")
         
         # FIX #2 (CORRECTED): Column P = A-series code for replacements, B-code for remedial
-        if a_series_code:
-            ws[f'P{row_num}'] = a_series_code  # A09, A04, etc.
+        if needs_replacement:
+            # Replacement door - use A-series code (or blank if can't determine)
+            if a_series_code:
+                ws[f'P{row_num}'] = a_series_code  # A09, A04, etc.
+            else:
+                ws[f'P{row_num}'] = ''  # Can't determine A-series code (Unknown rating)
+                logger.warning(f"Door {door_id}: Replacement needed but can't determine A-series code (fire_rating={fire_rating})")
         else:
-            # BUG 2 FIX: Column P should contain primary B-code for ALL doors with faults
+            # Remedial door - use primary B-code
             ws[f'P{row_num}'] = primary_code if primary_code else ''
         
         # Column Q: QTY (all B-codes for remedial work)
