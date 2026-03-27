@@ -1442,9 +1442,15 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     quote_sheet.cell(row=23, column=6).value = option_a_total_to_write  # F23 (CLIENT PRICE)
     logger.info(f"Quote Sheet F23 (Option A TOTAL - CLIENT PRICE): £{option_a_total_to_write}")
     
+    # DEVVIE FIX: Write to ACTUAL TOTAL row (Row 49, not 23)
+    quote_sheet.cell(row=49, column=6).value = option_a_total_to_write  # F49 (OPTION A TOTAL)
+    logger.info(f"Quote Sheet F49 (OPTION A TOTAL - ACTUAL ROW): £{option_a_total_to_write}")
+    
     # IMMEDIATE VERIFICATION: Read back what we just wrote
-    written_value = quote_sheet.cell(row=23, column=6).value
-    logger.info(f"VERIFICATION: Read back Quote Sheet F23 = {written_value} (type: {type(written_value)})")
+    written_value_23 = quote_sheet.cell(row=23, column=6).value
+    written_value_49 = quote_sheet.cell(row=49, column=6).value
+    logger.info(f"VERIFICATION: Read back Quote Sheet F23 = {written_value_23} (type: {type(written_value_23)})")
+    logger.info(f"VERIFICATION: Read back Quote Sheet F49 = {written_value_49} (type: {type(written_value_49)})")
     
     # Step 6b: FIX #2 - Calculate and write Option B totals (replacement doors)
     # Get A-series rates from Rate Card
@@ -1521,17 +1527,29 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     quote_sheet.cell(row=option_b_total_row, column=6).value = option_b_total_to_write
     logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - CLIENT PRICE): £{option_b_total_to_write}")
     
-    # IMMEDIATE VERIFICATION: Read back what we just wrote
-    written_value = quote_sheet.cell(row=option_b_total_row, column=6).value
-    logger.info(f"VERIFICATION: Read back Quote Sheet F{option_b_total_row} = {written_value} (type: {type(written_value)})")
+    # DEVVIE FIX: Write to ACTUAL TOTAL row (Row 50, not 42)
+    quote_sheet.cell(row=50, column=6).value = option_b_total_to_write  # F50 (OPTION B TOTAL)
+    logger.info(f"Quote Sheet F50 (OPTION B TOTAL - ACTUAL ROW): £{option_b_total_to_write}")
     
-    # VALIDATION: Ensure TOTAL rows are NEVER None
+    # IMMEDIATE VERIFICATION: Read back what we just wrote
+    written_value_42 = quote_sheet.cell(row=option_b_total_row, column=6).value
+    written_value_50 = quote_sheet.cell(row=50, column=6).value
+    logger.info(f"VERIFICATION: Read back Quote Sheet F{option_b_total_row} = {written_value_42} (type: {type(written_value_42)})")
+    logger.info(f"VERIFICATION: Read back Quote Sheet F50 = {written_value_50} (type: {type(written_value_50)})")
+    
+    # VALIDATION: Ensure TOTAL rows are NEVER None (check both 23/42 and 49/50)
     if quote_sheet.cell(row=23, column=6).value is None:
-        logger.error("VALIDATION ERROR: Quote Sheet F23 (Option A TOTAL) is None - writing 0 as fallback")
+        logger.error("VALIDATION ERROR: Quote Sheet F23 (Option A subtotal) is None - writing 0 as fallback")
         quote_sheet.cell(row=23, column=6).value = 0
+    if quote_sheet.cell(row=49, column=6).value is None:
+        logger.error("VALIDATION ERROR: Quote Sheet F49 (Option A TOTAL) is None - writing 0 as fallback")
+        quote_sheet.cell(row=49, column=6).value = 0
     if quote_sheet.cell(row=option_b_total_row, column=6).value is None:
-        logger.error(f"VALIDATION ERROR: Quote Sheet F{option_b_total_row} (Option B TOTAL) is None - writing 0 as fallback")
+        logger.error(f"VALIDATION ERROR: Quote Sheet F{option_b_total_row} (Option B subtotal) is None - writing 0 as fallback")
         quote_sheet.cell(row=option_b_total_row, column=6).value = 0
+    if quote_sheet.cell(row=50, column=6).value is None:
+        logger.error("VALIDATION ERROR: Quote Sheet F50 (Option B TOTAL) is None - writing 0 as fallback")
+        quote_sheet.cell(row=50, column=6).value = 0
     
     # Write Option B total to Client Summary E11
     if option_b_client > 0:
