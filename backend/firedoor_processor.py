@@ -1567,27 +1567,31 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             val = client_summary.cell(row=row, column=1).value
             logger.error(f"  Row {row}: '{val}'")
     
-    # VERIFICATION NOTES: Add warnings for replacement doors with unknown/uncertain dimensions
+    # VERIFICATION NOTES: Scan Door Schedule for A-series codes and add verification warnings
+    # This ensures we flag any door where dimensions were extracted and need confirmation
     verification_notes = []
-    for door in doors:
-        # Check if this is a replacement door
-        is_replacement = door.get('is_replacement', False)
-        if not is_replacement:
-            continue
-            
-        door_id = door.get('door_id', 'Unknown')
-        fire_rating = door.get('fire_rating', 'Unknown')
-        door_config = door.get('door_config', 'Unknown')
-        door_height = door.get('door_height_mm', 'Unknown')
+    
+    # Scan Door Schedule column P (Base Item) for A-series codes
+    door_schedule = wb["Door Schedule"]
+    for row_num in range(door_schedule_start_row, door_schedule_start_row + len(doors)):
+        door_id = door_schedule.cell(row=row_num, column=1).value  # Column A
+        base_item = door_schedule.cell(row=row_num, column=16).value  # Column P
         
-        # Check if height is unknown or missing
-        if door_height in ['Unknown', None, '', 0]:
-            # Get the A-series code that was assigned
-            a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
-            
-            note = f"⚠️ {door_id}: Height not specified in survey. Mapped to {a_series_code} ({fire_rating} {door_config}, tallest size). Confirm door height to verify correct A-series code."
-            verification_notes.append(note)
-            logger.info(f"Added verification note for {door_id}: height unknown")
+        # Check if this is an A-series code (A01-A15 pattern)
+        if base_item and isinstance(base_item, str) and base_item.startswith('A') and len(base_item) >= 3:
+            # Extract A-series number (e.g., "A10" -> "10")
+            try:
+                a_num = int(base_item[1:])
+                if 1 <= a_num <= 15:
+                    # This is an A-series code - add verification note
+                    fire_rating = door_schedule.cell(row=row_num, column=4).value  # Column D
+                    door_config = door_schedule.cell(row=row_num, column=5).value  # Column E
+                    
+                    note = f"⚠️ {door_id}: Door dimensions extracted from survey. Mapped to {base_item} ({fire_rating} {door_config}). Please verify actual door height before ordering to confirm correct A-series code."
+                    verification_notes.append(note)
+                    logger.info(f"Added verification note for {door_id}: A-series code {base_item} needs confirmation")
+            except (ValueError, IndexError):
+                pass  # Not a valid A-series code
     
     # Write verification notes to Client Summary if any exist
     if verification_notes:
@@ -1599,6 +1603,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             client_summary.cell(row=notes_start_row + 1 + i, column=1).value = note
         
         logger.info(f"Added {len(verification_notes)} verification note(s) to Client Summary")
+    else:
+        logger.info("No A-series codes found in Door Schedule - no verification notes needed")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
     if "Material Call-Off" in wb.sheetnames:
