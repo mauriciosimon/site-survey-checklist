@@ -1608,73 +1608,74 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.info("No A-series codes found in Door Schedule - no verification notes needed")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
-    # CRITICAL: Material Call-Off must count ALL B-code occurrences across all doors
-    # for component ordering, not just primary codes (column P) used for pricing.
-    # We scan column Q (All Codes) to count every occurrence of each B-code.
+    # ROUND 6 FIX: Material Call-Off logic updated per Mauricio's clarification:
+    # - Most B-codes: Count from column P (primary B-code) only
+    # - B07 (signage) ONLY: Count from column Q (all codes) × 2 because signage is needed
+    #   for every door that has ART19, even if signage isn't the primary remedial code
     if "Material Call-Off" in wb.sheetnames:
         material_calloff = wb["Material Call-Off"]
-        
-        # Count ALL B-code occurrences from Door Schedule column Q
-        all_codes_counts = {}
         door_schedule = wb["Door Schedule"]
         
+        # Count B-codes from column P (Base Item - primary B-code only)
+        # This is what gets PRICED per door in Quote Sheet
+        primary_counts = {}
+        for row_num in range(4, 4 + len(doors)):
+            base_item = door_schedule.cell(row=row_num, column=16).value  # Column P
+            if base_item and base_item.startswith('B'):
+                primary_counts[base_item] = primary_counts.get(base_item, 0) + 1
+        
+        # Count B07 (signage) separately from column Q (all codes)
+        # because signage is needed for every door with ART19, not just primary
+        b07_count_q = 0
         for row_num in range(4, 4 + len(doors)):
             all_codes_str = door_schedule.cell(row=row_num, column=17).value  # Column Q
-            if all_codes_str:
-                # Parse the comma-separated B-codes
-                codes = [code.strip() for code in str(all_codes_str).split(',')]
-                for code in codes:
-                    # Only count valid B-codes (B01-B12)
-                    if code.startswith('B') and len(code) >= 3:
-                        try:
-                            b_num = int(code[1:3])
-                            if 1 <= b_num <= 12:
-                                all_codes_counts[code] = all_codes_counts.get(code, 0) + 1
-                        except (ValueError, IndexError):
-                            pass  # Not a valid B-code
+            if all_codes_str and 'B07' in str(all_codes_str):
+                b07_count_q += 1
         
-        logger.info("Material Call-Off counts from ALL B-code occurrences (column Q):")
-        for code, count in sorted(all_codes_counts.items()):
-            logger.info(f"  {code} = {count}")
+        logger.info("Material Call-Off counts:")
+        logger.info(f"  Primary B-codes (column P):")
+        for code, count in sorted(primary_counts.items()):
+            logger.info(f"    {code} = {count}")
+        logger.info(f"  B07 (signage) from column Q: {b07_count_q}")
         
-        # Row 13: Closers (B03)
-        closers_count = all_codes_counts.get('B03', 0)
+        # Row 13: Closers (B03) - from column P
+        closers_count = primary_counts.get('B03', 0)
         material_calloff.cell(row=13, column=4).value = closers_count
         
-        # Row 14: Hinges (B04)
-        hinges_count = all_codes_counts.get('B04', 0)
+        # Row 14: Hinges (B04) - from column P
+        hinges_count = primary_counts.get('B04', 0)
         material_calloff.cell(row=14, column=4).value = hinges_count
         
-        # Row 15: Seals (B01 - intumescent + smoke)
-        seals_count = all_codes_counts.get('B01', 0)
+        # Row 15: Seals (B01) - from column P
+        seals_count = primary_counts.get('B01', 0)
         material_calloff.cell(row=15, column=4).value = seals_count
         
-        # Row 16: Intumescent only (B02)
-        intumescent_count = all_codes_counts.get('B02', 0)
+        # Row 16: Intumescent only (B02) - from column P
+        intumescent_count = primary_counts.get('B02', 0)
         material_calloff.cell(row=16, column=4).value = intumescent_count
         
-        # Row 17: Signage (B07 × 2) - 2 signs per door
-        signage_count = all_codes_counts.get('B07', 0) * 2
+        # Row 17: Signage (B07 × 2) - SPECIAL: from column Q × 2
+        signage_count = b07_count_q * 2
         material_calloff.cell(row=17, column=4).value = signage_count
         
-        # Row 18: Drop seal (B09)
-        drop_seal_count = all_codes_counts.get('B09', 0)
+        # Row 18: Drop seal (B09) - from column P
+        drop_seal_count = primary_counts.get('B09', 0)
         material_calloff.cell(row=18, column=4).value = drop_seal_count
         
-        # Row 19: Lever handles/latch (B05)
-        latch_count = all_codes_counts.get('B05', 0)
+        # Row 19: Lever handles/latch (B05) - from column P
+        latch_count = primary_counts.get('B05', 0)
         material_calloff.cell(row=19, column=4).value = latch_count
         
-        # Row 20: Intumescent mastic (B06)
-        mastic_count = all_codes_counts.get('B06', 0)
+        # Row 20: Intumescent mastic (B06) - from column P
+        mastic_count = primary_counts.get('B06', 0)
         material_calloff.cell(row=20, column=4).value = mastic_count
         
-        # Row 21: Hardwood lipping (B11)
-        lipping_count = all_codes_counts.get('B11', 0)
+        # Row 21: Hardwood lipping (B11) - from column P
+        lipping_count = primary_counts.get('B11', 0)
         material_calloff.cell(row=21, column=4).value = lipping_count
         
-        # Row 22: Hardwood void infill (B12)
-        void_infill_count = all_codes_counts.get('B12', 0)
+        # Row 22: Hardwood void infill (B12) - from column P
+        void_infill_count = primary_counts.get('B12', 0)
         material_calloff.cell(row=22, column=4).value = void_infill_count
         
         logger.info(f"Material Call-Off populated:")
@@ -1682,7 +1683,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.info(f"  Hinges (B04) = {hinges_count}")
         logger.info(f"  Seals (B01) = {seals_count}")
         logger.info(f"  Intumescent only (B02) = {intumescent_count}")
-        logger.info(f"  Signage (B07×2) = {signage_count}")
+        logger.info(f"  Signage (B07×2) = {signage_count} (from column Q)")
         logger.info(f"  Lever handles/latch (B05) = {latch_count}")
         logger.info(f"  Drop seal (B09) = {drop_seal_count}")
         logger.info(f"  Intumescent mastic (B06) = {mastic_count}")
