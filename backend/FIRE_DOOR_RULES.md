@@ -238,39 +238,65 @@ List ALL applicable B-codes as a comma-separated list.
 ## 6. Option B (Full Replacement)
 
 ### Type 1 (PDF) - ALWAYS PRICED
-**Rule:** Option B MUST be priced based on fire rating and leaf configuration
+**Rule:** Option B MUST be priced based on fire rating, leaf configuration, AND door height
 
-**A-Series Codes (Replacement Doors) - from WestPark Rate Card:**
-- **A01:** FD30 — Single Leaf, Paint Grade, Height up to 2040mm
-- **A02:** FD30 — Single Leaf, Paint Grade, Height 2040–2400mm
-- **A03:** FD30 — Single Leaf, Paint Grade, Height 2400–2730mm
-- **A04:** FD30 — Double Leaf, Paint Grade, Height up to 2040mm
-- **A05:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **A06:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
-- **A07:** FD30S — Single Leaf, Paint Grade + Smoke Seals, Height 2400–2730mm
-- **A08:** FD30S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **A09:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **A10:** FD60S — Single Leaf, Paint Grade + Smoke Seals, Height 2040–2400mm
-- **A11:** FD60S — Double Leaf, Paint Grade + Smoke Seals, Height up to 2040mm
-- **A12:** E/O Hardwood Veneer Finish — any size (uplift per door)
-- **A13:** E/O External Grade Specification — weathered locations
-- **A14:** E/O Fire-Rated Vision Panel up to 300 x 600mm
-- **A15:** E/O Fire-Rated Vision Panel over 300 x 600mm
+**CRITICAL: FD30 ≠ FD30S**
+- **FD30:** Fire door WITHOUT smoke seals
+- **FD30S:** Fire door WITH smoke seals
+- The **S suffix** is critical for correct pricing
 
-**Note:** A12-A15 are "E/O" (Extra Over) items added to base door codes.
+**A-Series Codes (Replacement Doors) - Full Mapping Table:**
+
+| Code | Fire Rating | Leaf Config | Height Range | Notes |
+|------|-------------|-------------|--------------|-------|
+| **A01** | FD30 | Single | ≤2040mm | No smoke seals |
+| **A02** | FD30 | Single | 2040–2400mm | No smoke seals |
+| **A03** | FD30 | Single | 2400–2730mm | No smoke seals |
+| **A04** | FD30 | Double | ≤2040mm | No smoke seals |
+| **A05** | FD30S | Single | ≤2040mm | WITH smoke seals |
+| **A06** | FD30S | Single | 2040–2400mm | WITH smoke seals |
+| **A07** | FD30S | Single | 2400–2730mm | WITH smoke seals |
+| **A08** | FD30S | Double | ≤2040mm | WITH smoke seals |
+| **A09** | FD60S | Single | ≤2040mm | WITH smoke seals |
+| **A10** | FD60S | Single | 2040–2400mm | WITH smoke seals |
+| **A11** | FD60S | Double | ≤2040mm | WITH smoke seals |
+| **A12** | E/O | Any | Any | Hardwood Veneer Finish (uplift) |
+| **A13** | E/O | Any | Any | External Grade Spec (uplift) |
+| **A14** | E/O | Any | Any | Vision Panel ≤300x600mm |
+| **A15** | E/O | Any | Any | Vision Panel >300x600mm |
+
+**Default Mappings (when fire rating is unclear):**
+- **Nominal Single** → A05 (defaults to FD30S ≤2040mm)
+- **Nominal Double** → A08 (defaults to FD30S double)
 
 **Pricing Logic:**
 1. Extract fire rating from survey (FD30, FD30S, FD60S, etc.)
-2. Extract leaf configuration (single/double)
-3. Extract height (≤2040, 2040–2400, 2400–2730)
-4. Map to corresponding A-series replacement code (A01–A15)
+   - **Distinguish FD30 from FD30S** by checking for "S" suffix
+2. Extract leaf configuration (Single Leaf / Double Leaf)
+3. Extract door height in mm from dimensions
+4. Map to corresponding A-series code using height ranges:
+   - ≤2040mm → base code
+   - 2040–2400mm → next size up
+   - 2400–2730mm → largest size
 5. Calculate: `QTY × RATE = TOTAL`
 
-**Example:**
-- 5 doors: FD30, single leaf, 2100mm height
-- Code: A02 (FD30 — Single Leaf, Paint Grade, Height 2040–2400mm)
-- Rate: £450 per door (from Rate Card)
-- Total: 5 × £450 = £2,250
+**Example 1 (FD30 - no smoke seals):**
+- 2 doors: FD30 (no S), double leaf, 2000mm height
+- Code: **A04** (FD30 — Double, ≤2040mm)
+- Rate: £650 per door (from Rate Card)
+- Total: 2 × £650 = £1,300
+
+**Example 2 (FD30S - with smoke seals):**
+- 3 doors: FD30S, single leaf, 2100mm height
+- Code: **A06** (FD30S — Single, 2040–2400mm)
+- Rate: £425 per door (from Rate Card)
+- Total: 3 × £425 = £1,275
+
+**Example 3 (FD60S):**
+- 1 door: FD60S, single leaf, 2050mm height
+- Code: **A10** (FD60S — Single, 2040–2400mm)
+- Rate: £575 per door (from Rate Card)
+- Total: 1 × £575 = £575
 
 ### Type 2 (Excel) - PENDING
 **Rule:** Option B shows "PENDING — fire strategy required"
@@ -454,6 +480,20 @@ This report identifies fire doors requiring remedial works based on visual inspe
 ---
 
 ## 14. Change Log
+
+### 2026-03-27 (Update 3) - Alpha Sights Fix #2
+- **Section 6:** MAJOR UPDATE - Complete A-series mapping table with S suffix distinction + height ranges
+  - **Critical:** FD30 ≠ FD30S (S suffix = smoke seals)
+  - Added full mapping table with 15 A-codes (A01-A15)
+  - FD30 (no smoke): A01-A04
+  - FD30S (with smoke): A05-A08
+  - FD60S (with smoke): A09-A11
+  - Height ranges: ≤2040mm, 2040-2400mm, 2400-2730mm
+  - Example: FD30 Double ≤2040mm → A04 (not A08)
+  - Example: FD30S Double ≤2040mm → A08
+  - Pricing logic now requires: fire rating + leaf config + door height
+  - Added default mappings for Nominal doors
+  - Added 3 worked examples showing correct code selection
 
 ### 2026-03-24 (Update 2)
 - **Section 4:** Fixed ART→B-code mappings - replaced incorrect mappings with complete correct data from BMTrada_ART_Codes_RateCard_Mapping.csv
