@@ -1143,6 +1143,32 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B TOTAL)
         logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
     
+    # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
+    if "Material Call-Off" in wb.sheetnames:
+        material_calloff = wb["Material Call-Off"]
+        
+        # Row 13: Closers (B03)
+        closers_count = b_code_counts.get('B03', 0)
+        material_calloff.cell(row=13, column=4).value = closers_count  # Column D
+        
+        # Row 14: Hinges (B04)
+        hinges_count = b_code_counts.get('B04', 0)
+        material_calloff.cell(row=14, column=4).value = hinges_count  # Column D
+        
+        # Row 15: Seals (B01 - intumescent + smoke)
+        seals_count = b_code_counts.get('B01', 0)
+        material_calloff.cell(row=15, column=4).value = seals_count  # Column D
+        
+        # Row 16: Intumescent only (B02)
+        intumescent_count = b_code_counts.get('B02', 0)
+        material_calloff.cell(row=16, column=4).value = intumescent_count  # Column D
+        
+        # Row 17: Signage (B07 × 2)
+        signage_count = b_code_counts.get('B07', 0) * 2  # 2 signs per door
+        material_calloff.cell(row=17, column=4).value = signage_count  # Column D
+        
+        logger.info(f"Material Call-Off: Closers={closers_count}, Hinges={hinges_count}, Seals={seals_count}, Intumescent={intumescent_count}, Signage={signage_count}")
+    
     logger.info("=== Line item numbers + header values written ===")
     
     # Save workbook
