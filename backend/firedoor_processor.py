@@ -314,8 +314,14 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
    - FD90, FD120, etc.
    - ONLY use "Unknown" if truly not mentioned
 6. Door configuration: "Single Leaf" or "Double Leaf"
-7. Door height in millimeters (extract from dimensions)
-8. Whether this is a replacement door (true ONLY if ART17, ART18, or ART20 present)
+   - Look for keywords: "double", "passive leaf", "active leaf", "pair", "set of doors"
+   - Check door width if mentioned: > 1500mm usually indicates double doors
+   - Typical single door widths: 700-1000mm
+   - Typical double door widths: 1400-1800mm+
+   - Default to Single Leaf only if confident
+7. Door height in millimeters (extract from dimensions - look for "h" or "height" near numbers)
+8. Door width in millimeters if mentioned (extract from dimensions - look for "w" or "width" near numbers)
+9. Whether this is a replacement door (true ONLY if ART17, ART18, or ART20 present)
 
 CRITICAL: Door IDs MUST match survey exactly. If survey shows "A01" for Level 2, extract as "A01-L2".
 
@@ -329,6 +335,7 @@ Return as JSON array with this structure:
     "fire_rating": "FD60S",
     "door_config": "Single Leaf",
     "door_height_mm": 2100,
+    "door_width_mm": 900,
     "is_replacement": false
   }},
   ...
@@ -366,6 +373,17 @@ Return ONLY the JSON array, no other text."""
         # FIX #2: Mark all Type 1 doors with format_type
         for door in doors:
             door['format_type'] = 'TYPE_1'
+            
+            # ROUND 6 FIX: Infer door_config from width if available
+            # Typical single doors: 700-1000mm, Double doors: 1400-1800mm+
+            door_width = door.get('door_width_mm')
+            if door_width and isinstance(door_width, (int, float)):
+                if door_width > 1400:
+                    # Wide door - likely double
+                    if door.get('door_config') != 'Double Leaf':
+                        logger.info(f"Door {door.get('door_id')}: Inferred Double Leaf from width {door_width}mm (was: {door.get('door_config')})")
+                        door['door_config'] = 'Double Leaf'
+        
         logger.info(f"Successfully extracted {len(doors)} doors from Type 1 survey")
         return doors
     except json.JSONDecodeError as e:
@@ -384,6 +402,15 @@ Return ONLY the JSON array, no other text."""
                 # FIX #2: Mark all Type 1 doors with format_type
                 for door in doors:
                     door['format_type'] = 'TYPE_1'
+                    
+                    # ROUND 6 FIX: Infer door_config from width if available
+                    door_width = door.get('door_width_mm')
+                    if door_width and isinstance(door_width, (int, float)):
+                        if door_width > 1400:
+                            if door.get('door_config') != 'Double Leaf':
+                                logger.info(f"Door {door.get('door_id')}: Inferred Double Leaf from width {door_width}mm (was: {door.get('door_config')})")
+                                door['door_config'] = 'Double Leaf'
+                
                 logger.info(f"Successfully extracted {len(doors)} doors after regex cleanup")
                 return doors
             except json.JSONDecodeError as e2:
