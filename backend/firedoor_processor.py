@@ -1307,10 +1307,10 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Client Summary headers: Client={quote_sheet['B4'].value}, Date={quote_sheet['B3'].value}, Ref={quote_sheet['B2'].value}")
     
     # Step 8: Set Option B to "PENDING" for Type 2 surveys (no fire strategy)
-    # UNLESS we already calculated Option B total above (replacement doors with specs)
+    # UNLESS we already calculated Option B client price above (replacement doors with specs)
     is_type2 = doors and doors[0].get('format_type') == 'TYPE_2'
-    if is_type2 and option_b_total == 0:
-        client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B TOTAL)
+    if is_type2 and option_b_client == 0:
+        client_summary.cell(row=11, column=5).value = "PENDING — fire strategy required"  # E11 (Option B)
         logger.info("Client Summary E11 (Option B): PENDING — fire strategy required (Type 2)")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
