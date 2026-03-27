@@ -1020,18 +1020,33 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info("=== Calculating Quote Sheet cached values ===")
     
     # Step 1: Count B-codes from Door Schedule (AFTER population, from actual Excel cells)
+    # FIX #1: Count ALL B-codes from column Q (not just primary from column P)
+    # and track which door IDs each B-code relates to
     door_schedule = wb['Door Schedule']
     b_code_counts = {}
+    b_code_door_ids = {}  # NEW: Track door IDs for each B-code
+    
     for row in range(4, 200):  # Check up to row 200
         door_id = door_schedule.cell(row=row, column=1).value
         if not door_id:
             break
         opt_a = door_schedule.cell(row=row, column=14).value  # Column N
-        base_item = door_schedule.cell(row=row, column=16).value  # Column P
-        if opt_a == 'YES' and base_item:
-            b_code_counts[base_item] = b_code_counts.get(base_item, 0) + 1
+        all_codes_str = door_schedule.cell(row=row, column=17).value  # Column Q (ALL codes)
+        
+        if opt_a == 'YES' and all_codes_str:
+            # Parse comma-separated B-codes from column Q
+            codes = [c.strip() for c in str(all_codes_str).split(',')]
+            for code in codes:
+                if code and code.startswith('B'):
+                    # Count this B-code
+                    b_code_counts[code] = b_code_counts.get(code, 0) + 1
+                    # Track which door ID this B-code relates to
+                    if code not in b_code_door_ids:
+                        b_code_door_ids[code] = []
+                    b_code_door_ids[code].append(str(door_id))
     
     logger.info(f"B-code counts from Door Schedule: {b_code_counts}")
+    logger.info(f"B-code door IDs: {b_code_door_ids}")
     
     # Step 2: Get rates from Rate Card
     rate_card_sheet = wb['Rate Card']
@@ -1061,14 +1076,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         qty = b_code_counts.get(b_code, 0)
         rate = rates.get(b_code, 0)
         total = qty * rate
+        door_ids = b_code_door_ids.get(b_code, [])
+        door_ids_str = ', '.join(door_ids) if door_ids else ''
         
         # Write numbers directly (openpyxl doesn't support cached formula values)
-        quote_sheet.cell(row=row_num, column=3).value = qty      # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=5).value = rate     # Column E (RATE)
-        quote_sheet.cell(row=row_num, column=6).value = total    # Column F (TOTAL)
+        quote_sheet.cell(row=row_num, column=3).value = qty          # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE)
+        quote_sheet.cell(row=row_num, column=6).value = total        # Column F (TOTAL)
+        quote_sheet.cell(row=row_num, column=7).value = door_ids_str # Column G (DOOR IDs) - NEW!
         
         if qty > 0:
-            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}")
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}, DOOR_IDS={door_ids_str}")
     
     # Step 5: Write calculated NUMBERs to Client Summary
     # Originally wanted SUM formulas, but openpyxl can't set cached values reliably
