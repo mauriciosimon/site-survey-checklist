@@ -526,6 +526,77 @@ After populating Material Call-Off, log all counts to help diagnose discrepancie
   - Option B rows use "B.01"–"B.15" labels for display (maps to A01-A15 in Rate Card)
 - **Unit Price:** £ per item/door
 
+### Rate Card Columns
+**As of 2026-03-27:** T&J (Tape & Jointing) column has been REMOVED per Matt's instruction.
+
+**Current structure:**
+- Column A: Code (A01-A17, B01-B12, C01-C05)
+- Column B: Description
+- Column D: Materials (£)
+- Column E: Labour (£)
+- Column F: ~~Tape & Jointing~~ (REMOVED)
+- Column G: Humping (£) — only for A-series replacement doors
+- Column H: Notes (for mock/pending rates)
+
+**Internal Cost Calculation:**
+- Option A (Remedial): Materials + Labour
+- Option B (Replacement): Materials + Labour + Humping
+
+**Client Price:** Internal Cost ÷ (1 - Margin%) — margin applied via Quote Sheet R2 cell
+
+### 11.1 Rate Status (Updated 2026-03-27)
+
+**CONFIRMED RATES FROM ALEX:**
+
+**A-SERIES (Replacement Doors):**
+- A01: Materials=£593.08, Labour=£250, Humping=£40 → Total=£883.08
+- A02: Materials=£682.18, Labour=£250, Humping=£40 → Total=£972.18
+- A03: Materials=£770.18, Labour=£250, Humping=£40 → Total=£1060.18
+- A04: Materials=£993.73, Labour=£350, Humping=£80 → Total=£1423.73
+- A05: Materials=£593.08, Labour=£250, Humping=£40 → Total=£883.08
+- A06: Materials=£682.18, Labour=£250, Humping=£40 → Total=£972.18
+- A07: Materials=£770.18, Labour=£250, Humping=£40 → Total=£1060.18
+- A08: Materials=£993.73, Labour=£350, Humping=£80 → Total=£1423.73
+- A09: Materials=£768.65, Labour=£250, Humping=£40 → Total=£1058.65
+- A10: Materials=£865.15, Labour=£250, Humping=£40 → Total=£1155.15
+- A11: Materials=£1229.20, Labour=£350, Humping=£80 → Total=£1659.20
+- A12 (E/O Hardwood Veneer): Materials=£100.00 → Total=£100.00
+- A14 (E/O FD30 Vision Panel ≤300x600): Materials=£139.18 → Total=£139.18
+- A16 (E/O FD60 Vision Panel ≤300x600): Materials=£206.00 → Total=£206.00
+
+**B-SERIES (Remedial Works):**
+- B01: Materials=£67.65, Labour=£75 → Total=£142.65
+- B02: Materials=£67.65, Labour=£75 → Total=£142.65
+- B03: Materials=£45.00, Labour=£37.50 → Total=£82.50
+- B04: Materials=£15.00, Labour=£75 → Total=£90.00
+- B05: Materials=£25.00, Labour=£75 → Total=£100.00
+- B06: Materials=£10.00, Labour=£75 → Total=£85.00
+- B07: Materials=£10.00, Labour=£37.50 → Total=£47.50
+- B11: Materials=£30.00, Labour=£37.50 → Total=£67.50
+
+**C-SERIES (Preliminaries):**
+- C04a (Out-of-hours weekday): Labour=£150.00 → Total=£150.00
+- C04b (Out-of-hours Sunday): Labour=£300.00 → Total=£300.00
+
+**MOCK RATES (PENDING CONFIRMATION):**
+
+⚠️ These rates are estimates. Matt must confirm with Alex/client before sending quote.
+
+- **A13** (E/O External Grade): £150.00 — *"Alex to confirm — under investigation"*
+- **A15** (E/O FD30 Vision Panel >300x600): £200.00 — *"Alex to confirm price for larger FD30 panel"*
+- **A17** (E/O FD60 Vision Panel >300x600): £280.00 — *"Alex to confirm price for larger FD60 panel"*
+- **B08** (Hold-open device): £325.00 — *"Alex cannot price access control items — quote separately per job"*
+- **B09** (Drop seal): £125.00 — *"Alex cannot price access control items — quote separately per job"*
+- **B10** (Adjust/re-hang door leaf): £300.00 — *"Hourly rate £37.50/hr or minimum 1 day carpenter £300 cost — Matt to confirm per-door rate"*
+- **B12** (Void infill): £500.00 — *"Hourly rate £62.50/hr or minimum 1 day magic man £500 cost — Matt to confirm per-door rate"*
+- **C01** (Mobilisation): £170.00 — *"Alex to confirm call-out rate"*
+- **C02** (Waste removal): £300.00 — *"Alex: £300 minimum per visit — not per door. Matt to confirm how to allocate across jobs"*
+- **C03** (Certification): £40.00 — *"Alex to confirm per-door certification rate"*
+- **C05** (Scaffold): £500.00 — *"Job by job basis — Alex cannot provide standard rate"*
+
+**Output Flagging:**
+When mock rates are used in a quote, the system adds a "⚠️ MOCK RATE" note in the Rate Card sheet (Column H) to alert Matt that this line item needs confirmation before client submission.
+
 ---
 
 ## 12. Compliance Notes
