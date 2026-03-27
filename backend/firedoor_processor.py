@@ -335,15 +335,23 @@ Return ONLY the JSON array, no other text."""
     client = get_anthropic_client()
     
     # Use SDK if available, otherwise raw HTTP
+    # Increased max_tokens to 8192 to handle large surveys (39+ doors)
     if client is not None:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}]
         )
         response_text = response.content[0].text
+        logger.info(f"Claude response received: {len(response_text)} chars, stop_reason={response.stop_reason}")
+        
+        # Check if response was truncated
+        if response.stop_reason == "max_tokens":
+            logger.warning("Claude response was truncated due to max_tokens limit!")
+            logger.warning("Survey may be too large - consider increasing max_tokens or splitting the survey")
     else:
-        response_text = call_anthropic_api(prompt, max_tokens=4096)
+        response_text = call_anthropic_api(prompt, max_tokens=8192)
+        logger.info(f"Claude response received: {len(response_text)} chars")
     
     # Parse JSON response
     try:
@@ -351,17 +359,39 @@ Return ONLY the JSON array, no other text."""
         # FIX #2: Mark all Type 1 doors with format_type
         for door in doors:
             door['format_type'] = 'TYPE_1'
+        logger.info(f"Successfully extracted {len(doors)} doors from Type 1 survey")
         return doors
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parse error: {e}")
+        logger.error(f"Response text length: {len(response_text)} chars")
+        logger.error(f"First 500 chars: {response_text[:500]}")
+        logger.error(f"Last 500 chars: {response_text[-500:]}")
+        
         # Try to extract JSON from response
         json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
         if json_match:
-            doors = json.loads(json_match.group())
-            # FIX #2: Mark all Type 1 doors with format_type
-            for door in doors:
-                door['format_type'] = 'TYPE_1'
-            return doors
-        return []
+            json_str = json_match.group()
+            logger.info(f"Found JSON array in response, attempting to parse...")
+            try:
+                doors = json.loads(json_str)
+                # FIX #2: Mark all Type 1 doors with format_type
+                for door in doors:
+                    door['format_type'] = 'TYPE_1'
+                logger.info(f"Successfully extracted {len(doors)} doors after regex cleanup")
+                return doors
+            except json.JSONDecodeError as e2:
+                logger.error(f"Regex extraction also failed: {e2}")
+                logger.error(f"JSON string: {json_str[:1000]}...")
+                raise ValueError(
+                    f"Claude returned invalid JSON. Error: {str(e)}. "
+                    "This may be due to a large survey - try splitting into smaller sections."
+                )
+        else:
+            logger.error("No JSON array found in Claude response")
+            raise ValueError(
+                "Claude did not return a valid JSON array. "
+                "Response may be truncated or formatted incorrectly."
+            )
 
 
 def map_fault_to_bcode(fault_text: str) -> Optional[str]:
