@@ -1545,16 +1545,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # ISSUE #5 FIX: Find and update compliance note cell
     # Check rows 15-25 for compliance note (expanded range)
+    # BUG FIX: Compliance note is in column A (not B)
     found_compliance_note = False
     for row in range(15, 26):
-        cell_value = client_summary.cell(row=row, column=2).value
-        logger.debug(f"Client Summary row {row} column B: '{cell_value}'")
+        cell_value = client_summary.cell(row=row, column=1).value
+        logger.debug(f"Client Summary row {row} column A: '{cell_value}'")
         if cell_value and isinstance(cell_value, str):
             if ('compliance' in cell_value.lower() or 
                 'approved document' in cell_value.lower() or
                 'fire safety order' in cell_value.lower() or
                 'remedial works' in cell_value.lower()):
-                client_summary.cell(row=row, column=2).value = compliance_note
+                client_summary.cell(row=row, column=1).value = compliance_note
                 logger.info(f"Updated compliance note at Client Summary row {row} to Type {'2' if is_type2 else '1'} note")
                 found_compliance_note = True
                 break
@@ -1563,7 +1564,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.error("ISSUE #5: Could not find compliance note cell in Client Summary rows 15-25")
         logger.error("Cell values checked:")
         for row in range(15, 26):
-            val = client_summary.cell(row=row, column=2).value
+            val = client_summary.cell(row=row, column=1).value
             logger.error(f"  Row {row}: '{val}'")
     
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
