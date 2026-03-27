@@ -307,8 +307,10 @@ def extract_type1_pdf(file_path: str) -> List[Dict]:
 3. List of faults found
 4. ART codes mentioned (if any)
 5. Fire rating (FD60, FD60S, FD30, FD30S, or "Unknown" if not specified)
+   - IMPORTANT: Distinguish FD30 from FD30S (the S means smoke seals)
 6. Door configuration: "Single Leaf" or "Double Leaf" (infer from context/dimensions if needed)
-7. Whether this is a replacement door (true/false)
+7. Door height in millimeters (extract from dimensions like "2100x900mm" or context)
+8. Whether this is a replacement door (true/false)
 
 Return as JSON array with this structure:
 [
@@ -319,6 +321,7 @@ Return as JSON array with this structure:
     "art_codes": ["ART04", "ART11"],
     "fire_rating": "FD60S",
     "door_config": "Single Leaf",
+    "door_height_mm": 2100,
     "is_replacement": false
   }},
   ...
@@ -581,23 +584,34 @@ def get_priority_bcode(codes: List[str]) -> str:
     return codes[0]
 
 
-def map_to_aseries_code(fire_rating: str, door_config: str) -> str:
+def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = None) -> str:
     """
-    Map fire rating + door configuration to A-series replacement code.
+    Map fire rating + door configuration + height to A-series replacement code.
     
     Args:
         fire_rating: Fire rating (FD60, FD60S, FD30, FD30S, Nominal, etc.)
         door_config: Door configuration ("Single Leaf" or "Double Leaf")
+        door_height: Door height in mm (optional, defaults to ≤2040 range)
     
     Returns:
         A-series code (A01-A15) or empty string if no match
     
-    Mapping table (from Mauricio 2026-03-27):
-        FD60 / FD60S + Single → A09
-        FD60 / FD60S + Double → A11
-        FD30 / FD30S + Single → A05
-        FD30 / FD30S + Double → A08
-        Nominal + Single → A05 (default to FD30S)
+    Full mapping table (from Mauricio 2026-03-27):
+        FD30 Single ≤2040 → A01
+        FD30 Single 2040–2400 → A02
+        FD30 Single 2400–2730 → A03
+        FD30 Double ≤2040 → A04
+        FD30S Single ≤2040 → A05
+        FD30S Single 2040–2400 → A06
+        FD30S Single 2400–2730 → A07
+        FD30S Double ≤2040 → A08
+        FD60S Single ≤2040 → A09
+        FD60S Single 2040–2400 → A10
+        FD60S Double ≤2040 → A11
+        Nominal Single → A05 (default to FD30S)
+        Nominal Double → A08 (default to FD30S)
+    
+    Note: S suffix = smoke seals. FD30 ≠ FD30S
     """
     if not fire_rating or not door_config:
         return ''
@@ -609,20 +623,57 @@ def map_to_aseries_code(fire_rating: str, door_config: str) -> str:
     is_single = 'single' in config_lower
     is_double = 'double' in config_lower
     
-    # Map based on rating + config
-    if 'FD60' in rating_upper:  # Matches FD60 and FD60S
+    # Default to ≤2040 range if height not provided
+    if door_height is None or door_height <= 2040:
+        height_range = 1  # ≤2040
+    elif door_height <= 2400:
+        height_range = 2  # 2040-2400
+    elif door_height <= 2730:
+        height_range = 3  # 2400-2730
+    else:
+        height_range = 1  # Fallback to base code
+    
+    # Map based on rating + config + height
+    # Check for exact FD30 (no S)
+    if rating_upper == 'FD30':
         if is_single:
-            return 'A09'
+            if height_range == 1:
+                return 'A01'
+            elif height_range == 2:
+                return 'A02'
+            elif height_range == 3:
+                return 'A03'
+        elif is_double:
+            return 'A04'  # FD30 double (no smoke seals)
+    
+    # Check for FD30S (with S)
+    elif 'FD30S' in rating_upper:
+        if is_single:
+            if height_range == 1:
+                return 'A05'
+            elif height_range == 2:
+                return 'A06'
+            elif height_range == 3:
+                return 'A07'
+        elif is_double:
+            return 'A08'  # FD30S double (with smoke seals)
+    
+    # Check for FD60S
+    elif 'FD60S' in rating_upper:
+        if is_single:
+            if height_range == 1:
+                return 'A09'
+            elif height_range == 2:
+                return 'A10'
         elif is_double:
             return 'A11'
-    elif 'FD30' in rating_upper:  # Matches FD30 and FD30S
-        if is_single:
-            return 'A05'
-        elif is_double:
-            return 'A08'
+    
+    # Nominal defaults to FD30S
     elif 'NOMINAL' in rating_upper:
         if is_single:
-            return 'A05'  # Default to FD30S
+            return 'A05'  # Default to FD30S single ≤2040
+        elif is_double:
+            return 'A08'  # Default to FD30S double
     
     return ''  # No match
 
@@ -1028,10 +1079,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         a_series_code = ''
         
         if is_replacement_door and fire_rating != 'Unknown':
-            # Map fire rating + config to A-series code
-            a_series_code = map_to_aseries_code(fire_rating, door_config)
+            # Get door height (from extraction or default)
+            door_height = door.get('door_height_mm', None)
+            
+            # Map fire rating + config + height to A-series code
+            a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
             if a_series_code:
-                logger.info(f"Door {door_id}: {fire_rating} {door_config} → {a_series_code}")
+                height_str = f"{door_height}mm" if door_height else "≤2040mm (default)"
+                logger.info(f"Door {door_id}: {fire_rating} {door_config} {height_str} → {a_series_code}")
         
         # Set Option A/B columns
         if is_replacement_door and a_series_code:
