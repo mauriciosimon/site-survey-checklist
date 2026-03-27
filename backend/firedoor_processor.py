@@ -1153,14 +1153,22 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     logger.info(f"Rates from Rate Card (Materials + Labour only): {rates}")
     
-    # Step 3: Calculate Option A total
-    option_a_total = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
-    logger.info(f"Option A total: £{option_a_total}")
+    # Step 3: Calculate Option A totals (cost and client price)
+    option_a_cost = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
+    
+    # FIX #5: Get target margin and calculate client price
+    target_margin = quote_sheet['R2'].value or 0
+    option_a_client = option_a_cost / (1 - target_margin) if (1 - target_margin) > 0 else option_a_cost
+    
+    logger.info(f"Option A cost: £{option_a_cost}")
+    logger.info(f"Option A client price (with {target_margin*100}% margin): £{option_a_client}")
     
     # Step 4: Write numbers to Quote Sheet
-    # Since openpyxl doesn't support cached values, we write numbers directly
-    # The formulas are preserved in the template for future manual editing
+    # FIX #5: Get target margin from R2 and apply gross margin formula
     quote_sheet = wb['Quote Sheet']
+    target_margin = quote_sheet['R2'].value or 0  # Default to 0 if not set
+    logger.info(f"Target margin from R2: {target_margin} ({target_margin*100}%)")
+    
     bcode_to_row = {
         'B01': 11, 'B02': 12, 'B03': 13, 'B04': 14, 'B05': 15, 'B06': 16,
         'B07': 17, 'B08': 18, 'B09': 19, 'B10': 20, 'B11': 21, 'B12': 22,
@@ -1168,48 +1176,58 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     for b_code, row_num in bcode_to_row.items():
         qty = b_code_counts.get(b_code, 0)
-        rate = rates.get(b_code, 0)
-        total = qty * rate
+        cost_rate = rates.get(b_code, 0)  # Materials + Labour (internal cost)
+        cost_total = qty * cost_rate
+        
+        # FIX #5: Apply gross margin formula
+        # Client Price = Cost ÷ (1 - Margin%)
+        if target_margin < 1:  # Margin must be less than 100%
+            client_total = cost_total / (1 - target_margin) if (1 - target_margin) > 0 else cost_total
+            client_rate = client_total / qty if qty > 0 else 0
+        else:
+            # Fallback if margin is invalid
+            client_total = cost_total
+            client_rate = cost_rate
+        
         door_ids = b_code_door_ids.get(b_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
-        # Write numbers directly (openpyxl doesn't support cached formula values)
-        quote_sheet.cell(row=row_num, column=3).value = qty          # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE - Materials + Labour only)
-        quote_sheet.cell(row=row_num, column=6).value = total        # Column F (TOTAL)
+        # Write CLIENT PRICE values (with margin applied)
+        quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=5).value = client_rate   # Column E (CLIENT RATE with margin)
+        quote_sheet.cell(row=row_num, column=6).value = client_total  # Column F (CLIENT TOTAL with margin)
         
         # FIX #3: Write zero to T&J and Humping rate columns to exclude from breakdown
-        quote_sheet.cell(row=row_num, column=11).value = 0           # Column K (T&J rate) = 0
-        quote_sheet.cell(row=row_num, column=13).value = 0           # Column M (Humping rate) = 0
-        # This makes columns L and N = 0, so column O = columns H + J only (Materials + Labour)
+        quote_sheet.cell(row=row_num, column=11).value = 0            # Column K (T&J rate) = 0
+        quote_sheet.cell(row=row_num, column=13).value = 0            # Column M (Humping rate) = 0
+        # This makes columns L and N = 0, so column O = columns H + J only (Materials + Labour = COST)
         
         # FIX #1: Door IDs reference column (use column S, after all existing columns)
         quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={rate}, TOTAL={total}, DOOR_IDS={door_ids_str}")
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDS={door_ids_str}")
     
     # Step 5: Write calculated NUMBERs to Client Summary
-    # Originally wanted SUM formulas, but openpyxl can't set cached values reliably
-    # Writing the numbers directly ensures Excel shows £1,685 immediately
+    # FIX #5: Client Summary shows CLIENT PRICES (with margin), not costs
     client_summary = wb['Client Summary']
     
-    # C10 = NET COST (raw total from Quote Sheet)
-    client_summary.cell(row=10, column=3).value = option_a_total
+    # C10 = NET COST (internal cost - for reference)
+    client_summary.cell(row=10, column=3).value = option_a_cost
     
-    # D10 = OPTION A TOTAL (same as NET COST for Option A only)
-    client_summary.cell(row=10, column=4).value = option_a_total
+    # D10 = OPTION A TOTAL (CLIENT PRICE with margin)
+    client_summary.cell(row=10, column=4).value = option_a_client
     
-    # D13 = TOTAL INVESTMENT (sum of all option totals - just Option A in this case)
-    client_summary.cell(row=13, column=4).value = option_a_total
+    # D13 = TOTAL INVESTMENT (sum of all option client prices - just Option A for now)
+    client_summary.cell(row=13, column=4).value = option_a_client
     
-    logger.info(f"Client Summary C10 (NET COST): £{option_a_total}")
-    logger.info(f"Client Summary D10 (OPTION A TOTAL): £{option_a_total}")
-    logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{option_a_total}")
+    logger.info(f"Client Summary C10 (NET COST): £{option_a_cost}")
+    logger.info(f"Client Summary D10 (OPTION A CLIENT PRICE): £{option_a_client}")
+    logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{option_a_client}")
     
     # Step 6: Write Option A TOTAL to Quote Sheet row 23
-    quote_sheet.cell(row=23, column=6).value = option_a_total  # F23
-    logger.info(f"Quote Sheet F23 (Option A TOTAL): £{option_a_total}")
+    quote_sheet.cell(row=23, column=6).value = option_a_client  # F23 (CLIENT PRICE)
+    logger.info(f"Quote Sheet F23 (Option A TOTAL - CLIENT PRICE): £{option_a_client}")
     
     # Step 6b: FIX #2 - Calculate and write Option B totals (replacement doors)
     # Get A-series rates from Rate Card
@@ -1224,9 +1242,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     logger.info(f"A-series rates from Rate Card: {a_series_rates}")
     
-    # Calculate Option B total
-    option_b_total = sum(a_code_counts.get(code, 0) * a_series_rates.get(code, 0) for code in a_series_rates.keys())
-    logger.info(f"Option B total: £{option_b_total}")
+    # Calculate Option B totals (cost and client price)
+    option_b_cost = sum(a_code_counts.get(code, 0) * a_series_rates.get(code, 0) for code in a_series_rates.keys())
+    
+    # FIX #5: Apply margin to Option B
+    option_b_client = option_b_cost / (1 - target_margin) if (1 - target_margin) > 0 else option_b_cost
+    
+    logger.info(f"Option B cost: £{option_b_cost}")
+    logger.info(f"Option B client price (with {target_margin*100}% margin): £{option_b_client}")
     
     # Write Option B line items to Quote Sheet (rows 26-40)
     acode_to_row = {
@@ -1237,36 +1260,36 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     for a_code, row_num in acode_to_row.items():
         qty = a_code_counts.get(a_code, 0)
-        rate = a_series_rates.get(a_code, 0)
-        total = qty * rate
+        cost_rate = a_series_rates.get(a_code, 0)
+        cost_total = qty * cost_rate
+        
+        # FIX #5: Apply gross margin formula to Option B
+        client_total = cost_total / (1 - target_margin) if (1 - target_margin) > 0 else cost_total
+        client_rate = client_total / qty if qty > 0 else 0
+        
         door_ids = a_code_door_ids.get(a_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
-        # Write Option B values
-        quote_sheet.cell(row=row_num, column=3).value = qty          # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=5).value = rate         # Column E (RATE)
-        quote_sheet.cell(row=row_num, column=6).value = total        # Column F (TOTAL)
-        quote_sheet.cell(row=row_num, column=11).value = 0           # Column K (T&J rate) = 0
-        quote_sheet.cell(row=row_num, column=13).value = 0           # Column M (Humping rate) = 0
-        quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
+        # Write Option B CLIENT PRICE values (with margin)
+        quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=5).value = client_rate    # Column E (CLIENT RATE with margin)
+        quote_sheet.cell(row=row_num, column=6).value = client_total   # Column F (CLIENT TOTAL with margin)
+        quote_sheet.cell(row=row_num, column=11).value = 0             # Column K (T&J rate) = 0
+        quote_sheet.cell(row=row_num, column=13).value = 0             # Column M (Humping rate) = 0
+        quote_sheet.cell(row=row_num, column=19).value = door_ids_str  # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {a_code}: QTY={qty}, RATE={rate}, TOTAL={total}, DOOR_IDs={door_ids_str}")
-    
-    # Write Option B TOTAL to Quote Sheet row 50 (or wherever Option B total goes)
-    # (Row number may vary - need to verify from template)
-    # For now, just log it
-    logger.info(f"Quote Sheet Option B TOTAL: £{option_b_total}")
+            logger.info(f"Quote Sheet {a_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDs={door_ids_str}")
     
     # Write Option B total to Client Summary E11
-    if option_b_total > 0:
-        client_summary.cell(row=11, column=5).value = option_b_total  # E11 (Option B TOTAL)
-        logger.info(f"Client Summary E11 (Option B TOTAL): £{option_b_total}")
+    if option_b_client > 0:
+        client_summary.cell(row=11, column=5).value = option_b_client  # E11 (Option B CLIENT PRICE)
+        logger.info(f"Client Summary E11 (Option B CLIENT PRICE): £{option_b_client}")
         
         # Update D13 (TOTAL INVESTMENT) to include Option B
-        total_investment = option_a_total + option_b_total
+        total_investment = option_a_client + option_b_client
         client_summary.cell(row=13, column=4).value = total_investment
-        logger.info(f"Client Summary D13 (TOTAL INVESTMENT): £{total_investment}")
+        logger.info(f"Client Summary D13 (TOTAL INVESTMENT with Option A + B): £{total_investment}")
     
     # Step 7: Copy header values from Quote Sheet to Client Summary
     # Client Summary pulls these from Quote Sheet via formulas, but we need to write them
