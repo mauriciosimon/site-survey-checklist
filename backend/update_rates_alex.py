@@ -79,6 +79,19 @@ def update_rate_card():
     updated_count = 0
     mock_count = 0
     
+    # FIRST PASS: Zero out ALL T&J values (Column F) - Matt removed this column
+    print("Zeroing out T&J column (Column F) for all rows...")
+    tj_zeroed = 0
+    for row in range(6, 50):
+        code = rate_card.cell(row=row, column=1).value
+        if code:  # Only process rows with a code
+            current_tj = rate_card.cell(row=row, column=6).value
+            if current_tj and current_tj != 0:
+                rate_card.cell(row=row, column=6).value = 0
+                tj_zeroed += 1
+    print(f"✅ Zeroed out {tj_zeroed} T&J values\n")
+    
+    # SECOND PASS: Update rates for known codes
     # Scan Rate Card sheet for codes (starting from row 6)
     for row in range(6, 50):  # Check up to row 50
         code = rate_card.cell(row=row, column=1).value  # Column A = Code
@@ -93,22 +106,24 @@ def update_rate_card():
             # Update Labour (Column E)
             rate_card.cell(row=row, column=5).value = rates['labour']
             
+            # CRITICAL: Zero out T&J (Column F) - Matt removed this per instruction
+            rate_card.cell(row=row, column=6).value = 0
+            
             # Update Humping (Column G) - only if non-zero
             if rates['humping'] > 0:
                 rate_card.cell(row=row, column=7).value = rates['humping']
             else:
                 rate_card.cell(row=row, column=7).value = 0
             
-            # Add note if this is a mock rate (Column H or I)
+            # Add note if this is a mock rate (Column H)
             if code_str in MOCK_RATES and rates['note']:
-                # Add note in column H (or next available column)
-                rate_card.cell(row=row, column=8).value = f"⚠️ MOCK RATE: {rates['note']}"
+                rate_card.cell(row=row, column=8).value = f"⚠️ MOCK: {rates['note']}"
                 mock_count += 1
-                print(f"  🟡 {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, Humping=£{rates['humping']} (MOCK - {rates['note'][:50]}...)")
+                print(f"  🟡 {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, T&J=£0, Humping=£{rates['humping']} (MOCK - {rates['note'][:50]}...)")
             else:
                 # Clear any existing note for confirmed rates
                 rate_card.cell(row=row, column=8).value = ""
-                print(f"  ✅ {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, Humping=£{rates['humping']}")
+                print(f"  ✅ {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, T&J=£0, Humping=£{rates['humping']}")
             
             updated_count += 1
     
