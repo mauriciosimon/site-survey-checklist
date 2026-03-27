@@ -1567,6 +1567,39 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             val = client_summary.cell(row=row, column=1).value
             logger.error(f"  Row {row}: '{val}'")
     
+    # VERIFICATION NOTES: Add warnings for replacement doors with unknown/uncertain dimensions
+    verification_notes = []
+    for door in doors:
+        # Check if this is a replacement door
+        is_replacement = door.get('is_replacement', False)
+        if not is_replacement:
+            continue
+            
+        door_id = door.get('door_id', 'Unknown')
+        fire_rating = door.get('fire_rating', 'Unknown')
+        door_config = door.get('door_config', 'Unknown')
+        door_height = door.get('door_height_mm', 'Unknown')
+        
+        # Check if height is unknown or missing
+        if door_height in ['Unknown', None, '', 0]:
+            # Get the A-series code that was assigned
+            a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
+            
+            note = f"⚠️ {door_id}: Height not specified in survey. Mapped to {a_series_code} ({fire_rating} {door_config}, tallest size). Confirm door height to verify correct A-series code."
+            verification_notes.append(note)
+            logger.info(f"Added verification note for {door_id}: height unknown")
+    
+    # Write verification notes to Client Summary if any exist
+    if verification_notes:
+        # Find a good place to add notes (after compliance note, around row 17-20)
+        notes_start_row = 18
+        client_summary.cell(row=notes_start_row, column=1).value = "VERIFICATION NOTES"
+        
+        for i, note in enumerate(verification_notes):
+            client_summary.cell(row=notes_start_row + 1 + i, column=1).value = note
+        
+        logger.info(f"Added {len(verification_notes)} verification note(s) to Client Summary")
+    
     # Step 9: FIX #6 - Populate Material Call-Off sheet with B-code counts
     if "Material Call-Off" in wb.sheetnames:
         material_calloff = wb["Material Call-Off"]
