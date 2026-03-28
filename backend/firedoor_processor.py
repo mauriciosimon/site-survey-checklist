@@ -1856,8 +1856,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # FIX #9: Count B-codes from column W (ALL B CODES) using EXACT matching - ISSUE 1 FIX
         # This matches the Quote Sheet logic (FIX #3)
         # MAURICIO FIX: Deduplicate B-codes per door (count each door once per B-code)
+        # DEVVIE FIX: Count ALL rows until empty, not just len(doors)
         component_counts = {}
-        for row_num in range(4, 4 + len(doors)):
+        for row_num in range(4, 200):  # Scan up to row 200
+            door_id = door_schedule.cell(row=row_num, column=1).value
+            if not door_id:  # Stop at first empty door_id
+                break
             all_b_codes_str = door_schedule.cell(row=row_num, column=23).value  # Column W (ALL B CODES) - ISSUE 1 FIX
             if all_b_codes_str:
                 all_codes_list = [c.strip() for c in str(all_b_codes_str).split(',')]
