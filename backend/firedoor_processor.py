@@ -1370,18 +1370,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     for b_code, row_num in bcode_to_row.items():
         qty = b_code_counts.get(b_code, 0)
-        cost_rate = rates.get(b_code, 0)  # Materials + Labour (internal cost)
-        cost_total = qty * cost_rate
-        
-        # FIX #5: Apply gross margin formula
-        # Client Price = Cost ÷ (1 - Margin%)
-        if target_margin < 1:  # Margin must be less than 100%
-            client_total = cost_total / (1 - target_margin) if (1 - target_margin) > 0 else cost_total
-            client_rate = client_total / qty if qty > 0 else 0
-        else:
-            # Fallback if margin is invalid
-            client_total = cost_total
-            client_rate = cost_rate
+        cost_rate = rates.get(b_code, 0)  # Rate Card Total (cost price)
+        cost_total = qty * cost_rate  # Line item cost subtotal (no margin)
         
         door_ids = b_code_door_ids.get(b_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
@@ -1391,11 +1381,10 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         template_label = quote_sheet.cell(row=row_num, column=2).value  # Column B (Description/Label)
         logger.info(f"Row {row_num}: Template label='{template_label}', Writing {b_code} with QTY={qty}, Doors={door_ids_str}")
         
-        # Write COST and CLIENT PRICE values
+        # Write COST values (no margin on line items)
         quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=4).value = cost_rate     # Column D (RATE from Rate Card)
-        quote_sheet.cell(row=row_num, column=5).value = client_rate   # Column E (CLIENT RATE with margin)
-        quote_sheet.cell(row=row_num, column=6).value = client_total  # Column F (CLIENT TOTAL with margin)
+        quote_sheet.cell(row=row_num, column=4).value = cost_rate     # Column D (RATE = Rate Card Total, plain cost)
+        quote_sheet.cell(row=row_num, column=6).value = cost_total    # Column F (TOTAL = QTY × RATE, cost subtotal)
         
         # FIX #3: Write zero to T&J and Humping rate columns to exclude from breakdown
         quote_sheet.cell(row=row_num, column=11).value = 0            # Column K (T&J rate) = 0
@@ -1406,7 +1395,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {b_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDS={door_ids_str}")
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={cost_rate}, TOTAL={cost_total}, DOOR_IDS={door_ids_str}")
     
     # Step 5: Write calculated NUMBERs to Client Summary
     # FIX #5: Client Summary shows CLIENT PRICES (with margin), not costs
@@ -1489,27 +1478,22 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     for a_code, row_num in acode_to_row.items():
         qty = a_code_counts.get(a_code, 0)
-        cost_rate = a_series_rates.get(a_code, 0)
-        cost_total = qty * cost_rate
-        
-        # FIX #5: Apply gross margin formula to Option B
-        client_total = cost_total / (1 - target_margin) if (1 - target_margin) > 0 else cost_total
-        client_rate = client_total / qty if qty > 0 else 0
+        cost_rate = a_series_rates.get(a_code, 0)  # Rate Card Total (cost price)
+        cost_total = qty * cost_rate  # Line item cost subtotal (no margin)
         
         door_ids = a_code_door_ids.get(a_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
-        # Write Option B COST and CLIENT PRICE values
+        # Write Option B COST values (no margin on line items)
         quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=4).value = cost_rate      # Column D (RATE from Rate Card)
-        quote_sheet.cell(row=row_num, column=5).value = client_rate    # Column E (CLIENT RATE with margin)
-        quote_sheet.cell(row=row_num, column=6).value = client_total   # Column F (CLIENT TOTAL with margin)
+        quote_sheet.cell(row=row_num, column=4).value = cost_rate      # Column D (RATE = Rate Card Total, plain cost)
+        quote_sheet.cell(row=row_num, column=6).value = cost_total     # Column F (TOTAL = QTY × RATE, cost subtotal)
         quote_sheet.cell(row=row_num, column=11).value = 0             # Column K (T&J rate) = 0
         quote_sheet.cell(row=row_num, column=13).value = 0             # Column M (Humping rate) = 0
         quote_sheet.cell(row=row_num, column=19).value = door_ids_str  # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {a_code}: QTY={qty}, COST_RATE={cost_rate}, CLIENT_RATE={client_rate}, CLIENT_TOTAL={client_total}, DOOR_IDs={door_ids_str}")
+            logger.info(f"Quote Sheet {a_code}: QTY={qty}, RATE={cost_rate}, TOTAL={cost_total}, DOOR_IDs={door_ids_str}")
     
     # ISSUE #3 FIX: Write Option B TOTAL to Quote Sheet
     # Try common locations for Option B TOTAL row
