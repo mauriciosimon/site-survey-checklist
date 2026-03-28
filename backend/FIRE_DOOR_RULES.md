@@ -1,7 +1,7 @@
 # Fire Door Quoting - Business Logic Rules
 
-**Version:** 1.0  
-**Last Updated:** 2026-03-24  
+**Version:** 1.1  
+**Last Updated:** 2026-03-28  
 **Owner:** Westpark Fire Safety
 
 ## Overview
@@ -210,7 +210,152 @@ List ALL applicable B-codes as a comma-separated list.
 
 ---
 
-## 5. Option A (Remedial Works)
+## 5. Door Schedule Column Structure (Updated 2026-03-28)
+
+### Critical Column Definitions
+
+The Door Schedule uses the following column structure:
+
+| Column | Name | Description | Example |
+|--------|------|-------------|---------|
+| A | DOOR ID | Unique door identifier | A01-L2, A02-L3 |
+| B | LOCATION | Physical location | Ground Floor Lobby |
+| C | DOOR TYPE | Type from survey | From Survey |
+| D | CURRENT RATING | Fire rating | FD30S, FD60S, Unknown |
+| E | LEAF CONFIG | Single or Double | Single Leaf, Double Leaf |
+| F-M | Various | Size, Finish, Seals, etc. | Paint, To Check |
+| N | OPT A REMEDIAL? | YES/NO/COMPLIANT | YES (needs remedial work) |
+| O | OPT B REPLACE? | YES/NO/PENDING | YES (needs replacement) |
+| P | OPT B BASE ITEM | Primary B-code or A-code | B01, A05, A09 |
+| **Q** | **QTY** | **Integer: 1 or 0** | **1 (non-compliant), 0 (compliant)** |
+| **R** | **ALL B CODES** | **Comma-separated B-codes** | **B10, B01, B06, B12, B07** |
+| **S** | **OPT B REPLACEMENT CODE** | **A-series code for Option B** | **A01, A05, A09** |
+| T-W | E/O Flags | Extra Over flags | NO, NO, NO, NO |
+| X | NOTES/FLAGS | ART codes, warnings | ARTs: ART01, ART03 |
+
+### Column Q: QTY (Quantity)
+
+**Purpose:** Integer count for each door (1 or 0)
+
+**Rules:**
+- **Non-compliant doors:** QTY = 1 (Opt A = YES or Opt B = YES)
+- **Compliant doors:** QTY = 0 (Opt A = COMPLIANT)
+- **Never blank, never text, always integer**
+
+**Previous Issue (Fixed 2026-03-28):**
+- Column Q was storing comma-separated B-codes
+- This made counting impossible
+- **Fix:** Moved B-code list to column R, made Q an integer
+
+### Column R: ALL B CODES (Comma-Separated List)
+
+**Purpose:** Complete list of ALL B-series codes required for remedial work on this door
+
+**Format:** Comma-separated, no quotes
+- Example: `B10, B01, B06, B12, B07`
+- Example: `B01, B03`
+- Example: `` (blank for compliant doors)
+
+**Used By:** Quote Sheet Option A wildcard COUNTIF (see Section 6)
+
+**Rules:**
+- **Multi-code doors:** List ALL codes (e.g., door needs seals + signage + re-hang)
+- **Single-code doors:** Single code (e.g., just B03 closer)
+- **Compliant doors:** Blank
+- **Order:** Does not matter (wildcard search)
+
+### Column S: OPT B REPLACEMENT CODE (A-Series)
+
+**Purpose:** A-series replacement code for Option B (full replacement)
+
+**Assignment Logic:**
+For **ALL non-compliant doors** (Opt A = YES OR Opt B = YES):
+- Map fire rating + leaf config → A-series code
+- FD30/FD30S single ≤2040mm → A05
+- FD60/FD60S single ≤2040mm → A09
+- FD30 double ≤2040mm → A08
+- NOMINAL single → A05 (default)
+- NOMINAL double → A08 (default)
+
+**Used By:** Quote Sheet Option B COUNTIF (see Section 7)
+
+**Rules:**
+- **ALL non-compliant doors get an A-code** (not just mandatory replacements)
+- Mandatory replacements (ART17/18/20) use specific codes
+- Remediable doors (Opt A = YES) ALSO get A-codes for Option B
+- Compliant doors: Blank
+
+**Critical Understanding (Fixed 2026-03-28):**
+Option B = replace **ALL 33 non-compliant doors**, not just 2 mandatory replacements.
+
+---
+
+## 6. Quote Sheet Counting Logic (Wildcard COUNTIF)
+
+### Option A (B-Series) - Wildcard Matching
+
+**Problem Solved (2026-03-28):**
+- B07 (signage), B10 (re-hang), B11 (lipping) were showing QTY = 0
+- Root cause: Primary code (column P) only showed ONE code per door
+- Doors with multiple codes were under-counted
+
+**Solution: Wildcard COUNTIF Against Column R (ALL B CODES)**
+
+For each B-series line item in Quote Sheet, count doors where that B-code appears **anywhere** in the ALL B CODES column (R).
+
+**Python Logic:**
+```python
+# For B07 (signage) at Quote Sheet row 17
+b07_count = 0
+for row in door_schedule_rows:
+    all_b_codes = door_schedule[row]['ALL B CODES']  # Column R
+    if 'B07' in str(all_b_codes):  # Wildcard/substring match
+        b07_count += 1
+
+quote_sheet[17]['QTY'] = b07_count  # Column C
+```
+
+**Excel Formula Equivalent:**
+```excel
+=COUNTIF(DoorSchedule!R:R, "*B07*")
+```
+
+**Result:**
+- B07: Counts ALL doors with signage failures (not just doors where B07 is primary)
+- B10: Counts ALL doors needing re-hang
+- B11: Counts ALL doors needing lipping
+
+### Option B (A-Series) - Exact Match on Column S
+
+**For each A-series line item in Quote Sheet, count doors where OPT B REPLACEMENT CODE (column S) exactly matches that A-code.**
+
+**Python Logic:**
+```python
+# For A05 (FD30S single ≤2040mm) at Quote Sheet row 30
+a05_count = 0
+for row in door_schedule_rows:
+    opt_b_code = door_schedule[row]['OPT B REPLACEMENT CODE']  # Column S
+    if opt_b_code == 'A05':  # Exact match
+        a05_count += 1
+
+quote_sheet[30]['QTY'] = a05_count  # Column C
+```
+
+**Excel Formula Equivalent:**
+```excel
+=COUNTIF(DoorSchedule!S:S, "A05")
+```
+
+**Result:**
+- A01: Counts doors assigned A01 (FD30 single ≤2040mm, no smoke)
+- A05: Counts doors assigned A05 (FD30S single ≤2040mm, with smoke)
+- A09: Counts doors assigned A09 (FD60S single ≤2040mm)
+
+**Expected Total for Option B:** ~33 doors for Alpha Sights (all non-compliant)
+
+---
+
+## 7. Option A (Remedial Works)
 
 ### Calculation Logic
 1. Count doors with `Opt A = YES` in Door Schedule
@@ -261,6 +406,20 @@ After writing Quote Sheet quantities, the system MUST:
 ---
 
 ## 6. Option B (Full Replacement)
+
+**CRITICAL UNDERSTANDING (Updated 2026-03-28):**
+
+Option B is NOT just for mandatory replacements (ART17/ART18/ART20). Option B provides a **complete alternative approach** where ALL non-compliant doors are replaced with certified fire doors instead of doing remedial works.
+
+**OLD (INCORRECT) Understanding:**
+- ❌ Option B = only the 2-3 doors that MUST be replaced (ART17/ART18/ART20)
+
+**CORRECT Understanding:**
+- ✅ Option B = replace ALL 33 non-compliant doors (complete certified door replacement alternative)
+- Client choice: Option A (remedial + mandatory replacements) vs Option B (all new certified doors)
+- Example: Alpha Sights had 6 compliant + 33 non-compliant doors
+  - Option A: £17.5K (remedial works on 33 doors + replace 2 mandatory)
+  - Option B: £37K (replace ALL 33 non-compliant with new certified doors)
 
 ### Type 1 (PDF) - ALWAYS PRICED
 **Rule:** Option B MUST be priced based on fire rating, leaf configuration, AND door height
@@ -429,10 +588,15 @@ else:
 
 ## 8.1 Material Call-Off Sheet
 
-### Component-to-B-Code Mapping (Issue #4 Fix)
+### Component-to-B-Code Mapping (Updated 2026-03-28)
 The Material Call-Off sheet tracks components needed for remedial works. Each component row must count doors from Door Schedule by B-code.
 
-**CRITICAL:** Use b_code_counts dictionary to populate quantities — do NOT use hardcoded values.
+**CRITICAL:** Use wildcard COUNTIF against Door Schedule column R (ALL B CODES) — same logic as Quote Sheet Option A (see Section 6).
+
+**Counting Method:**
+- For each B-code, count doors where that code appears **anywhere** in column R (ALL B CODES)
+- This ensures multi-code doors are counted for ALL their required components
+- Example: Door with "B10, B01, B06, B12, B07" counts toward B01, B06, B07, B10, B12 material call-offs
 
 | Row | Component | B-Code | Calculation |
 |-----|-----------|--------|-------------|
