@@ -79,26 +79,17 @@ def update_rate_card():
     updated_count = 0
     mock_count = 0
     
-    # FIRST PASS: Zero out ALL T&J values (Column F) - Matt removed this column
-    # Also clear old column H (8) mock flags - we moved them to column J (10)
-    print("Zeroing out T&J column (Column F) and clearing old mock flags (Column H)...")
-    tj_zeroed = 0
+    # FIRST PASS: Clear old mock flags from column H (moved to column J)
+    print("Clearing old mock flags from Column H...")
     h_cleared = 0
     for row in range(6, 50):
         code = rate_card.cell(row=row, column=1).value
         if code:  # Only process rows with a code
-            # Zero T&J
-            current_tj = rate_card.cell(row=row, column=6).value
-            if current_tj and current_tj != 0:
-                rate_card.cell(row=row, column=6).value = 0
-                tj_zeroed += 1
-            
             # Clear column H if it contains text (old mock flags)
             col_h = rate_card.cell(row=row, column=8).value
             if col_h and isinstance(col_h, str) and 'MOCK' in col_h:
                 rate_card.cell(row=row, column=8).value = None
                 h_cleared += 1
-    print(f"✅ Zeroed out {tj_zeroed} T&J values")
     print(f"✅ Cleared {h_cleared} old mock flags from column H\n")
     
     # SECOND PASS: Update rates for known codes
@@ -116,26 +107,40 @@ def update_rate_card():
             # Update Labour (Column E)
             rate_card.cell(row=row, column=5).value = rates['labour']
             
-            # CRITICAL: Zero out T&J (Column F) - Matt removed this per instruction
-            rate_card.cell(row=row, column=6).value = 0
-            
-            # Update Humping (Column G) - only if non-zero
-            if rates['humping'] > 0:
-                rate_card.cell(row=row, column=7).value = rates['humping']
-            else:
-                rate_card.cell(row=row, column=7).value = 0
+            # Update Humping (Column F)
+            rate_card.cell(row=row, column=6).value = rates['humping']
             
             # Add note if this is a mock rate (Column J = 10, avoid Column H which gets overwritten by processor)
             if code_str in MOCK_RATES and rates['note']:
                 rate_card.cell(row=row, column=10).value = f"⚠️ MOCK: {rates['note']}"
                 mock_count += 1
-                print(f"  🟡 {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, T&J=£0, Humping=£{rates['humping']} (MOCK - {rates['note'][:50]}...)")
+                print(f"  🟡 {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, Humping=£{rates['humping']} (MOCK - {rates['note'][:50]}...)")
             else:
                 # Clear any existing mock note for confirmed rates
                 rate_card.cell(row=row, column=10).value = ""
-                print(f"  ✅ {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, T&J=£0, Humping=£{rates['humping']}")
+                print(f"  ✅ {code_str}: Materials=£{rates['materials']}, Labour=£{rates['labour']}, Humping=£{rates['humping']}")
             
             updated_count += 1
+    
+    # THIRD PASS: Calculate and write Total column (Column G) for ALL rows
+    print("\nCalculating totals for all Rate Card rows...")
+    totals_written = 0
+    for row in range(6, 50):
+        code = rate_card.cell(row=row, column=1).value
+        if code:  # Only process rows with a code
+            mat = rate_card.cell(row=row, column=4).value or 0
+            lab = rate_card.cell(row=row, column=5).value or 0
+            hump = rate_card.cell(row=row, column=6).value or 0
+            total = mat + lab + hump
+            
+            # Write numeric total to Column G
+            rate_card.cell(row=row, column=7).value = total
+            totals_written += 1
+            
+            if code in ['A01', 'A04', 'A09', 'B01', 'B03', 'B11']:  # Verification samples
+                print(f"  ✅ {code}: {mat} + {lab} + {hump} = £{total:.2f}")
+    
+    print(f"✅ Wrote {totals_written} total values to Column G\n")
     
     # Save workbook
     wb.save(template_path)
