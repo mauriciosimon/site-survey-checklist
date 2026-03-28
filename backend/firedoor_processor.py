@@ -1458,9 +1458,10 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     for row_num in range(6, 40):  # Check all rows in Rate Card
         code = rate_card_sheet.cell(row=row_num, column=1).value
         if code and str(code).startswith('A'):
-            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0
-            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0
-            rate = mat + lab
+            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0  # Column D (Materials)
+            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0  # Column E (Labour)
+            hump = rate_card_sheet.cell(row=row_num, column=6).value or 0  # Column F (Humping)
+            rate = mat + lab + hump  # A-series includes humping cost
             a_series_rates[str(code)] = rate
     
     logger.info(f"A-series rates from Rate Card: {a_series_rates}")
