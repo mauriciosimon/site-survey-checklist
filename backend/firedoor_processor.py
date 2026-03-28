@@ -1,6 +1,7 @@
 """
 Fire Door Quoting Processor
 Handles extraction and mapping of fire door survey data to rate card codes.
+Version: 2026-03-28 - Force redeploy for template binary update
 """
 
 import os
