@@ -680,7 +680,7 @@ def get_aseries_description(a_code: str) -> str:
     return descriptions.get(a_code, '')
 
 
-def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = None) -> str:
+def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = None, explicit_mapping: bool = False) -> str:
     """
     Map fire rating + door configuration + height to A-series replacement code.
     
@@ -688,15 +688,17 @@ def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = N
         fire_rating: Fire rating (FD60, FD60S, FD30, FD30S, Nominal, etc.)
         door_config: Door configuration ("Single Leaf" or "Double Leaf")
         door_height: Door height in mm (optional, defaults to ≤2040 range)
+        explicit_mapping: If True, use exact FD30 → A01/A02/A03/A04 (no smoke seals default)
+                         If False (default), use FD30 → A05/A06/A07/A08 (with smoke seals)
     
     Returns:
         A-series code (A01-A15) or empty string if no match
     
     Full mapping table (from Mauricio 2026-03-27):
-        FD30 Single ≤2040 → A01
-        FD30 Single 2040–2400 → A02
-        FD30 Single 2400–2730 → A03
-        FD30 Double ≤2040 → A04
+        FD30 Single ≤2040 → A01 (explicit) or A05 (default with smoke)
+        FD30 Single 2040–2400 → A02 (explicit) or A06 (default with smoke)
+        FD30 Single 2400–2730 → A03 (explicit) or A07 (default with smoke)
+        FD30 Double ≤2040 → A04 (explicit) or A08 (default with smoke)
         FD30S Single ≤2040 → A05
         FD30S Single 2040–2400 → A06
         FD30S Single 2400–2730 → A07
@@ -708,6 +710,7 @@ def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = N
         Nominal Double → A08 (default to FD30S)
     
     Note: S suffix = smoke seals. FD30 ≠ FD30S
+    ISSUE 2 FIX: explicit_mapping=True for mandatory replacement doors (ART17/18/20)
     """
     if not fire_rating or not door_config:
         return ''
@@ -730,18 +733,31 @@ def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = N
         height_range = 1  # Fallback to base code
     
     # Map based on rating + config + height
-    # CRITICAL FIX (Issue 3): FD30 defaults to FD30S (with smoke seals) per Mauricio's brief
-    # "FD30 single leaf = A05 (FD30S with smoke seals)"
+    # ISSUE 2 FIX: For explicit_mapping=True, use exact FD30 codes (A01-A04) without smoke seal default
+    # For explicit_mapping=False (default), FD30 defaults to FD30S (A05-A08) per Mauricio's brief
     if rating_upper == 'FD30':
-        if is_single:
-            if height_range == 1:
-                return 'A05'  # FD30 defaults to FD30S single ≤2040mm (with smoke)
-            elif height_range == 2:
-                return 'A06'  # FD30 defaults to FD30S single 2040-2400mm (with smoke)
-            elif height_range == 3:
-                return 'A07'  # FD30 defaults to FD30S single 2400-2730mm (with smoke)
-        elif is_double:
-            return 'A08'  # FD30 defaults to FD30S double ≤2040mm (with smoke)
+        if explicit_mapping:
+            # Exact mapping for replacement doors (ART17/18/20) - no smoke seal default
+            if is_single:
+                if height_range == 1:
+                    return 'A01'  # FD30 single ≤2040mm (exact, no smoke)
+                elif height_range == 2:
+                    return 'A02'  # FD30 single 2040-2400mm (exact, no smoke)
+                elif height_range == 3:
+                    return 'A03'  # FD30 single 2400-2730mm (exact, no smoke)
+            elif is_double:
+                return 'A04'  # FD30 double ≤2040mm (exact, no smoke)
+        else:
+            # Default mapping with smoke seals for remedial doors
+            if is_single:
+                if height_range == 1:
+                    return 'A05'  # FD30 defaults to FD30S single ≤2040mm (with smoke)
+                elif height_range == 2:
+                    return 'A06'  # FD30 defaults to FD30S single 2040-2400mm (with smoke)
+                elif height_range == 3:
+                    return 'A07'  # FD30 defaults to FD30S single 2400-2730mm (with smoke)
+            elif is_double:
+                return 'A08'  # FD30 defaults to FD30S double ≤2040mm (with smoke)
     
     # Check for FD30S (with S)
     elif 'FD30S' in rating_upper:
@@ -792,7 +808,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     - Column S: OPT B REPLACEMENT CODE (A-series code for ALL non-compliant doors)
     
     FIX #3-5: Quote Sheet Logic
-    - Option A (B-series): Wildcard COUNTIF against column R (ALL B CODES)
+    - Option A (B-series): Wildcard COUNTIF against column W (ALL B CODES) - ISSUE 1 FIX
     - Option B (A-series): COUNTIF against column S for ALL non-compliant doors (~33 for Alpha Sights)
     - CRITICAL: Option B = replace ALL non-compliant doors, not just mandatory replacements
     
@@ -805,7 +821,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     FIX #8: Prelims Blank - ALL prelim quantities set to None
     
-    FIX #9: Material Call-Off uses wildcard match against column R (ALL B CODES)
+    FIX #9: Material Call-Off uses wildcard match against column W (ALL B CODES) - ISSUE 1 FIX
     
     Args:
         doors: List of door dictionaries
@@ -1142,8 +1158,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         if needs_replacement:
             # Replacement doors: Skip B-code logic entirely
             codes = []  # No remedial codes
-            primary_code = ''  # Empty primary (Column P)
-            all_codes_str = ''  # Empty ALL B CODES (Column R)
+            # ISSUE 3 FIX: Calculate A-series code FIRST for replacement doors
+            fire_rating = door.get('fire_rating', 'Unknown')
+            door_config = door.get('door_config', 'Single Leaf')
+            door_height = door.get('door_height_mm', None)
+            # ISSUE 2 FIX: Use explicit_mapping=True for replacement doors (no smoke seal default)
+            a_series_code_replacement = map_to_aseries_code(fire_rating, door_config, door_height, explicit_mapping=True)
+            primary_code = a_series_code_replacement  # ISSUE 3 FIX: Column P = A-series code (was '')
+            all_codes_str = ''  # Empty ALL B CODES (Column W)
         else:
             # Remedial doors: Continue with B-code logic
             if not codes and 'art_codes' in door:
@@ -1222,11 +1244,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             logger.info(f"Door {door_id}: Non-compliant door - fire_rating='{fire_rating}', door_config='{door_config}', door_height={door_height}")
             
             if fire_rating != 'Unknown':
-                # Map fire rating + config + height to A-series code
-                a_series_code = map_to_aseries_code(fire_rating, door_config, door_height)
+                # ISSUE 2 FIX: Use explicit_mapping=True for replacement doors (ART17/18/20)
+                # This ensures A14-L3 (FD30 double) maps to A04 (no smoke) not A08 (with smoke)
+                use_explicit = needs_replacement  # True for ART17/18/20 doors
+                a_series_code = map_to_aseries_code(fire_rating, door_config, door_height, explicit_mapping=use_explicit)
                 if a_series_code:
                     height_str = f"{door_height}mm" if door_height else "≤2040mm (default)"
-                    logger.info(f"Door {door_id}: MAPPED {fire_rating} {door_config} {height_str} → {a_series_code}")
+                    mapping_type = "explicit (no smoke)" if use_explicit else "default (with smoke)"
+                    logger.info(f"Door {door_id}: MAPPED {fire_rating} {door_config} {height_str} → {a_series_code} ({mapping_type})")
                 else:
                     logger.error(f"Door {door_id}: MAPPING FAILED - rating='{fire_rating}', config='{door_config}', height={door_height}")
                     logger.error(f"Door {door_id}: This should NEVER happen - check map_to_aseries_code function")
@@ -1265,32 +1290,28 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             ws[f'O{row_num}'] = 'NO'
             logger.info(f"Door {door_id}: Has faults → OptA=YES, OptB=NO")
         
-        # 9 FIXES - NEW COLUMN STRUCTURE:
+        # ISSUE 1 FIX - CORRECTED COLUMN STRUCTURE:
         # Column P: OPT A BASE ITEM (primary B-code for Option A)
         # Column Q: QTY (1 for non-compliant, 0 for compliant)
-        # Column R: ALL B CODES (comma-separated list for wildcard COUNTIF)
-        # Column S: OPT B REPLACEMENT CODE (A-series code for ALL non-compliant doors)
+        # Columns R-U: E/O flags (OVERSIZE/HARDWOOD/EXTERNAL/VISION) - RESTORED to original position
+        # Column V: NOTES/FLAGS - RESTORED to original position
+        # Column W: ALL B CODES (comma-separated list for wildcard COUNTIF) - MOVED from R
+        # Column X: OPT B REPLACEMENT CODE (A-series code for ALL non-compliant doors) - MOVED from S
         
         # Column P: OPT A BASE ITEM (primary B-code)
         ws[f'P{row_num}'] = primary_code if primary_code else ''
         
-        # Column Q: QTY (1 or 0) - FIX #1
+        # Column Q: QTY (1 or 0)
         qty_value = 1 if not is_compliant else 0
         ws[f'Q{row_num}'] = qty_value
         
-        # Column R: ALL B CODES (comma-separated) - FIX #1
-        ws[f'R{row_num}'] = all_codes_str if all_codes_str != 'MANUAL REVIEW' else ''
+        # Columns R-U: E/O flags (Extra Over costs) - RESTORED to original position
+        ws[f'R{row_num}'] = 'NO'  # E/O OVERSIZE
+        ws[f'S{row_num}'] = 'NO'  # E/O HARDWOOD
+        ws[f'T{row_num}'] = 'NO'  # E/O EXTERNAL
+        ws[f'U{row_num}'] = 'NO'  # E/O VISION
         
-        # Column S: OPT B REPLACEMENT CODE (A-series) - FIX #2
-        ws[f'S{row_num}'] = a_series_code if a_series_code else ''
-        
-        # Columns T-W: E/O flags (Extra Over costs) - shifted from R-U
-        ws[f'T{row_num}'] = 'NO'  # E/O OVERSIZE
-        ws[f'U{row_num}'] = 'NO'  # E/O HARDWOOD
-        ws[f'V{row_num}'] = 'NO'  # E/O EXTERNAL
-        ws[f'W{row_num}'] = 'NO'  # E/O VISION
-        
-        # Column X: NOTES / FLAGS - shifted from V
+        # Column V: NOTES / FLAGS - RESTORED to original position
         flag_notes = []
         
         # BUG 3 FIX: Only add ART codes for Type 1 (PDF) surveys
@@ -1310,7 +1331,13 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
             flag_notes.append("⚠️ Manual review required")
         
         if flag_notes:
-            ws[f'X{row_num}'] = ' | '.join(flag_notes)
+            ws[f'V{row_num}'] = ' | '.join(flag_notes)
+        
+        # Column W: ALL B CODES (comma-separated) - MOVED from R (ISSUE 1 FIX)
+        ws[f'W{row_num}'] = all_codes_str if all_codes_str != 'MANUAL REVIEW' else ''
+        
+        # Column X: OPT B REPLACEMENT CODE (A-series) - MOVED from S (ISSUE 1 FIX)
+        ws[f'X{row_num}'] = a_series_code if a_series_code else ''
         
         # Color code based on status
         # Priority: Orange (manual review) > Red (replacement) > Yellow (remedial) > Green (compliant)
@@ -1337,8 +1364,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # Step 1: Count B-codes AND A-series codes from Door Schedule
     # 9 FIXES - NEW COUNTING LOGIC:
-    # - Option A (B-codes): Wildcard match against column R (ALL B CODES)
-    # - Option B (A-series): Count from column S (OPT B REPLACEMENT CODE) for ALL non-compliant doors
+    # - Option A (B-codes): Wildcard match against column W (ALL B CODES) - ISSUE 1 FIX
+    # - Option B (A-series): Count from column X (OPT B REPLACEMENT CODE) for ALL non-compliant doors - ISSUE 1 FIX
     door_schedule = wb['Door Schedule']
     b_code_counts = {}
     b_code_door_ids = {}
@@ -1354,10 +1381,10 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         opt_b = door_schedule.cell(row=row, column=15).value  # Column O (Option B)
         base_item = door_schedule.cell(row=row, column=16).value  # Column P (Primary B-code)
         qty = door_schedule.cell(row=row, column=17).value  # Column Q (QTY: 1 or 0)
-        all_b_codes_str = door_schedule.cell(row=row, column=18).value  # Column R (ALL B CODES)
-        opt_b_code = door_schedule.cell(row=row, column=19).value  # Column S (OPT B REPLACEMENT CODE)
+        all_b_codes_str = door_schedule.cell(row=row, column=23).value  # Column W (ALL B CODES) - ISSUE 1 FIX
+        opt_b_code = door_schedule.cell(row=row, column=24).value  # Column X (OPT B REPLACEMENT CODE) - ISSUE 1 FIX
         
-        # FIX #3: Count Option A B-codes using WILDCARD match against column R (ALL B CODES)
+        # FIX #3: Count Option A B-codes using WILDCARD match against column W (ALL B CODES) - ISSUE 1 FIX
         # This correctly counts B07, B10, B11 which appear on multiple doors but aren't always primary
         if opt_a == 'YES' and all_b_codes_str:
             all_codes_list = [c.strip() for c in str(all_b_codes_str).split(',')]
@@ -1395,6 +1422,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     if opt_a_yes_count > 0 and total_b_code_instances == 0:
         logger.error(f"VALIDATION ERROR: {opt_a_yes_count} doors have OptA=YES but 0 B-codes counted!")
+    
+    # ISSUE 4: B12 Verification - Log count and door IDs for Mauricio to verify against source
+    if 'B12' in b_code_counts:
+        b12_count = b_code_counts['B12']
+        b12_doors = b_code_door_ids.get('B12', [])
+        logger.info(f"🔍 ISSUE 4 - B12 VERIFICATION:")
+        logger.info(f"   B12 (void infill) count: {b12_count}")
+        logger.info(f"   Door IDs with B12: {', '.join(b12_doors)}")
+        logger.info(f"   ⚠️ Mauricio - please verify these {b12_count} doors against source PDF")
+    else:
+        logger.info(f"🔍 ISSUE 4 - B12 VERIFICATION: No B12 codes found in this survey")
     
     # Step 2: Get rates from Rate Card
     # FIX #4: Read rates from Rate Card Total column (Column G)
@@ -1707,12 +1745,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # This ensures we flag any door where dimensions were extracted and need confirmation
     verification_notes = []
     
-    # 9 FIXES: Scan Door Schedule column S (OPT B REPLACEMENT CODE) for A-series codes
+    # 9 FIXES: Scan Door Schedule column X (OPT B REPLACEMENT CODE) for A-series codes - ISSUE 1 FIX
     door_schedule = wb["Door Schedule"]
     # Door data starts at row 4 (row 3 is headers)
     for row_num in range(4, 4 + len(doors)):
         door_id = door_schedule.cell(row=row_num, column=1).value  # Column A
-        opt_b_code = door_schedule.cell(row=row_num, column=19).value  # Column S (OPT B REPLACEMENT CODE)
+        opt_b_code = door_schedule.cell(row=row_num, column=24).value  # Column X (OPT B REPLACEMENT CODE) - ISSUE 1 FIX
         
         # Check if this is an A-series code (A01-A15 pattern)
         if opt_b_code and isinstance(opt_b_code, str) and opt_b_code.startswith('A') and len(opt_b_code) >= 3:
@@ -1744,17 +1782,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.info("No A-series codes found in Door Schedule - no verification notes needed")
     
     # Step 9 (FIX #9): Populate Material Call-Off sheet with B-code counts
-    # 9 FIXES: Material Call-Off uses wildcard match against column R (ALL B CODES)
+    # 9 FIXES: Material Call-Off uses wildcard match against column W (ALL B CODES) - ISSUE 1 FIX
     # B07 (signage) × 2 because each door needs 2 signs
     if "Material Call-Off" in wb.sheetnames:
         material_calloff = wb["Material Call-Off"]
         door_schedule = wb["Door Schedule"]
         
-        # FIX #9: Count B-codes from column R (ALL B CODES) using wildcard matching
+        # FIX #9: Count B-codes from column W (ALL B CODES) using wildcard matching - ISSUE 1 FIX
         # This matches the Quote Sheet logic (FIX #3)
         component_counts = {}
         for row_num in range(4, 4 + len(doors)):
-            all_b_codes_str = door_schedule.cell(row=row_num, column=18).value  # Column R (ALL B CODES)
+            all_b_codes_str = door_schedule.cell(row=row_num, column=23).value  # Column W (ALL B CODES) - ISSUE 1 FIX
             if all_b_codes_str:
                 all_codes_list = [c.strip() for c in str(all_b_codes_str).split(',')]
                 for b_code in all_codes_list:

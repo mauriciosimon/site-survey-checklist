@@ -210,7 +210,7 @@ List ALL applicable B-codes as a comma-separated list.
 
 ---
 
-## 5. Door Schedule Column Structure (Updated 2026-03-28)
+## 5. Door Schedule Column Structure (Updated 2026-03-29 - ISSUE 1 FIX)
 
 ### Critical Column Definitions
 
@@ -226,12 +226,32 @@ The Door Schedule uses the following column structure:
 | F-M | Various | Size, Finish, Seals, etc. | Paint, To Check |
 | N | OPT A REMEDIAL? | YES/NO/COMPLIANT | YES (needs remedial work) |
 | O | OPT B REPLACE? | YES/NO/PENDING | YES (needs replacement) |
-| P | OPT B BASE ITEM | Primary B-code or A-code | B01, A05, A09 |
+| **P** | **OPT A BASE ITEM** | **Primary B-code** | **B01, B03, B10** |
 | **Q** | **QTY** | **Integer: 1 or 0** | **1 (non-compliant), 0 (compliant)** |
-| **R** | **ALL B CODES** | **Comma-separated B-codes** | **B10, B01, B06, B12, B07** |
-| **S** | **OPT B REPLACEMENT CODE** | **A-series code for Option B** | **A01, A05, A09** |
-| T-W | E/O Flags | Extra Over flags | NO, NO, NO, NO |
-| X | NOTES/FLAGS | ART codes, warnings | ARTs: ART01, ART03 |
+| **R** | **E/O OVERSIZE** | **Extra Over flag** | **NO, YES** |
+| **S** | **E/O HARDWOOD** | **Extra Over flag** | **NO, YES** |
+| **T** | **E/O EXTERNAL** | **Extra Over flag** | **NO, YES** |
+| **U** | **E/O VISION** | **Extra Over flag** | **NO, YES** |
+| **V** | **NOTES/FLAGS** | **ART codes, warnings** | **ARTs: ART01, ART03** |
+| **W** | **ALL B CODES** | **Comma-separated B-codes** | **B10, B01, B06, B12, B07** |
+| **X** | **OPT B REPLACEMENT CODE** | **A-series code for Option B** | **A01, A05, A09** |
+
+### ISSUE 1 FIX (2026-03-29): Column Structure Correction
+
+**Problem:** The 9-fixes implementation (2026-03-28) inadvertently overwrote columns R/S:
+- OLD (INCORRECT): Columns R/S = ALL B CODES / OPT B REPLACEMENT CODE
+- This overwrote the existing E/O (Extra Over) columns which are CRITICAL for pricing
+
+**Solution:** Columns restored to preserve E/O pricing data:
+- **Columns R-U**: E/O flags (OVERSIZE/HARDWOOD/EXTERNAL/VISION) - RESTORED to original position
+- **Column V**: NOTES/FLAGS - RESTORED to original position
+- **Column W**: ALL B CODES (comma-separated) - MOVED from R
+- **Column X**: OPT B REPLACEMENT CODE (A-series) - MOVED from S
+
+**Impact:** 
+- E/O columns are now preserved for Extra Over pricing calculations
+- Quote Sheet counting logic updated to read from columns W/X instead of R/S
+- All formulas and Python code updated to reflect new column indices (W=23, X=24)
 
 ### Column Q: QTY (Quantity)
 
