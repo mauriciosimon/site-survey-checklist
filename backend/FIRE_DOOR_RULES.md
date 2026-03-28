@@ -253,6 +253,25 @@ The Door Schedule uses the following column structure:
 - Quote Sheet counting logic updated to read from columns W/X instead of R/S
 - All formulas and Python code updated to reflect new column indices (W=23, X=24)
 
+### Column P: OPT A BASE ITEM (Primary B-Code)
+
+**Purpose:** Single primary B-code for Option A remedial pricing
+
+**Rules:**
+- **Remedial doors:** Primary B-code selected by priority (see Section 4.3)
+- **Replacement doors (ISSUE 3 FIX):** A-series code (e.g., A04, A10) for Option A pricing
+  - Previously: Column P was blank for replacement doors (INCORRECT)
+  - Now: Column P contains the A-series replacement code (CORRECT)
+- **Compliant doors:** Blank
+
+**Priority Order (for doors with multiple B-codes):**
+1. B01 (seals) — highest priority
+2. B03 (closer)
+3. B04 (hinges)
+4. B10 (adjust/rehang)
+5. B05 (latch/handles)
+6. Other codes
+
 ### Column Q: QTY (Quantity)
 
 **Purpose:** Integer count for each door (1 or 0)
@@ -265,48 +284,78 @@ The Door Schedule uses the following column structure:
 **Previous Issue (Fixed 2026-03-28):**
 - Column Q was storing comma-separated B-codes
 - This made counting impossible
-- **Fix:** Moved B-code list to column R, made Q an integer
+- **Fix:** Moved B-code list to column W, made Q an integer
 
-### Column R: ALL B CODES (Comma-Separated List)
+### Columns R-U: E/O Flags (Extra Over)
+
+**Purpose:** Track doors requiring Extra Over charges for special specifications
+
+**Columns:**
+- **R**: E/O OVERSIZE (doors >2730mm height or >1200mm width)
+- **S**: E/O HARDWOOD (hardwood veneer finish required)
+- **T**: E/O EXTERNAL (external grade weatherproofing required)
+- **U**: E/O VISION (vision panel required)
+
+**Values:** YES or NO
+
+**ISSUE 1 FIX (2026-03-29):** These columns were previously overwritten by ALL B CODES and OPT B REPLACEMENT CODE. Now restored to preserve Extra Over pricing data.
+
+### Column V: NOTES/FLAGS
+
+**Purpose:** Store ART codes, warnings, and manual review flags
+
+**Format:** Pipe-separated notes
+- Example: `ARTs: ART01, ART03 | ⚠️ Manual review required`
+- Example: `ARTs: ART17 | ⚠️ Unable to inspect - needs revisit`
+
+**ISSUE 1 FIX (2026-03-29):** Restored from column X to original column V position.
+
+### Column W: ALL B CODES (Comma-Separated List)
 
 **Purpose:** Complete list of ALL B-series codes required for remedial work on this door
 
 **Format:** Comma-separated, no quotes
 - Example: `B10, B01, B06, B12, B07`
 - Example: `B01, B03`
-- Example: `` (blank for compliant doors)
+- Example: `` (blank for compliant doors or replacement doors)
 
 **Used By:** Quote Sheet Option A wildcard COUNTIF (see Section 6)
 
 **Rules:**
 - **Multi-code doors:** List ALL codes (e.g., door needs seals + signage + re-hang)
 - **Single-code doors:** Single code (e.g., just B03 closer)
+- **Replacement doors:** Blank (no remedial codes)
 - **Compliant doors:** Blank
 - **Order:** Does not matter (wildcard search)
 
-### Column S: OPT B REPLACEMENT CODE (A-Series)
+**ISSUE 1 FIX (2026-03-29):** Moved from column R to column W to avoid overwriting E/O OVERSIZE flag.
+
+### Column X: OPT B REPLACEMENT CODE (A-Series)
 
 **Purpose:** A-series replacement code for Option B (full replacement)
 
 **Assignment Logic:**
 For **ALL non-compliant doors** (Opt A = YES OR Opt B = YES):
-- Map fire rating + leaf config → A-series code
-- FD30/FD30S single ≤2040mm → A05
-- FD60/FD60S single ≤2040mm → A09
-- FD30 double ≤2040mm → A08
-- NOMINAL single → A05 (default)
-- NOMINAL double → A08 (default)
+- Map fire rating + leaf config + height → A-series code
+- **ISSUE 2 FIX (2026-03-29):** Replacement doors (ART17/18/20) use explicit_mapping=True
+  - FD30 double ≤2040mm → A04 (no smoke seals) - CORRECT
+  - FD30 double ≤2040mm → A08 (with smoke seals) - INCORRECT for replacements
+- Non-replacement doors use default mapping (with smoke seals)
+  - FD30 single ≤2040mm → A05 (with smoke seals)
+  - FD30 double ≤2040mm → A08 (with smoke seals)
 
 **Used By:** Quote Sheet Option B COUNTIF (see Section 7)
 
 **Rules:**
 - **ALL non-compliant doors get an A-code** (not just mandatory replacements)
-- Mandatory replacements (ART17/18/20) use specific codes
-- Remediable doors (Opt A = YES) ALSO get A-codes for Option B
-- Compliant doors: Blank
+- **Mandatory replacements (ART17/18/20):** Use explicit mapping (no smoke seal default)
+- **Remediable doors (Opt A = YES):** Use default mapping (with smoke seals)
+- **Compliant doors:** Blank
 
 **Critical Understanding (Fixed 2026-03-28):**
 Option B = replace **ALL 33 non-compliant doors**, not just 2 mandatory replacements.
+
+**ISSUE 1 FIX (2026-03-29):** Moved from column S to column X to avoid overwriting E/O HARDWOOD flag.
 
 ---
 
@@ -319,16 +368,16 @@ Option B = replace **ALL 33 non-compliant doors**, not just 2 mandatory replacem
 - Root cause: Primary code (column P) only showed ONE code per door
 - Doors with multiple codes were under-counted
 
-**Solution: Wildcard COUNTIF Against Column R (ALL B CODES)**
+**Solution: Wildcard COUNTIF Against Column W (ALL B CODES) - ISSUE 1 FIX (2026-03-29)**
 
-For each B-series line item in Quote Sheet, count doors where that B-code appears **anywhere** in the ALL B CODES column (R).
+For each B-series line item in Quote Sheet, count doors where that B-code appears **anywhere** in the ALL B CODES column (W).
 
 **Python Logic:**
 ```python
 # For B07 (signage) at Quote Sheet row 17
 b07_count = 0
 for row in door_schedule_rows:
-    all_b_codes = door_schedule[row]['ALL B CODES']  # Column R
+    all_b_codes = door_schedule[row]['ALL B CODES']  # Column W (moved from R)
     if 'B07' in str(all_b_codes):  # Wildcard/substring match
         b07_count += 1
 
@@ -337,24 +386,26 @@ quote_sheet[17]['QTY'] = b07_count  # Column C
 
 **Excel Formula Equivalent:**
 ```excel
-=COUNTIF(DoorSchedule!R:R, "*B07*")
+=COUNTIF(DoorSchedule!W:W, "*B07*")
 ```
+
+**Column Index:** Column W = index 23 (in 1-indexed openpyxl)
 
 **Result:**
 - B07: Counts ALL doors with signage failures (not just doors where B07 is primary)
 - B10: Counts ALL doors needing re-hang
 - B11: Counts ALL doors needing lipping
 
-### Option B (A-Series) - Exact Match on Column S
+### Option B (A-Series) - Exact Match on Column X
 
-**For each A-series line item in Quote Sheet, count doors where OPT B REPLACEMENT CODE (column S) exactly matches that A-code.**
+**ISSUE 1 FIX (2026-03-29):** For each A-series line item in Quote Sheet, count doors where OPT B REPLACEMENT CODE (column X) exactly matches that A-code.
 
 **Python Logic:**
 ```python
 # For A05 (FD30S single ≤2040mm) at Quote Sheet row 30
 a05_count = 0
 for row in door_schedule_rows:
-    opt_b_code = door_schedule[row]['OPT B REPLACEMENT CODE']  # Column S
+    opt_b_code = door_schedule[row]['OPT B REPLACEMENT CODE']  # Column X (moved from S)
     if opt_b_code == 'A05':  # Exact match
         a05_count += 1
 
@@ -363,15 +414,24 @@ quote_sheet[30]['QTY'] = a05_count  # Column C
 
 **Excel Formula Equivalent:**
 ```excel
-=COUNTIF(DoorSchedule!S:S, "A05")
+=COUNTIF(DoorSchedule!X:X, "A05")
 ```
 
+**Column Index:** Column X = index 24 (in 1-indexed openpyxl)
+
 **Result:**
-- A01: Counts doors assigned A01 (FD30 single ≤2040mm, no smoke)
-- A05: Counts doors assigned A05 (FD30S single ≤2040mm, with smoke)
+- A01: Counts doors assigned A01 (FD30 single ≤2040mm, no smoke) - explicit mapping
+- A04: Counts doors assigned A04 (FD30 double ≤2040mm, no smoke) - explicit mapping for replacements
+- A05: Counts doors assigned A05 (FD30S single ≤2040mm, with smoke) - default mapping
+- A08: Counts doors assigned A08 (FD30S double ≤2040mm, with smoke) - default mapping
 - A09: Counts doors assigned A09 (FD60S single ≤2040mm)
+- A10: Counts doors assigned A10 (FD60S single 2040-2400mm)
 
 **Expected Total for Option B:** ~33 doors for Alpha Sights (all non-compliant)
+
+**ISSUE 2 FIX (2026-03-29):** Replacement doors (ART17/18/20) now use explicit mapping:
+- A14-L3 (FD30 double) → A04 (no smoke seals) - CORRECT
+- Previously mapped to A08 (with smoke seals) - INCORRECT
 
 ---
 
@@ -818,6 +878,54 @@ This report identifies fire doors requiring remedial works based on visual inspe
 ---
 
 ## 14. Change Log
+
+### 2026-03-29 - 4 Issues Fix (Mauricio Feedback)
+
+**ISSUE 1: E/O Columns Overwritten (STRUCTURAL - CRITICAL)**
+- **Problem:** 9-fixes implementation overwrote columns R/S (E/O OVERSIZE/HARDWOOD) with ALL B CODES and OPT B REPLACEMENT CODE
+- **Impact:** E/O pricing data was lost, Extra Over charges could not be calculated
+- **Fix:** Restored column structure to preserve E/O flags:
+  - Columns R-U: E/O flags (OVERSIZE/HARDWOOD/EXTERNAL/VISION) - RESTORED to original position
+  - Column V: NOTES/FLAGS - RESTORED to original position
+  - Column W: ALL B CODES - MOVED from R (new column 23)
+  - Column X: OPT B REPLACEMENT CODE - MOVED from S (new column 24)
+- **Code Changes:**
+  - Door Schedule population updated to write to columns W/X instead of R/S
+  - Quote Sheet counting logic updated to read from columns 23/24 instead of 18/19
+  - Data clearing extended to column 24 (X)
+- **Files Updated:** firedoor_processor.py lines 1280-1340, 1385-1390
+
+**ISSUE 2: A14-L3 Wrong Mapping (FD30 → A08 instead of A04)**
+- **Problem:** A14-L3 (FD30 Double Leaf) mapped to A08 (FD30S with smoke) instead of A04 (FD30 no smoke)
+- **Root Cause:** FD30 → FD30S default (commit 890b773) applied to ALL FD30 doors, including mandatory replacements
+- **Fix:** Added `explicit_mapping` parameter to `map_to_aseries_code()` function:
+  - `explicit_mapping=False` (default): FD30 → A05/A06/A07/A08 (with smoke seals) for remedial doors
+  - `explicit_mapping=True`: FD30 → A01/A02/A03/A04 (no smoke seals) for replacement doors (ART17/18/20)
+- **Result:** A14-L3 now correctly maps to A04 (FD30 double, no smoke)
+- **Files Updated:** firedoor_processor.py lines 683-750, 1240-1260
+
+**ISSUE 3: Replacement Doors Column P Empty**
+- **Problem:** A12-L3 and A14-L3 had column P = None (should contain their A-series codes for Option A pricing)
+- **Root Cause:** Replacement door logic set `primary_code = ''` instead of using A-series code
+- **Fix:** Changed replacement door logic to set `primary_code = a_series_code` with explicit_mapping=True
+  - A12-L3 (FD60): Column P = A10
+  - A14-L3 (FD30 double): Column P = A04
+- **Result:** Replacement doors now show their A-series codes in column P for Option A pricing
+- **Files Updated:** firedoor_processor.py lines 1145-1155
+
+**ISSUE 4: B12 Verification (Count and Door IDs)**
+- **Problem:** B12 (void infill) shows QTY=10, which seems high (originally rare code)
+- **Fix:** Added verification logging to show count and door IDs:
+  - Logs B12 count and comma-separated door IDs after counting
+  - Allows Mauricio to verify against source PDF
+  - COUNTIF logic is technically correct, but need human verification
+- **Files Updated:** firedoor_processor.py lines 1425-1433
+
+**Documentation Updated:**
+- Section 5: Complete column structure table with all 24 columns (A-X)
+- Section 5 subsections: Added Column P definition, updated Column W/X positions
+- Section 6: Updated counting logic to reference columns W/X instead of R/S
+- Added ISSUE 1 FIX, ISSUE 2 FIX, ISSUE 3 FIX notes throughout
 
 ### 2026-03-27 (Update 3) - Alpha Sights Fix #2
 - **Section 6:** MAJOR UPDATE - Complete A-series mapping table with S suffix distinction + height ranges
