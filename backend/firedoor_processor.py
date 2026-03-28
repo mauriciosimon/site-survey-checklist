@@ -650,6 +650,36 @@ def get_priority_bcode(codes: List[str]) -> str:
     return codes[0]
 
 
+def get_aseries_description(a_code: str) -> str:
+    """
+    Get the description for an A-series replacement code.
+    
+    Args:
+        a_code: A-series code (A01-A15)
+    
+    Returns:
+        Description string with format: "A01 — FD30 Single Leaf, ≤2040mm"
+    """
+    descriptions = {
+        'A01': 'A01 — FD30 Single Leaf, ≤2040mm',
+        'A02': 'A02 — FD30 Single Leaf, 2040-2400mm',
+        'A03': 'A03 — FD30 Single Leaf, 2400-2730mm',
+        'A04': 'A04 — FD30 Double Leaf, ≤2040mm',
+        'A05': 'A05 — FD30S Single Leaf, ≤2040mm',
+        'A06': 'A06 — FD30S Single Leaf, 2040-2400mm',
+        'A07': 'A07 — FD30S Single Leaf, 2400-2730mm',
+        'A08': 'A08 — FD30S Double Leaf, ≤2040mm',
+        'A09': 'A09 — FD60S Single Leaf, ≤2040mm',
+        'A10': 'A10 — FD60S Single Leaf, 2040-2400mm',
+        'A11': 'A11 — FD60S Double Leaf, ≤2040mm',
+        'A12': 'A12 — Reserved',
+        'A13': 'A13 — Reserved',
+        'A14': 'A14 — Reserved',
+        'A15': 'A15 — Reserved',
+    }
+    return descriptions.get(a_code, '')
+
+
 def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = None) -> str:
     """
     Map fire rating + door configuration + height to A-series replacement code.
@@ -1096,20 +1126,37 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     for idx, door in enumerate(doors):
         row_num = start_row + idx
         
-        # Get codes (either b_codes from Type 2 or map art_codes from Type 1)
+        # ISSUE 3 FIX: Check for replacement doors FIRST, before B-code processing
+        # ART17 = leaf replacement, ART18 = full doorset replacement, ART20 = frame replacement
+        art_codes = door.get('art_codes', [])
         codes = door.get('b_codes', [])
-        if not codes and 'art_codes' in door:
-            codes = map_art_to_rate_card(door['art_codes'])
         
-        # BUG 2 FIX: Get primary code using priority order
-        primary_code = get_priority_bcode(codes)
-        all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
+        needs_replacement = (
+            any(art in ['ART17', 'ART18', 'ART20'] for art in art_codes) or
+            'A-series' in codes or  # CSV mapping returns 'A-series' for replacement codes
+            door.get('is_replacement', False)  # Claude's explicit flag
+        )
         
-        # FINAL FIX: For unable-to-inspect doors with no detectable codes,
-        # assign B01 (seals) as provisional primary code
-        # Column P must NEVER be empty for a YES door
-        if not primary_code and door.get('has_unable'):
-            primary_code = 'B01'  # Provisional code for reinspection
+        # Process codes differently based on door type
+        if needs_replacement:
+            # Replacement doors: Skip B-code logic entirely
+            codes = []  # No remedial codes
+            primary_code = ''  # Empty primary (Column P)
+            all_codes_str = ''  # Empty ALL B CODES (Column R)
+        else:
+            # Remedial doors: Continue with B-code logic
+            if not codes and 'art_codes' in door:
+                codes = map_art_to_rate_card(door['art_codes'])
+            
+            # BUG 2 FIX: Get primary code using priority order
+            primary_code = get_priority_bcode(codes)
+            all_codes_str = ', '.join(codes) if codes else 'MANUAL REVIEW'
+            
+            # FINAL FIX: For unable-to-inspect doors with no detectable codes,
+            # assign B01 (seals) as provisional primary code
+            # Column P must NEVER be empty for a YES door
+            if not primary_code and door.get('has_unable'):
+                primary_code = 'B01'  # Provisional code for reinspection
         
         # Column mapping based on Door Schedule template (updated Mar 2026 - 9 FIXES):
         # A=DOOR ID, B=LOCATION, C=DOOR TYPE, D=CURRENT RATING, E=LEAF CONFIG,
@@ -1154,15 +1201,6 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # BUG 1 FIX: Door is compliant ONLY if no codes AND no faults
         # Rule: any detected fault = Opt A YES
         is_compliant = not codes and not faults_str
-        
-        # CRITICAL FIX: Check for replacement doors - ONLY ART17, ART18, ART20
-        # ART17 = leaf replacement, ART18 = full doorset replacement, ART20 = frame replacement
-        art_codes = door.get('art_codes', [])
-        needs_replacement = (
-            any(art in ['ART17', 'ART18', 'ART20'] for art in art_codes) or
-            'A-series' in codes or  # CSV mapping returns 'A-series' for replacement codes
-            door.get('is_replacement', False)  # Claude's explicit flag
-        )
         
         # Check if this is Type 2 format (no fire strategy, so Option B = PENDING)
         is_type2 = door.get('format_type') == 'TYPE_2'
@@ -1525,8 +1563,12 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         door_ids = a_code_door_ids.get(a_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
+        # ISSUE 2 FIX: Get description with A-code prefix
+        description = get_aseries_description(a_code)
+        
         # Write Option B COST values (no margin on line items)
         quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=4).value = description    # Column D (DESCRIPTION with A-code)
         quote_sheet.cell(row=row_num, column=5).value = cost_rate      # Column E (RATE = Rate Card Total, plain cost)
         quote_sheet.cell(row=row_num, column=6).value = cost_total     # Column F (TOTAL = QTY × RATE, cost subtotal)
         quote_sheet.cell(row=row_num, column=11).value = 0             # Column K (T&J rate) = 0
@@ -1534,7 +1576,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         quote_sheet.cell(row=row_num, column=19).value = door_ids_str  # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {a_code}: QTY={qty}, RATE={cost_rate}, TOTAL={cost_total}, DOOR_IDs={door_ids_str}")
+            logger.info(f"Quote Sheet {a_code}: {description}, QTY={qty}, RATE={cost_rate}, TOTAL={cost_total}, DOOR_IDs={door_ids_str}")
     
     # ISSUE #3 FIX: Write Option B TOTAL to Quote Sheet
     # Try common locations for Option B TOTAL row
