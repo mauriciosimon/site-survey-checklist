@@ -1383,7 +1383,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         
         # Write COST values (no margin on line items)
         quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=4).value = cost_rate     # Column D (RATE = Rate Card Total, plain cost)
+        quote_sheet.cell(row=row_num, column=5).value = cost_rate     # Column E (RATE = Rate Card Total, plain cost)
         quote_sheet.cell(row=row_num, column=6).value = cost_total    # Column F (TOTAL = QTY × RATE, cost subtotal)
         
         # FIX #3: Write zero to T&J and Humping rate columns to exclude from breakdown
@@ -1488,7 +1488,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         
         # Write Option B COST values (no margin on line items)
         quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=4).value = cost_rate      # Column D (RATE = Rate Card Total, plain cost)
+        quote_sheet.cell(row=row_num, column=5).value = cost_rate      # Column E (RATE = Rate Card Total, plain cost)
         quote_sheet.cell(row=row_num, column=6).value = cost_total     # Column F (TOTAL = QTY × RATE, cost subtotal)
         quote_sheet.cell(row=row_num, column=11).value = 0             # Column K (T&J rate) = 0
         quote_sheet.cell(row=row_num, column=13).value = 0             # Column M (Humping rate) = 0
