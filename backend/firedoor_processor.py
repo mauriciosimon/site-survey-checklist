@@ -1394,9 +1394,10 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     target_margin = quote_sheet['R2'].value or 0  # Default to 0 if not set
     logger.info(f"Target margin from R2: {target_margin} ({target_margin*100}%)")
     
-    # FIX #8: Clear ALL prelim quantities (P.01-P.05) - rows 6-10 in Quote Sheet
+    # FIX #8: Clear ALL prelim quantities - rows 43-47 in Quote Sheet
     # Prelims must be left blank for Matt to fill in manually per job
-    prelim_rows = [6, 7, 8, 9, 10]  # P.01-P.05
+    # Row 43: Mobilisation, Row 44-47: P.01-P.04 prelims, Row 48: P.05 (already blank in template)
+    prelim_rows = [43, 44, 45, 46, 47]  # Mobilisation + P.01-P.04
     for prelim_row in prelim_rows:
         quote_sheet.cell(row=prelim_row, column=3).value = None  # Column C (QTY) = blank
         logger.info(f"Quote Sheet row {prelim_row}: Cleared prelim quantity (set to None)")
