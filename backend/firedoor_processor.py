@@ -1439,14 +1439,21 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     
     # Step 2: Get rates from Rate Card
     # FIX #4: Read rates from Rate Card Total column (Column G)
+    # MAURICIO FIX: Also read Materials (D) and Labour (E) for breakdown
     rate_card_sheet = wb['Rate Card']
     rates = {}
+    materials_rates = {}
+    labour_rates = {}
     for row_num in range(22, 34):  # B01-B12
         code = rate_card_sheet.cell(row=row_num, column=1).value
         # Read Total from Column G (calculated numeric value: Materials + Labour + Humping)
         rate = rate_card_sheet.cell(row=row_num, column=7).value or 0  # Column G (Total)
+        mat_rate = rate_card_sheet.cell(row=row_num, column=4).value or 0  # Column D (Materials)
+        lab_rate = rate_card_sheet.cell(row=row_num, column=5).value or 0  # Column E (Labour)
         if code and rate and isinstance(rate, (int, float)):
             rates[str(code)] = rate
+            materials_rates[str(code)] = mat_rate
+            labour_rates[str(code)] = lab_rate
     
     logger.info(f"Rates from Rate Card Total column (G): {rates}")
     
@@ -1474,6 +1481,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     target_margin = quote_sheet['R2'].value or 0  # Default to 0 if not set
     logger.info(f"Target margin from R2: {target_margin} ({target_margin*100}%)")
     
+    # MAURICIO FIX: Log all Quote Sheet column headers (Issue #2 verification)
+    logger.info("🔍 QUOTE SHEET COLUMN HEADERS (Row 10):")
+    header_row = 10
+    for col_idx in range(1, 20):  # Check columns A-S
+        header = quote_sheet.cell(row=header_row, column=col_idx).value
+        if header:
+            logger.info(f"  Column {chr(64 + col_idx)} ({col_idx}): {header}")
+        else:
+            logger.info(f"  Column {chr(64 + col_idx)} ({col_idx}): (empty)")
+    
     # FIX #8: Clear ALL prelim quantities - rows 43-47 in Quote Sheet
     # Prelims must be left blank for Matt to fill in manually per job
     # Row 43: Mobilisation, Row 44-47: P.01-P.04 prelims, Row 48: P.05 (already blank in template)
@@ -1492,6 +1509,13 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         cost_rate = rates.get(b_code, 0)  # Rate Card Total (cost price)
         cost_total = qty * cost_rate  # Line item cost subtotal (no margin)
         
+        # MAURICIO FIX: Calculate materials and labour breakdown
+        mat_rate = materials_rates.get(b_code, 0)
+        lab_rate = labour_rates.get(b_code, 0)
+        mat_total = qty * mat_rate  # MAT'S TOTAL
+        lab_total = qty * lab_rate  # LAB TOTAL
+        total_cost = mat_total + lab_total  # TOTAL COST (should equal cost_total)
+        
         door_ids = b_code_door_ids.get(b_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
@@ -1500,10 +1524,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         template_label = quote_sheet.cell(row=row_num, column=2).value  # Column B (Description/Label)
         logger.info(f"Row {row_num}: Template label='{template_label}', Writing {b_code} with QTY={qty}, Doors={door_ids_str}")
         
-        # Write COST values (no margin on line items)
+        # MAURICIO FIX: Calculate client total with margin
+        client_total = total_cost / (1 - target_margin) if (1 - target_margin) > 0 else total_cost
+        
+        # Write values to Quote Sheet
         quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
-        quote_sheet.cell(row=row_num, column=5).value = cost_rate     # Column E (RATE = Rate Card Total, plain cost)
-        quote_sheet.cell(row=row_num, column=6).value = cost_total    # Column F (TOTAL = QTY × RATE, cost subtotal)
+        quote_sheet.cell(row=row_num, column=4).value = mat_rate      # Column D (MAT'S rate)
+        quote_sheet.cell(row=row_num, column=5).value = lab_rate      # Column E (LAB rate)
+        quote_sheet.cell(row=row_num, column=7).value = mat_total     # Column G (MAT'S TOTAL)
+        quote_sheet.cell(row=row_num, column=9).value = lab_total     # Column I (LAB TOTAL)
+        quote_sheet.cell(row=row_num, column=15).value = total_cost   # Column O (TOTAL COST)
+        quote_sheet.cell(row=row_num, column=16).value = client_total # Column P (TOTAL with margin)
         
         # FIX #3: Write zero to T&J and Humping rate columns to exclude from breakdown
         quote_sheet.cell(row=row_num, column=11).value = 0            # Column K (T&J rate) = 0
@@ -1514,7 +1545,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         quote_sheet.cell(row=row_num, column=19).value = door_ids_str # Column S (DOOR IDs)
         
         if qty > 0:
-            logger.info(f"Quote Sheet {b_code}: QTY={qty}, RATE={cost_rate}, TOTAL={cost_total}, DOOR_IDS={door_ids_str}")
+            logger.info(f"Quote Sheet {b_code}: QTY={qty}, MAT={mat_rate}×{qty}={mat_total}, LAB={lab_rate}×{qty}={lab_total}, COST={total_cost}, CLIENT={client_total}")
     
     # Step 5: Write calculated NUMBERs to Client Summary
     # FIX #5: Client Summary shows CLIENT PRICES (with margin), not costs
@@ -1835,6 +1866,15 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Row 19: Lever handles/latch (B05)
         latch_count = component_counts.get('B05', 0)
         material_calloff.cell(row=19, column=4).value = latch_count
+        
+        # MAURICIO FIX: Row 20: Re-hang / adjust door leaf (B10)
+        rehang_count = component_counts.get('B10', 0)
+        material_calloff.cell(row=20, column=4).value = rehang_count
+        # Add label if not present
+        current_label = material_calloff.cell(row=20, column=2).value
+        if not current_label or 'B10' not in str(current_label):
+            material_calloff.cell(row=20, column=2).value = "Re-hang / adjust door leaf — carpenter"
+        logger.info(f"Material Call-Off B10 (re-hang): {rehang_count} doors")
         
         # Row 20: Intumescent mastic (B06)
         mastic_count = component_counts.get('B06', 0)
