@@ -1327,20 +1327,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         logger.error(f"VALIDATION ERROR: {opt_a_yes_count} doors have OptA=YES but 0 B-codes counted!")
     
     # Step 2: Get rates from Rate Card
-    # FIX #4: Calculate rate from Materials + Labour only (not T&J or Humping)
+    # FIX #4: Read rates from Rate Card Total column (Column G)
     rate_card_sheet = wb['Rate Card']
     rates = {}
     for row_num in range(22, 34):  # B01-B12
         code = rate_card_sheet.cell(row=row_num, column=1).value
-        # OLD: rate = rate_card_sheet.cell(row=row_num, column=8).value  # Column H (TOTAL with T&J+Humping)
-        # NEW: Calculate from Materials + Labour only
-        mat = rate_card_sheet.cell(row=row_num, column=4).value or 0  # Column D (Materials)
-        lab = rate_card_sheet.cell(row=row_num, column=5).value or 0  # Column E (Labour)
-        rate = mat + lab
+        # Read Total from Column G (calculated numeric value: Materials + Labour + Humping)
+        rate = rate_card_sheet.cell(row=row_num, column=7).value or 0  # Column G (Total)
         if code and rate and isinstance(rate, (int, float)):
             rates[str(code)] = rate
     
-    logger.info(f"Rates from Rate Card (Materials + Labour only): {rates}")
+    logger.info(f"Rates from Rate Card Total column (G): {rates}")
     
     # Step 3: Calculate Option A totals (cost and client price)
     option_a_cost = sum(b_code_counts.get(code, 0) * rates.get(code, 0) for code in rates.keys())
@@ -1394,8 +1391,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         template_label = quote_sheet.cell(row=row_num, column=2).value  # Column B (Description/Label)
         logger.info(f"Row {row_num}: Template label='{template_label}', Writing {b_code} with QTY={qty}, Doors={door_ids_str}")
         
-        # Write CLIENT PRICE values (with margin applied)
+        # Write COST and CLIENT PRICE values
         quote_sheet.cell(row=row_num, column=3).value = qty           # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=4).value = cost_rate     # Column D (RATE from Rate Card)
         quote_sheet.cell(row=row_num, column=5).value = client_rate   # Column E (CLIENT RATE with margin)
         quote_sheet.cell(row=row_num, column=6).value = client_total  # Column F (CLIENT TOTAL with margin)
         
@@ -1454,18 +1452,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"VERIFICATION: Read back Quote Sheet F49 = {written_value_49} (type: {type(written_value_49)})")
     
     # Step 6b: FIX #2 - Calculate and write Option B totals (replacement doors)
-    # Get A-series rates from Rate Card
+    # Get A-series rates from Rate Card Total column (Column G)
     a_series_rates = {}
     for row_num in range(6, 40):  # Check all rows in Rate Card
         code = rate_card_sheet.cell(row=row_num, column=1).value
         if code and str(code).startswith('A'):
-            mat = rate_card_sheet.cell(row=row_num, column=4).value or 0  # Column D (Materials)
-            lab = rate_card_sheet.cell(row=row_num, column=5).value or 0  # Column E (Labour)
-            hump = rate_card_sheet.cell(row=row_num, column=6).value or 0  # Column F (Humping)
-            rate = mat + lab + hump  # A-series includes humping cost
+            # Read Total from Column G (calculated numeric value: Materials + Labour + Humping)
+            rate = rate_card_sheet.cell(row=row_num, column=7).value or 0  # Column G (Total)
             a_series_rates[str(code)] = rate
     
-    logger.info(f"A-series rates from Rate Card: {a_series_rates}")
+    logger.info(f"A-series rates from Rate Card Total column (G): {a_series_rates}")
     
     # Calculate Option B totals (cost and client price)
     option_b_cost = sum(a_code_counts.get(code, 0) * a_series_rates.get(code, 0) for code in a_series_rates.keys())
@@ -1503,8 +1499,9 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         door_ids = a_code_door_ids.get(a_code, [])
         door_ids_str = ', '.join(door_ids) if door_ids else ''
         
-        # Write Option B CLIENT PRICE values (with margin)
+        # Write Option B COST and CLIENT PRICE values
         quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
+        quote_sheet.cell(row=row_num, column=4).value = cost_rate      # Column D (RATE from Rate Card)
         quote_sheet.cell(row=row_num, column=5).value = client_rate    # Column E (CLIENT RATE with margin)
         quote_sheet.cell(row=row_num, column=6).value = client_total   # Column F (CLIENT TOTAL with margin)
         quote_sheet.cell(row=row_num, column=11).value = 0             # Column K (T&J rate) = 0
