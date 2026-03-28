@@ -1312,15 +1312,8 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         ws[f'U{row_num}'] = 'NO'  # E/O VISION
         
         # Column V: NOTES / FLAGS - RESTORED to original position
+        # MAURICIO FIX: Human-readable flags only, no raw ART codes (ART codes → B-codes in col W)
         flag_notes = []
-        
-        # BUG 3 FIX: Only add ART codes for Type 1 (PDF) surveys
-        # Type 2 (Excel) surveys have no ART codes
-        is_type1 = door.get('format_type') == 'TYPE_1' or 'art_codes' in door
-        if is_type1 and 'art_codes' in door:
-            art_codes_str = ', '.join(door.get('art_codes', []))
-            if art_codes_str:
-                flag_notes.append(f"ARTs: {art_codes_str}")
         
         # Add flag notes for special cases requiring manual review
         if door.get('has_unable'):
@@ -1329,6 +1322,14 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         # Check for ambiguous or placeholder codes that need manual review
         if any(c in ['MANUAL REVIEW', 'A-series', 'FLAG FOR MANUAL REVIEW'] for c in codes):
             flag_notes.append("⚠️ Manual review required")
+        
+        # Add specific manual review notes for known problematic ARTs
+        if 'art_codes' in door:
+            art_codes = door.get('art_codes', [])
+            if 'ART14' in art_codes:
+                flag_notes.append("ART14 — damaged glazing, manual review required")
+            if 'ART23' in art_codes:
+                flag_notes.append("ART23 — no repair technique, manual review required")
         
         if flag_notes:
             ws[f'V{row_num}'] = ' | '.join(flag_notes)
@@ -1384,18 +1385,20 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         all_b_codes_str = door_schedule.cell(row=row, column=23).value  # Column W (ALL B CODES) - ISSUE 1 FIX
         opt_b_code = door_schedule.cell(row=row, column=24).value  # Column X (OPT B REPLACEMENT CODE) - ISSUE 1 FIX
         
-        # FIX #3: Count Option A B-codes using WILDCARD match against column W (ALL B CODES) - ISSUE 1 FIX
+        # FIX #3: Count Option A B-codes using EXACT match against column W (ALL B CODES) - ISSUE 1 FIX
         # This correctly counts B07, B10, B11 which appear on multiple doors but aren't always primary
+        # MAURICIO FIX: Use set to deduplicate B-codes per door (count each door once per B-code)
         if opt_a == 'YES' and all_b_codes_str:
             all_codes_list = [c.strip() for c in str(all_b_codes_str).split(',')]
-            for b_code in all_codes_list:
+            unique_codes = set(all_codes_list)  # Deduplicate codes for this door
+            for b_code in unique_codes:
                 if b_code and b_code.startswith('B'):
                     b_code_counts[b_code] = b_code_counts.get(b_code, 0) + 1
                     if b_code not in b_code_door_ids:
                         b_code_door_ids[b_code] = []
                     if str(door_id) not in b_code_door_ids[b_code]:
                         b_code_door_ids[b_code].append(str(door_id))
-            logger.debug(f"Door {door_id}: Counted B-codes from ALL B CODES: {all_codes_list}")
+            logger.debug(f"Door {door_id}: Counted B-codes from ALL B CODES: {list(unique_codes)}")
         
         # FIX #4-5: Count Option B A-series codes from column S for ALL non-compliant doors
         # Option B = replace ALL non-compliant doors, not just mandatory replacements
@@ -1788,14 +1791,16 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         material_calloff = wb["Material Call-Off"]
         door_schedule = wb["Door Schedule"]
         
-        # FIX #9: Count B-codes from column W (ALL B CODES) using wildcard matching - ISSUE 1 FIX
+        # FIX #9: Count B-codes from column W (ALL B CODES) using EXACT matching - ISSUE 1 FIX
         # This matches the Quote Sheet logic (FIX #3)
+        # MAURICIO FIX: Deduplicate B-codes per door (count each door once per B-code)
         component_counts = {}
         for row_num in range(4, 4 + len(doors)):
             all_b_codes_str = door_schedule.cell(row=row_num, column=23).value  # Column W (ALL B CODES) - ISSUE 1 FIX
             if all_b_codes_str:
                 all_codes_list = [c.strip() for c in str(all_b_codes_str).split(',')]
-                for b_code in all_codes_list:
+                unique_codes = set(all_codes_list)  # Deduplicate codes for this door
+                for b_code in unique_codes:
                     if b_code and b_code.startswith('B'):
                         component_counts[b_code] = component_counts.get(b_code, 0) + 1
         
