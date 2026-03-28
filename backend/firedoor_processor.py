@@ -730,17 +730,18 @@ def map_to_aseries_code(fire_rating: str, door_config: str, door_height: int = N
         height_range = 1  # Fallback to base code
     
     # Map based on rating + config + height
-    # Check for exact FD30 (no S)
+    # CRITICAL FIX (Issue 3): FD30 defaults to FD30S (with smoke seals) per Mauricio's brief
+    # "FD30 single leaf = A05 (FD30S with smoke seals)"
     if rating_upper == 'FD30':
         if is_single:
             if height_range == 1:
-                return 'A01'
+                return 'A05'  # FD30 defaults to FD30S single ≤2040mm (with smoke)
             elif height_range == 2:
-                return 'A02'
+                return 'A06'  # FD30 defaults to FD30S single 2040-2400mm (with smoke)
             elif height_range == 3:
-                return 'A03'
+                return 'A07'  # FD30 defaults to FD30S single 2400-2730mm (with smoke)
         elif is_double:
-            return 'A04'  # FD30 double (no smoke seals)
+            return 'A08'  # FD30 defaults to FD30S double ≤2040mm (with smoke)
     
     # Check for FD30S (with S)
     elif 'FD30S' in rating_upper:
