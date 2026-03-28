@@ -1482,14 +1482,45 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Target margin from R2: {target_margin} ({target_margin*100}%)")
     
     # MAURICIO FIX: Log all Quote Sheet column headers (Issue #2 verification)
-    logger.info("🔍 QUOTE SHEET COLUMN HEADERS (Row 10):")
-    header_row = 10
-    for col_idx in range(1, 20):  # Check columns A-S
-        header = quote_sheet.cell(row=header_row, column=col_idx).value
-        if header:
-            logger.info(f"  Column {chr(64 + col_idx)} ({col_idx}): {header}")
-        else:
-            logger.info(f"  Column {chr(64 + col_idx)} ({col_idx}): (empty)")
+    # DEVVIE FIX: Check BOTH row 8 and row 10 for headers
+    logger.info("🔍 QUOTE SHEET COLUMN HEADERS:")
+    for header_row in [8, 10]:
+        logger.info(f"  Row {header_row}:")
+        for col_idx in range(1, 20):  # Check columns A-S
+            header = quote_sheet.cell(row=header_row, column=col_idx).value
+            if header:
+                logger.info(f"    Column {chr(64 + col_idx)} ({col_idx}): {header}")
+        
+    # Check specifically for T&J and Hump columns
+    tj_found = []
+    hump_found = []
+    for row in [8, 9, 10]:
+        for col in range(1, 20):
+            val = quote_sheet.cell(row=row, column=col).value
+            if val and ('T&J' in str(val) or 'T & J' in str(val)):
+                tj_found.append(f"Row {row}, Col {chr(64 + col)}")
+            if val and 'HUMP' in str(val).upper():
+                hump_found.append(f"Row {row}, Col {chr(64 + col)}")
+    
+    if tj_found:
+        logger.warning(f"⚠️ T&J column headers found: {', '.join(tj_found)}")
+        # DEVVIE FIX: Clear T&J header cells
+        for row in [8, 9, 10]:
+            for col in range(1, 20):
+                val = quote_sheet.cell(row=row, column=col).value
+                if val and ('T&J' in str(val) or 'T & J' in str(val)):
+                    quote_sheet.cell(row=row, column=col).value = None
+                    logger.info(f"  Cleared T&J header at Row {row}, Col {chr(64 + col)}")
+    
+    if hump_found:
+        logger.warning(f"⚠️ HUMP column headers found: {', '.join(hump_found)}")
+        # DEVVIE FIX: Clear Hump header cells
+        for row in [8, 9, 10]:
+            for col in range(1, 20):
+                val = quote_sheet.cell(row=row, column=col).value
+                if val and 'HUMP' in str(val).upper():
+                    quote_sheet.cell(row=row, column=col).value = None
+                    logger.info(f"  Cleared HUMP header at Row {row}, Col {chr(64 + col)}")
     
     # FIX #8: Clear ALL prelim quantities - rows 43-47 in Quote Sheet
     # Prelims must be left blank for Matt to fill in manually per job
@@ -1867,18 +1898,17 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         latch_count = component_counts.get('B05', 0)
         material_calloff.cell(row=19, column=4).value = latch_count
         
-        # MAURICIO FIX: Row 20: Re-hang / adjust door leaf (B10)
-        rehang_count = component_counts.get('B10', 0)
-        material_calloff.cell(row=20, column=4).value = rehang_count
-        # Add label if not present
-        current_label = material_calloff.cell(row=20, column=2).value
-        if not current_label or 'B10' not in str(current_label):
-            material_calloff.cell(row=20, column=2).value = "Re-hang / adjust door leaf — carpenter"
-        logger.info(f"Material Call-Off B10 (re-hang): {rehang_count} doors")
-        
         # Row 20: Intumescent mastic (B06)
         mastic_count = component_counts.get('B06', 0)
         material_calloff.cell(row=20, column=4).value = mastic_count
+        
+        # MAURICIO FIX: Row 22: Re-hang / adjust door leaf (B10)
+        # DEVVIE FIX: Moved from row 20 to avoid conflict with B06
+        rehang_count = component_counts.get('B10', 0)
+        material_calloff.cell(row=22, column=4).value = rehang_count
+        # Set label
+        material_calloff.cell(row=22, column=2).value = "Re-hang / adjust door leaf — carpenter"
+        logger.info(f"Material Call-Off B10 (re-hang): {rehang_count} doors")
         
         # Row 21: Hardwood lipping (B11)
         lipping_count = component_counts.get('B11', 0)
