@@ -1420,19 +1420,21 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     logger.info(f"Client Summary D10 (OPTION A CLIENT PRICE): £{option_a_client}")
     logger.info(f"Client Summary D13 (TOTAL INVESTMENT - Option A): £{option_a_client}")
     
-    # Step 6: Write Option A TOTAL to Quote Sheet row 23
+    # Step 6: Write Option A TOTAL to Quote Sheet row 23 and 49
+    # Quote Sheet shows COST totals (no margin)
+    # Client Summary shows CLIENT PRICE (with margin)
     # CRITICAL: Ensure we write a NUMBER, not None
-    if option_a_client is None or not isinstance(option_a_client, (int, float)):
-        logger.error(f"CRITICAL: option_a_client is {type(option_a_client)} with value {option_a_client} - forcing to 0")
-        option_a_client = 0
+    if option_a_cost is None or not isinstance(option_a_cost, (int, float)):
+        logger.error(f"CRITICAL: option_a_cost is {type(option_a_cost)} with value {option_a_cost} - forcing to 0")
+        option_a_cost = 0
     
-    option_a_total_to_write = float(option_a_client)  # Explicitly cast to float
-    quote_sheet.cell(row=23, column=6).value = option_a_total_to_write  # F23 (CLIENT PRICE)
-    logger.info(f"Quote Sheet F23 (Option A TOTAL - CLIENT PRICE): £{option_a_total_to_write}")
+    option_a_total_to_write = float(option_a_cost)  # Write COST to Quote Sheet
+    quote_sheet.cell(row=23, column=6).value = option_a_total_to_write  # F23 (COST TOTAL)
+    logger.info(f"Quote Sheet F23 (Option A TOTAL - COST): £{option_a_total_to_write}")
     
     # DEVVIE FIX: Write to ACTUAL TOTAL row (Row 49, not 23)
-    quote_sheet.cell(row=49, column=6).value = option_a_total_to_write  # F49 (OPTION A TOTAL)
-    logger.info(f"Quote Sheet F49 (OPTION A TOTAL - ACTUAL ROW): £{option_a_total_to_write}")
+    quote_sheet.cell(row=49, column=6).value = option_a_total_to_write  # F49 (OPTION A COST TOTAL)
+    logger.info(f"Quote Sheet F49 (OPTION A TOTAL - COST): £{option_a_total_to_write}")
     
     # IMMEDIATE VERIFICATION: Read back what we just wrote
     written_value_23 = quote_sheet.cell(row=23, column=6).value
@@ -1501,18 +1503,20 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
     # Write to row 42 as a best guess (can adjust if template differs)
     option_b_total_row = 42
     
+    # Quote Sheet shows COST totals (no margin)
+    # Client Summary shows CLIENT PRICE (with margin)
     # CRITICAL: Ensure we write a NUMBER, not None
-    if option_b_client is None or not isinstance(option_b_client, (int, float)):
-        logger.error(f"CRITICAL: option_b_client is {type(option_b_client)} with value {option_b_client} - forcing to 0")
-        option_b_client = 0
+    if option_b_cost is None or not isinstance(option_b_cost, (int, float)):
+        logger.error(f"CRITICAL: option_b_cost is {type(option_b_cost)} with value {option_b_cost} - forcing to 0")
+        option_b_cost = 0
     
-    option_b_total_to_write = float(option_b_client) if option_b_client > 0 else 0.0
+    option_b_total_to_write = float(option_b_cost) if option_b_cost > 0 else 0.0
     quote_sheet.cell(row=option_b_total_row, column=6).value = option_b_total_to_write
-    logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - CLIENT PRICE): £{option_b_total_to_write}")
+    logger.info(f"Quote Sheet F{option_b_total_row} (Option B TOTAL - COST): £{option_b_total_to_write}")
     
     # DEVVIE FIX: Write to ACTUAL TOTAL row (Row 50, not 42)
-    quote_sheet.cell(row=50, column=6).value = option_b_total_to_write  # F50 (OPTION B TOTAL)
-    logger.info(f"Quote Sheet F50 (OPTION B TOTAL - ACTUAL ROW): £{option_b_total_to_write}")
+    quote_sheet.cell(row=50, column=6).value = option_b_total_to_write  # F50 (OPTION B COST TOTAL)
+    logger.info(f"Quote Sheet F50 (OPTION B TOTAL - COST): £{option_b_total_to_write}")
     
     # IMMEDIATE VERIFICATION: Read back what we just wrote
     written_value_42 = quote_sheet.cell(row=option_b_total_row, column=6).value
