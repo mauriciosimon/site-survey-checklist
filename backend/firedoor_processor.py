@@ -1567,6 +1567,7 @@ def populate_excel_template(doors: List[Dict], client_name: str, template_path: 
         description = get_aseries_description(a_code)
         
         # Write Option B COST values (no margin on line items)
+        quote_sheet.cell(row=row_num, column=1).value = a_code         # Column A (ITEM CODE - A01, A05, etc.)
         quote_sheet.cell(row=row_num, column=3).value = qty            # Column C (QTY)
         quote_sheet.cell(row=row_num, column=4).value = description    # Column D (DESCRIPTION with A-code)
         quote_sheet.cell(row=row_num, column=5).value = cost_rate      # Column E (RATE = Rate Card Total, plain cost)
